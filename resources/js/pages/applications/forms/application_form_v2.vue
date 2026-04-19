@@ -73,7 +73,10 @@ const nextStep = async (payload: any) => {
             next()
 
         } else if (currentStep.value === 3) {
-            await savePayment(payload, form.value.application_id)
+            await savePayment({
+            ...payload,
+        application_type:payload.application_type,
+        },form.value.application_id)
 
             toast.add({
                 severity: 'success',

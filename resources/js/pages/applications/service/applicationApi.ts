@@ -42,11 +42,32 @@ export const saveChainsaw = async (payload: any, id: any) => {
 };
 
 export const savePayment = async (payload: any, id: any) => {
-    return await axios.post('/api/chainsaw/insert_payment', {
-        ...payload,
-        id
-    })
-}
+    const formData = new FormData();
+
+    formData.append('id', String(id));
+
+    Object.keys(payload).forEach((key) => {
+        const value = payload[key];
+
+        if (value instanceof File) {
+            formData.append(key, value);
+        } 
+        else if (value !== null && value !== undefined) {
+            formData.append(key, String(value));
+        }
+    });
+
+    // 🔍 Debug (optional)
+    for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+    }
+
+    return await axios.post('/api/chainsaw/insert_payment', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
 export const saveSupplierInfo = async (payload: any) => {
     return await axios.post('/api/chainsaw-permit/store', payload)
 }
