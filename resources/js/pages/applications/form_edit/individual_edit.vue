@@ -321,7 +321,7 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id)
         formData.append('name', selectedFileToUpdate.value.name)
 
-        const response = await axios.post('http://localhost:8000/api/files/update', formData, {
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         })
 
@@ -573,7 +573,7 @@ const saveCompanyApplication = async () => {
 
     try {
         const response = await insertFormData(
-            'http://localhost:8000/api/chainsaw/company_apply',
+            'https://cps.denrcalabarzon.com/api/chainsaw/company_apply',
             {
                 ...formData,
                 encoded_by: userId,
@@ -644,7 +644,7 @@ const submitChainsawForm = async () => {
         });
 
         const response = await axios.post(
-            'http://localhost:8000/api/chainsaw/insertChainsawInfo',
+            'https://cps.denrcalabarzon.com/api/chainsaw/insertChainsawInfo',
             formData
         );
 
@@ -866,7 +866,7 @@ const getApplicationDetails = async () => {
     }
 
     try {
-        const response = await axios.get(`http://localhost:8000/api/getApplicationDetails/${applicationId}`);
+        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicationDetails/${applicationId}`);
         applicationData.value = response.data.data ?? {};
         i_city_mun.value = response.data.data?.i_city_mun ?? i_city_mun.value;
     } catch (error: any) {
@@ -881,7 +881,7 @@ const getDocumentaryRequirements = async () => {
     if (!applicationId) return;
 
     try {
-        const response = await axios.get(`http://localhost:8000/api/getApplicantFile/${applicationId}`);
+        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicantFile/${applicationId}`);
         if (response.data.status && Array.isArray(response.data.data)) {
             files.value = response.data.data.map((file: any) => ({
                 name: file.file_name,
@@ -910,7 +910,7 @@ const loadBrands = async () => {
     }
 
     const res = await axios.get(
-        `http://localhost:8000/api/chainsaw/${applicationId}/supplier`
+        `https://cps.denrcalabarzon.com/api/chainsaw/${applicationId}/supplier`
     )
 
     // If data exists, overwrite
@@ -922,11 +922,11 @@ const loadBrands = async () => {
 const getApplicantFile = async (application_id) => {
     try {
         const checklistRes = await axios.get(
-            `http://localhost:8000/api/getChecklistEntries/${application_id}`
+            `https://cps.denrcalabarzon.com/api/getChecklistEntries/${application_id}`
         );
 
         const attachmentsRes = await axios.get(
-            `http://localhost:8000/api/getApplicantFile/${application_id}`
+            `https://cps.denrcalabarzon.com/api/getApplicantFile/${application_id}`
         );
 
         if (checklistRes.data.status && attachmentsRes.data.status) {
@@ -1120,7 +1120,7 @@ const handleSupplierSave = async (data) => {
     try {
 
         const response = await axios.post(
-            'http://localhost:8000/api/chainsaw-permit/store',
+            'https://cps.denrcalabarzon.com/api/chainsaw-permit/store',
             {
                 suppliers: data,
                 application_id: page.props.application.id

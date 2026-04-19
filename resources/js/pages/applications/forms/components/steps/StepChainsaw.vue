@@ -113,8 +113,8 @@ const submitStep = () => {
 
     emit('next', {
         purpose: props.form.purpose,
-        files: files.value,
-        application_type: props.application_type
+        application_type: props.application_type,
+        ...files.value
     })
 }
 </script>

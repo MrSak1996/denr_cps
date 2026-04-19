@@ -154,8 +154,8 @@ class ChainsawController extends Controller
             ];
 
             $folderPath = match ($request->applicant_type) {
-                'Individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application->application_no}",
-                'Company' => "CHAINSAW_PERMITTING/Company Applications/{$application->application_no}",
+                'individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application->application_no}",
+                'company' => "CHAINSAW_PERMITTING/Company Applications/{$application->application_no}",
                 default => "CHAINSAW_PERMITTING/Other/{$application->application_no}",
             };
 
