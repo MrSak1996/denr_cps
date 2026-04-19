@@ -172,7 +172,7 @@ const cancel = () => {
 
                 <!-- Brand Name -->
                 <FloatLabel>
-                    <InputText v-model="brand.name" class="w-full" v-letters-only-uppercase/>
+                    <InputText v-model="brand.name" class="w-full" />
                     <label>Brand Name</label>
                 </FloatLabel>
 
@@ -182,7 +182,7 @@ const cancel = () => {
 
                     <Column header="Model">
                         <template #body="slotProps">
-                            <InputText v-model="slotProps.data.model" v-letters-only-uppercase class="w-full" />
+                            <InputText v-model="slotProps.data.model" class="w-full" />
                         </template>
                     </Column>
 
@@ -194,7 +194,7 @@ const cancel = () => {
 
                     <Column header="Serial No">
                         <template #body="slotProps">
-                            <InputText v-model="slotProps.data.serial_no" class="w-full" v-letters-only-uppercase/>
+                            <InputText v-model="slotProps.data.serial_no" class="w-full" />
                         </template>
                     </Column>
 

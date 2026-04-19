@@ -233,7 +233,7 @@ const saveCompanyApplication = async () => {
 
     try {
         const response = await insertFormData(
-            'https://cps.denrcalabarzon.com/api/chainsaw/company_apply',
+            'http://localhost:8000/api/chainsaw/company_apply',
             {
                 ...company_form,
                 ...formData,
@@ -304,7 +304,7 @@ const submitChainsawForm = async () => {
         });
 
         const response = await axios.post(
-            'https://cps.denrcalabarzon.com/api/chainsaw/insertChainsawInfo',
+            'http://localhost:8000/api/chainsaw/insertChainsawInfo',
             formData
         );
 
@@ -346,7 +346,7 @@ const submitORPayment = async () => {
 
     try {
         const response = await axios.post(
-            'https://cps.denrcalabarzon.com/api/chainsaw/insert_payment',
+            'http://localhost:8000/api/chainsaw/insert_payment',
             formData,
             {
                 headers: {
@@ -642,7 +642,7 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id)
         formData.append('name', selectedFileToUpdate.value.name)
 
-        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+        const response = await axios.post('http://localhost:8000/api/files/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         })
 
@@ -670,7 +670,7 @@ const handleFileUpdate = async (event) => {
 const getApplicationDetails = async () => {
     const applicationId = getApplicationIdFromUrl();
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicationDetails/${applicationId}`);
+        const response = await axios.get(`http://localhost:8000/api/getApplicationDetails/${applicationId}`);
         applicationData.value = response.data.data || [];
     } catch (error: any) {
         errorMessage.value = error.message || 'Error fetching application data.';
@@ -684,7 +684,7 @@ const getApplicantFile = async () => {
     if (!applicationId) return;
 
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicantFile/${applicationId}`);
+        const response = await axios.get(`http://localhost:8000/api/getApplicantFile/${applicationId}`);
         if (response.data.status && Array.isArray(response.data.data)) {
             files.value = response.data.data.map((file) => ({
                 name: file.file_name,
@@ -706,7 +706,7 @@ const handleSupplierSave = async (data) => {
     try {
 
         const response = await axios.post(
-            'https://cps.denrcalabarzon.com/api/chainsaw-permit/store',
+            'http://localhost:8000/api/chainsaw-permit/store',
             {
                 suppliers: data,
                 application_id: application_id
@@ -758,7 +758,7 @@ const loadBrands = async () => {
     const applicationId = getApplicationIdFromUrl();
     if (!applicationId) return;
 
-    const res = await axios.get(`https://cps.denrcalabarzon.com/api/chainsaw/${applicationId}/supplier`);
+    const res = await axios.get(`http://localhost:8000/api/chainsaw/${applicationId}/supplier`);
     if (res.data.length) suppliers.value = res.data;
 };
 

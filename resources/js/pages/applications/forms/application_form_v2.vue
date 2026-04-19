@@ -53,27 +53,27 @@ const nextStep = async (payload: any) => {
     isProcessing.value = true
 
     try {
-
         if (currentStep.value === 1) {
-            console.log(currentStep);
-            const res = await saveApplicant({
-                ...payload,
-                application_type: payload.application_type
+            // const res = await saveApplicant({
+            //     ...payload,
+            //     application_type: payload.application_type
+            // })
 
-            })
-            form.value.application_id = res.application_id
             next()
 
         } else if (currentStep.value === 2) {
             await saveChainsaw({
                 ...payload,
-                suppliers: suppliers.value
+                suppliers: suppliers.value,
+                application_type:payload.application_type,
             }, form.value.application_id)
+
+            
 
             next()
 
         } else if (currentStep.value === 3) {
-             await savePayment(payload, form.value.application_id)
+            await savePayment(payload, form.value.application_id)
 
             toast.add({
                 severity: 'success',
@@ -81,8 +81,23 @@ const nextStep = async (payload: any) => {
                 detail: 'Payment saved successfully',
                 life: 3000,
             })
+
             next()
         }
+
+    } catch (error: any) {
+
+        console.error('Step submission error:', error)
+
+        toast.add({
+            severity: 'error',
+            summary: 'Submission Failed',
+            detail:
+                error?.response?.data?.message ||
+                error?.message ||
+                'Something went wrong. Please try again.',
+            life: 4000,
+        })
 
     } finally {
         setTimeout(() => {
