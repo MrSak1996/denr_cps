@@ -44,7 +44,7 @@ class PaymentController extends Controller
             ],
         ];
 
-        $applicantType = strtolower($request->input('applicant_type'));
+        $applicantType = strtolower($request->input('application_type'));
 
         $folderPath = match ($applicantType) {
             'individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application_no}",

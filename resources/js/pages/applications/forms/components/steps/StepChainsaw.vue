@@ -198,11 +198,12 @@ const submitStep = () => {
 
                 <Button
                     :disabled="isProcessing"
-                    class="w-full bg-green-900 text-white hover:bg-sky-500"
+                    class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white"
                     @click="submitStep"
                 >
                     {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
                 </Button>
+                
             </div>
 
         </Fieldset>
