@@ -208,6 +208,3 @@ const submitStep = () => {
         </Fieldset>
     </div>
 </template>
-
-<style scoped>
-</style>
