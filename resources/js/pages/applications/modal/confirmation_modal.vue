@@ -20,11 +20,7 @@ const props = defineProps({
     },
     role_id:{
       type: Number,
-    },
-    currentStep: {
-        type: Number,
-        required: true
-    }   
+    },  
 });
 
 const requireConfirmation = () => {

@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { usePage } from '@inertiajs/vue3';
+
 import { Button } from '@/components/ui/button'
 import Fieldset from 'primevue/fieldset'
 import Dialog from 'primevue/dialog'
 import FileCard from '../../file_card.vue'
 import Tag from 'primevue/tag'
+import ConfirmModal from '../../../modal/confirmation_modal.vue';
+const page = usePage();
 
 const emit = defineEmits(['back', 'submit'])
+const roleId = page.props.auth?.user?.role_id;
 
 const props = defineProps({
   application: Object,
@@ -84,7 +89,7 @@ const formatDate = (date: any) => {
 
           <div class="flex">
             <span class="w-48 font-semibold">Applicant Name:</span>
-            <span>{{ applicationData?.applicant_firstname }} {{ applicationData?.applicant_lastname }}</span>
+            <span>{{ applicationData?.first_name }} {{ applicationData?.last_name }}</span>
           </div>
           <div class="flex">
             <span class="w-48 font-semibold">Contact Details:</span>
@@ -150,13 +155,13 @@ const formatDate = (date: any) => {
               <tr class="border-b">
                 <td class="bg-gray-50 p-2 font-semibold">Official Receipt</td>
                 <td class="p-2">
-                  <Tag :value="payment?.official_receipt" severity="success" />
+                  <Tag :value="applicationData.official_receipt" severity="success" />
                 </td>
               </tr>
 
               <tr>
                 <td class="bg-gray-50 p-2 font-semibold">Permit Fee</td>
-                <td class="p-2">₱ {{ payment?.permit_fee }}.00</td>
+                <td class="p-2">₱ {{ applicationData.permit_fee }}.00</td>
               </tr>
             </tbody>
           </table>
@@ -226,7 +231,7 @@ const formatDate = (date: any) => {
 
     <div class="grid grid-cols-2 gap-4">
       <Button variant="outline" @click="emit('back')">Back</Button>
-      <Button class="bg-green-700 text-white" @click="emit('submit')">Submit Application</Button>
+      <ConfirmModal  class="w-full" :applicationId="Number(applicationData.application_id)" :role_id="roleId" />
     </div>
   </div>
 </template>
