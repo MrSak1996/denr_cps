@@ -11,8 +11,16 @@ Route::middleware(['auth', 'verified'])
         Route::get('/index', [ApplicationController::class, 'index'])
             ->name('applications.index');
 
-        Route::get('/create/business', function () {
-            return Inertia::render('applications/forms/company_application_form');
+            Route::get('/create/business/{application_id?}/{type?}/{step?}', function (
+            $application_id = null,
+            $type = 'business',
+            $step = 1
+        ) {
+            return Inertia::render('applications/forms/company_application_form', [
+                'application_id' => $application_id,
+                'type' => $type,
+                'step' => (int) $step,
+            ]);
         })->name('applications.create.business');
 
         // ✅ SINGLE CLEAN DYNAMIC ROUTE (CITIZEN)
@@ -28,5 +36,5 @@ Route::middleware(['auth', 'verified'])
             ]);
         })->name('applications.create.citizen');
 
-       
+
     });

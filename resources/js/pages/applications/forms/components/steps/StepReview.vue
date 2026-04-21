@@ -90,11 +90,15 @@ const formatDate = (date: any) => {
             <span class="w-48 font-semibold">Classification:</span>
             <span>{{ applicationData.classification }}</span>
           </div>
-
           <div class="flex">
-            <span class="w-48 font-semibold">Applicant Name:</span>
-            <span>{{ applicationData?.first_name }} {{ applicationData?.last_name }}</span>
+            <span class="w-48 font-semibold">Company Name:</span>
+            <span>{{ applicationData.company_name }}</span>
           </div>
+          <div class="flex">
+            <span class="w-48 font-semibold">Authorized Representative:</span>
+            <span>{{ applicationData.authorized_representative }}</span>
+          </div>
+  
           <div class="flex">
             <span class="w-48 font-semibold">Contact Details:</span>
             <span>{{ applicationData.mobile_no }}</span>
