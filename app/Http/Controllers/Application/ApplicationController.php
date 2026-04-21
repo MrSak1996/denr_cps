@@ -104,7 +104,7 @@ class ApplicationController extends Controller
             'gov_id_type' => 'nullable|string',
             'gov_id_number' => 'nullable|string',
             'classification' => 'required',
-          
+
             'i_complete_address' => 'required|string',
             'mobile_no' => 'nullable|string',          // ✅ ADD
             'telephone_no' => 'nullable|string',       // ✅ ADD
@@ -119,7 +119,7 @@ class ApplicationController extends Controller
 
         // Create the application using the validated data
         $application = ChainsawIndividualApplication::updateOrCreate(
-         ['application_no' => $request->input('application_no')], // 🔥 match condition
+            ['application_no' => $request->input('application_no')], // 🔥 match condition
             [
                 'application_status' => self::STATUS_DRAFT,
                 'application_type' => $validated['application_type'],
@@ -153,7 +153,9 @@ class ApplicationController extends Controller
         return response()->json([
             'message' => 'Application submitted successfully.',
             'application_id' => $application->id,
+            'application' => $application
         ], 201);
+       
     }
 
     public function company_apply(Request $request, GoogleDriveService $driveService)

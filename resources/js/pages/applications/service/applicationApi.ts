@@ -2,7 +2,7 @@ import axios from 'axios'
 
 export const saveApplicant = async (payload: any) => {
     const res = await axios.post('/api/chainsaw/apply', payload)
-    return res.data.data
+    return res.data
 }
 
 export const saveChainsaw = async (payload: any, id: any) => {
@@ -18,16 +18,16 @@ export const saveChainsaw = async (payload: any, id: any) => {
         // 🔥 HANDLE FILES PROPERLY
         if (value instanceof File) {
             formData.append(key, value);
-        } 
+        }
         else if (value?.file instanceof File) {
             formData.append(key, value.file);
         }
         else if (Array.isArray(value) && value.length && value[0] instanceof File) {
             formData.append(key, value[0]); // take first file
-        } 
+        }
         else if (Array.isArray(value)) {
             formData.append(key, JSON.stringify(value));
-        } 
+        }
         else if (value !== null && value !== undefined) {
             formData.append(key, String(value));
         }
@@ -51,7 +51,7 @@ export const savePayment = async (payload: any, id: any) => {
 
         if (value instanceof File) {
             formData.append(key, value);
-        } 
+        }
         else if (value !== null && value !== undefined) {
             formData.append(key, String(value));
         }
@@ -68,7 +68,22 @@ export const savePayment = async (payload: any, id: any) => {
         },
     });
 };
+
 export const saveSupplierInfo = async (payload: any) => {
     return await axios.post('/api/chainsaw-permit/store', payload)
+}
+
+export const getApplicationReview = async (id: any) => {
+    const [appRes, supplierRes, fileRes] = await Promise.all([
+        axios.get(`/api/getApplicationDetails/${id}`),
+        axios.get(`/api/chainsaw/${id}/supplier`),
+        axios.get(`/api/getApplicantFile/${id}`)
+    ])
+
+    return {
+        application: appRes.data.data || {},
+        suppliers: supplierRes.data || [],
+        files: fileRes.data.data || []
+    }
 }
 
