@@ -16,7 +16,10 @@ import { saveCompanyApplication, saveChainsaw, savePayment, saveSupplierInfo, ge
 const props = defineProps({
     application_id: [String, Number, null],
     step: Number,
-    type: String
+    type: {
+        type: String,
+        default: 'company' // ✅ NEVER undefined
+    }
 })
 
 const { currentStep, next, prevStep } = useApplicationStepper(props.step)
@@ -55,13 +58,16 @@ const nextStep = async (payload: any) => {
     isProcessing.value = true
 
     try {
+        const basePayload = {
+            application_type: props.type || 'company' // ✅ SOURCE OF TRUTH
+        }
+
         if (currentStep.value === 1) {
             const res = await saveCompanyApplication({
                 ...payload,
-                application_type: payload.application_type
+                ...basePayload
             })
 
-            // ✅ IMPORTANT: store returned ID
             form.value.application_id = res.application_id
             form.value.application_no = res.application?.application_no
 
@@ -85,14 +91,14 @@ const nextStep = async (payload: any) => {
         }
 
         else if (currentStep.value === 2) {
-            const res = await saveChainsaw({
+            await saveChainsaw({
                 ...payload,
                 suppliers: suppliers.value,
-                application_type: payload.application_type,
+                ...basePayload
             }, form.value.application_id)
 
-
             toast.add({ severity: 'success', summary: 'Saved', detail: 'Chainsaw saved', life: 3000 })
+
             next()
 
             router.visit(route('applications.create.business', {
@@ -106,12 +112,13 @@ const nextStep = async (payload: any) => {
         }
 
         else if (currentStep.value === 3) {
-            const res = await savePayment({
+            await savePayment({
                 ...payload,
-                application_type: payload.application_type,
+                ...basePayload
             }, form.value.application_id)
 
             toast.add({ severity: 'success', summary: 'Saved', detail: 'Payment saved', life: 3000 })
+
             next()
 
             router.visit(route('applications.create.business', {
