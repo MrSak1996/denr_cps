@@ -181,11 +181,11 @@ watch(checked, (value) => {
 
                     <!-- Business -->
                     <button
-                        @click="selectApplicant('company')"
+                        @click="selectApplicant('business')"
                         class="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl shadow-md border bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:shadow-lg transition"
                     >
                         <img :src="company_img" class="h-28 w-28 object-contain" />
-                        <span class="text-lg font-semibold">Private</span>
+                        <span class="text-lg font-semibold">Business</span>
                     </button>
 
                     <!-- Citizen -->

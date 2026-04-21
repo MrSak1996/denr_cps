@@ -11,7 +11,7 @@ Route::middleware(['auth', 'verified'])
         Route::get('/index', [ApplicationController::class, 'index'])
             ->name('applications.index');
 
-            Route::get('/create/company/{application_id?}/{type?}/{step?}', function (
+            Route::get('/create/business/{application_id?}/{type?}/{step?}', function (
             $application_id = null,
             $type = 'company',
             $step = 1
@@ -21,7 +21,7 @@ Route::middleware(['auth', 'verified'])
                 'type' => $type,
                 'step' => (int) $step,
             ]);
-        })->name('applications.create.company');
+        })->name('applications.create.business');
 
         // ✅ SINGLE CLEAN DYNAMIC ROUTE (CITIZEN)
         Route::get('/create/citizen/{application_id?}/{type?}/{step?}', function (
