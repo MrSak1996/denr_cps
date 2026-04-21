@@ -8,10 +8,16 @@ export function usePrivacyConsent() {
     const checkConsent = (applicationId: any) => {
         if (!applicationId) {
             showPrivacyDialog.value = true
-        } else {
-            const saved = sessionStorage.getItem('privacy_accepted')
-            hasAgreedPrivacy.value = saved === 'true'
+            return false
         }
+
+        const saved = sessionStorage.getItem('privacy_accepted')
+        const hasConsent = saved === 'true'
+
+        hasAgreedPrivacy.value = hasConsent
+        showPrivacyDialog.value = !hasConsent   // ✅ THIS IS THE FIX
+
+        return hasConsent
     }
 
     const generateApplicationNumber = async () => {

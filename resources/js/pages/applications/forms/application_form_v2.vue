@@ -175,18 +175,25 @@ watch(currentStep, async (step) => {
 })
 
 onMounted(async () => {
-    if (props.application_id || currentStep.value === 4) {
+    // ✅ Restore ID from URL
+    if (props.application_id) {
         form.value.application_id = props.application_id
+    }
 
-        const hasConsent = await checkConsent(form.value.application_id)
+    // ❗ If no application → must show privacy
+    if (!form.value.application_id) {
+        showPrivacyDialog.value = true
+        return
+    }
 
-        if (!hasConsent) {
-            showPrivacyDialog.value = true
-        }
-    } else {
+    // ✅ Check if user already accepted privacy
+    const hasConsent = await checkConsent(form.value.application_id)
+
+    if (!hasConsent) {
         showPrivacyDialog.value = true
     }
 
+    // ✅ Load review if step 4
     if (currentStep.value === 4) {
         await loadReviewData()
     }
