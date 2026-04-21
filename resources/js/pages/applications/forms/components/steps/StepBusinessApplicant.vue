@@ -303,7 +303,7 @@ onMounted(async () => {
 
         </Fieldset>
         <Button :disabled="props.isProcessing" type="button"
-            class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="save">
+            class="w-full mt-2 bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="save">
             {{ props.isProcessing ? 'Saving...' : 'Save & Continue' }}
         </Button>
 

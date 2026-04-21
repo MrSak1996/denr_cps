@@ -211,39 +211,48 @@ onMounted(async () => {
 </script>
 
 <template>
+
     <Head title="Chainsaw Purchase System" />
-    <div class="box">
 
-        <AppLayout>
-            <Toast />
-            <div class="space-y-6 p-6">
-                <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
-                    :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                    :supplier="suppliers" :files="files" @next="nextStep" @back="goBack"
-                    @supplierSaved="supplierSaved" />
+    <AppLayout>
+        <div class="flex flex-col gap-6 rounded-xl p-4 sm:grid-cols-3">
+            <div class="box">
+
+                <Toast />
+
+                <div class="space-y-6 p-6">
+                    <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
+                        :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
+                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack"
+                        @supplierSaved="supplierSaved" />
+                </div>
+
+                <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"
+                    :draggable="false" :style="{ width: '500px' }">
+                    <div class="space-y-4 text-sm text-gray-700">
+                        <p> In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process
+                            your
+                            personal information solely for the purpose of processing your Chainsaw Purchase System.
+                        </p>
+                        <p>Your data will be treated confidentially and will not be shared without your consent unless
+                            required
+                            by law.</p>
+                        <div class="mt-4 flex items-start gap-2">
+                            <Checkbox v-model="hasAgreedPrivacy" binary /> <label class="text-sm"> I have read and agree
+                                to
+                                the
+                                Data Privacy Policy. </label>
+                        </div>
+                    </div> <template #footer> <Button label="Decline" class="p-button-text"
+                            @click="router.get(route('applications.create.business'))">Decline</Button> <Button
+                            label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
+                            @click="handleAcceptPrivacy">Agree & Continue</Button> </template>
+                </Dialog>
             </div>
-
-            <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"
-                :draggable="false" :style="{ width: '500px' }">
-                <div class="space-y-4 text-sm text-gray-700">
-                    <p> In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process your
-                        personal information solely for the purpose of processing your Chainsaw Purchase System. </p>
-                    <p>Your data will be treated confidentially and will not be shared without your consent unless
-                        required
-                        by law.</p>
-                    <div class="mt-4 flex items-start gap-2">
-                        <Checkbox v-model="hasAgreedPrivacy" binary /> <label class="text-sm"> I have read and agree to
-                            the
-                            Data Privacy Policy. </label>
-                    </div>
-                </div> <template #footer> <Button label="Decline" class="p-button-text"
-                        @click="router.get(route('applications.create.business'))">Decline</Button> <Button
-                        label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
-                        @click="handleAcceptPrivacy">Agree & Continue</Button> </template>
-            </Dialog>
-        </AppLayout>
-    </div>
+        </div>
+    </AppLayout>
 </template>
+
 
 
 

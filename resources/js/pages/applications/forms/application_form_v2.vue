@@ -204,28 +204,105 @@ onMounted(async () => {
 
     <Head title="Chainsaw Purchase System" />
     <AppLayout>
-        <Toast />
-        <div class="space-y-6 p-6">
-            <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
-                :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep" :supplier="suppliers"
-                :files="files" @next="nextStep" @back="goBack" @supplierSaved="supplierSaved" />
-        </div>
+        <div class="flex flex-col gap-6 rounded-xl p-4 sm:grid-cols-3">
+            <div class="box">
 
-        <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false" :draggable="false"
-            :style="{ width: '500px' }">
-            <div class="space-y-4 text-sm text-gray-700">
-                <p> In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process your
-                    personal information solely for the purpose of processing your Chainsaw Purchase System. </p>
-                <p>Your data will be treated confidentially and will not be shared without your consent unless required
-                    by law.</p>
-                <div class="mt-4 flex items-start gap-2">
-                    <Checkbox v-model="hasAgreedPrivacy" binary /> <label class="text-sm"> I have read and agree to the
-                        Data Privacy Policy. </label>
+                <Toast />
+                <div class="space-y-6 p-6">
+                    <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
+                        :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
+                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack"
+                        @supplierSaved="supplierSaved" />
                 </div>
-            </div> <template #footer> <Button label="Decline" class="p-button-text"
-                    @click="router.get(route('applications.create.citizen'))">Decline</Button> <Button
-                    label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
-                    @click="handleAcceptPrivacy">Agree & Continue</Button> </template>
-        </Dialog>
+
+                <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"
+                    :draggable="false" :style="{ width: '500px' }">
+                    <div class="space-y-4 text-sm text-gray-700">
+                        <p> In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process
+                            your
+                            personal information solely for the purpose of processing your Chainsaw Purchase System.
+                        </p>
+                        <p>Your data will be treated confidentially and will not be shared without your consent unless
+                            required
+                            by law.</p>
+                        <div class="mt-4 flex items-start gap-2">
+                            <Checkbox v-model="hasAgreedPrivacy" binary /> <label class="text-sm"> I have read and agree
+                                to the
+                                Data Privacy Policy. </label>
+                        </div>
+                    </div> <template #footer> <Button label="Decline" class="p-button-text"
+                            @click="router.get(route('applications.create.citizen'))">Decline</Button> <Button
+                            label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
+                            @click="handleAcceptPrivacy">Agree & Continue</Button> </template>
+                </Dialog>
+            </div>
+        </div>
     </AppLayout>
 </template>
+
+
+<style scoped>
+.box {
+    background-color: #fff;
+    border-top: 4px solid #00943a;
+    margin-bottom: 20px;
+    padding: 20px;
+    -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    -o-box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.box .title {
+    border-bottom: 1px solid #e0e0e0;
+    color: #432c0b !important;
+    font-weight: bold;
+    margin-bottom: 20px;
+    margin-top: 0;
+    padding-bottom: 10px;
+    padding-top: 0;
+    text-transform: uppercase;
+    font-size: 10pt;
+}
+
+/* Base style for ToggleButton - Green (unchecked/default state) */
+/* Default state - Green */
+/* Base style for ToggleButton - Green (unchecked/default state) */
+.p-togglebutton {
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    background-color: #22c55e;
+    /* green-500 */
+    color: white;
+    transition: background-color 0.3s ease, filter 0.3s ease;
+}
+
+/* Hover effect */
+.p-togglebutton:hover {
+    filter: brightness(1.1);
+}
+
+/* Checked state - Darker green */
+.p-togglebutton.p-togglebutton-checked {
+    background-color: #15803d !important;
+    /* green-700 */
+    border-color: #166534;
+    color: rgb(0, 0, 0);
+}
+
+/* Fix inner white background */
+.p-togglebutton.p-togglebutton-checked .p-togglebutton-content {
+    background-color: #15803d !important;
+    box-shadow: none;
+    color: white !important;
+}
+
+/* Ensure label and icon are white in all states */
+.p-togglebutton .p-togglebutton-icon,
+.p-togglebutton .p-togglebutton-label {
+    color: white !important;
+}
+</style>
