@@ -94,7 +94,7 @@ class ApplicationController extends Controller
             'application_type' => 'required|string',
             'type_of_transaction' => 'required|string',
             'application_no' => 'required',
-            'date_applied' => 'required|date_format:Y-m-d',            
+            'date_applied' => 'required|date',
             'encoded_by' => 'nullable|integer',
 
             'last_name' => 'required|string',
@@ -118,8 +118,7 @@ class ApplicationController extends Controller
         ]);
 
         // Create the application using the validated data
-        $validated['date_applied'] = Carbon::parse($validated['date_applied'])->format('Y-m-d');
-
+        $validated['date_applied'] = \Carbon\Carbon::parse($request->date_applied)->format('Y-m-d');
         $application = ChainsawIndividualApplication::updateOrCreate(
             ['application_no' => $request->input('application_no')], // 🔥 match condition
             [

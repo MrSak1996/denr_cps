@@ -14,10 +14,16 @@ const emit = defineEmits(['back', 'submit'])
 const roleId = page.props.auth?.user?.role_id;
 
 const props = defineProps({
+  form: {
+    type: Object,
+    required: true
+  },
   application: Object,
-  supplier:Array,
-  files:Array
+  supplier: Array,
+  files: Array
 })
+
+
 
 
 const applicationData = computed(() => props.application || {})
@@ -35,10 +41,8 @@ const payment = computed(() =>
   applicationData.value?.payment || {}
 )
 
-/* ========================
-   UI STATE
-======================== */
 const showModal = ref(false)
+
 const selectedFile = ref<any>(null)
 
 const openFileModal = (file: any) => {
@@ -231,7 +235,7 @@ const formatDate = (date: any) => {
 
     <div class="grid grid-cols-2 gap-4">
       <Button variant="outline" @click="emit('back')">Back</Button>
-      <ConfirmModal  class="w-full" :applicationId="Number(applicationData.application_id)" :role_id="roleId" />
+      <ConfirmModal class="w-full" :applicationId="props.form.application_id" :role_id="roleId" />
     </div>
   </div>
 </template>
