@@ -1482,7 +1482,7 @@ onMounted(() => {
 
         <!-- <LoadingSpinner :loading="isloadingSpinner" /> -->
         <!-- Stepper -->
-        <div class="mb-6 flex items-center justify-between" v-if="company_form.status_title == 'Draft'">
+        <div class="mb-6 flex items-center justify-between" v-if="[1,25].includes(company_form.application_status)">
             <div v-for="step in steps" :key="step.id" class="flex-1 cursor-pointer text-center"
                 @click="handleStepClick(step.id)">
                 <div :class="[
