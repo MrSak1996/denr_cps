@@ -110,11 +110,11 @@ onMounted(async () => {
     await getProvinceCode()
 
     watch(
-        () => props.form.i_province,
+        () => props.form.company_c_province,
         async (province) => {
             if (!province) {
                 city_mun_opts.value = []
-                props.form.i_city_mun = ''
+                props.form.c_city_mun = ''
                 return
             }
 
@@ -130,18 +130,18 @@ onMounted(async () => {
     )
 
     watch(
-        () => props.form.i_city_mun,
+        () => props.form.c_city_mun,
         async (city) => {
             if (!city) {
                 barangay_opts.value = []
-                props.form.i_barangay = ''
+                props.form.c_barangay = ''
                 return
             }
 
             const res = await axios.get('/api/barangays', {
                 params: {
                     reg_code: props.form.i_region,
-                    prov_code: props.form.i_province,
+                    prov_code: props.form.company_c_province,
                     mun_code: city
                 }
             })
