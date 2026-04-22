@@ -622,9 +622,12 @@ const getDownloadCount = async (application_id) => {
                         class="mr-2 inline-flex items-center justify-center bg-green-700 text-white rounded-md px-3 py-2 hover:bg-green-600">
                         <EyeIcon :size="15" />
                     </Link>
-
-                    <Link v-if="data.application_status === STATUS_DRAFT"
-                        :href="route('applications.edit', { id: data.id, type: data.application_type })"
+                        <Link
+                            v-if="[STATUS_DRAFT, 25].includes(data.application_status)"
+                            :href="route('applications.edit', {
+                                id: data.id,
+                                type: data.application_type
+                            })"
                         class="mr-2 inline-flex items-center justify-center bg-orange-700 text-white rounded-md px-3 py-2 hover:bg-orange-600">
                         <SquarePen :size="16" />
                     </Link>

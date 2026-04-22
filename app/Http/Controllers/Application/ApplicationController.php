@@ -123,7 +123,7 @@ class ApplicationController extends Controller
             ['application_no' => $request->input('application_no')], // 🔥 match condition
             [
                 'application_status' => self::STATUS_DRAFT,
-                'application_type' => $validated['application_type'],
+                'application_type' => ucfirst($validated['application_type']),
                 'transaction_type' => $validated['type_of_transaction'],
                 'application_no' => $validated['application_no'],
                 'date_applied' => $validated['date_applied'],
@@ -448,11 +448,18 @@ class ApplicationController extends Controller
             $officeId = $user->office_id;
 
             $provinceSuffix = match ($officeId) {
-                1 => 'C',
-                2, 6, 7, 8 => 'L',
-                3 => 'B',
-                4 => 'R',
-                5, 9, 10, 11, 12 => 'Q',
+                1 => 'CAV',
+                2 => 'LAG',
+				6 => 'CSTAX',
+                3 => 'BAT',
+				7 => 'CLIPA',
+				8 => 'CCALACA',
+                4 => 'RIZ',
+                5 => 'QUE',
+				9 => 'CCALAUUAG',
+				10 => 'CCATANAUAN',
+				11 => 'CCTAYABAS',
+				12 => 'CCREAL',
                 default => 'X',
             };
 
@@ -513,8 +520,14 @@ class ApplicationController extends Controller
                 'ac.applicant_complete_address',
                 'ac.company_address',
                 'ac.authorized_representative',
-                DB::raw("CONCAT(ac.applicant_lastname, ', ', ac.applicant_firstname, ' ', ac.applicant_middlename) AS applicant_name"),
-                'ap.official_receipt',
+				DB::raw("
+					CONCAT(
+						ac.applicant_lastname, ', ',
+						ac.applicant_firstname, ' ',
+						IFNULL(ac.applicant_middlename, '')
+					) AS applicant_name
+				") ,
+			    'ap.official_receipt',
                 'ap.permit_fee',
                 'ap.date_of_payment',
                 'ac.created_at',
@@ -530,7 +543,7 @@ class ApplicationController extends Controller
             )
 
             ->where('u.id', $userId)
-            ->where('ac.application_status', '>=', 1)
+            //->where('ac.application_status', '>=', 1)
             ->orderBy('ac.id', 'desc')
             ->get()
             ->map(function ($item) {

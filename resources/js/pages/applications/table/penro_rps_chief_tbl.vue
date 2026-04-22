@@ -237,7 +237,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
         receive: {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
-            api: 'applications.penro.rps.chief.receive',
+            api: 'applications.penro.receive',
             payload: { id, office_id, user_id },
             showTextarea: false,
             showDropdown: false,

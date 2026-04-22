@@ -46,6 +46,7 @@ const govIdOptions = [
     { label: 'Philippine Identification (PhilID / ePhilID)', value: 'philid' },
     { label: 'Passport', value: 'passport' },
     { label: "Driver's License (LTO)", value: 'drivers_license' },
+    { label: "Senior Citizen ID", value: 'senior_citizen_id' },
     { label: 'UMID', value: 'umid' },
     { label: 'PRC ID', value: 'prc_id' },
     { label: 'SSS ID', value: 'sss_id' },
