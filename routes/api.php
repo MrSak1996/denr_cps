@@ -22,7 +22,7 @@ Route::middleware('api')->group(function () {
 
 Route::get('/getProvinces', [ApplicationController::class, 'getProvinces']);
 Route::get('/provinces/{provinceId}/cities', [ApplicationController::class, 'getCitiesByProvince']);
-Route::get('/barangays', [ApplicationController::class, 'getBarangays']);
+Route::post('/barangays', [ApplicationController::class, 'getBarangays']);
 // Route::get('/generateApplicationNumber', [ApplicationController::class, 'generateApplicationNumber']);
 Route::get('/application-details', [ApplicationController::class,'showApplicationDetails']);
 Route::get('/getApplicationDetails/{application_id}',[ApplicationController::class,'getApplicationDetails']);

@@ -95,7 +95,7 @@ class ChainsawController extends Controller
                             'brand_name' => $brand['name'] ?? null,
                             'model' => $model['model'] ?? null,
                             'quantity' => $model['quantity'] ?? 0,
-                            'serial_no' => $model['serial_no'],
+                            // 'serial_no' => $model['serial_no'],
 
                         ]);
                     }

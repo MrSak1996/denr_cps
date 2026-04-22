@@ -86,15 +86,19 @@ class ApplicationController extends Controller
         return Inertia::render('applications/index');
     }
 
-    public function apply(Request $request)
+    public function apply(Request $request, GoogleDriveService $driveService)
     {
+        $lastName = strtoupper($request->input('last_name'));
+        $firstName = strtoupper($request->input('first_name'));
+        $middleName = strtoupper($request->input('middle_name'));
+
         // Validate the incoming request; this will automatically return 422 on failure
         $validated = $request->validate([
             // 'geo_code' => 'required|string',
             'application_type' => 'required|string',
             'type_of_transaction' => 'required|string',
             'application_no' => 'required',
-            'date_applied' => 'required|date',
+            // 'date_applied' => 'required|date',
             'encoded_by' => 'nullable|integer',
 
             'last_name' => 'required|string',
@@ -118,23 +122,25 @@ class ApplicationController extends Controller
         ]);
 
         // Create the application using the validated data
-        $validated['date_applied'] = \Carbon\Carbon::parse($request->date_applied)->format('Y-m-d');
+        // $validated['date_applied'] = \Carbon\Carbon::parse($request->date_applied)->format('Y-m-d');
         $application = ChainsawIndividualApplication::updateOrCreate(
-            ['application_no' => $request->input('application_no')], // 🔥 match condition
+            ['application_no' => $request->input('application_no')],
             [
                 'application_status' => self::STATUS_DRAFT,
-                'application_type' => ucfirst($validated['application_type']),
+                'application_type' => 'Individual',
                 'transaction_type' => $validated['type_of_transaction'],
                 'application_no' => $validated['application_no'],
-                'date_applied' => $validated['date_applied'],
+
                 'encoded_by' => $validated['encoded_by'] ?? null,
                 'classification' => $validated['classification'] ?? null,
-                'applicant_lastname' => $validated['last_name'],
-                'applicant_firstname' => $validated['first_name'],
-                'applicant_middlename' => $validated['middle_name'] ?? null,
+
+                // ✅ UPPERCASE CLEAN DATA
+                'applicant_lastname' => $lastName,
+                'applicant_firstname' => $firstName,
+                'applicant_middlename' => $middleName,
+
                 'sex' => $validated['sex'],
-                'government_id' => $validated['gov_id_type'] ?? null,
-                'gov_id_number' => $validated['gov_id_number'] ?? null,
+
                 'applicant_contact_details' => $validated['mobile_no'] ?? null,
                 'applicant_telephone_no' => $validated['telephone_no'] ?? null,
                 'applicant_email_address' => $validated['email_address'] ?? null,
@@ -150,13 +156,43 @@ class ApplicationController extends Controller
                 'operation_brgy_c' => $validated['p_barangay'] ?? null,
             ]
         );
+        $applicationNo = $application->application_no;
+        $applicationId = $application->id;
+        $filesToUpload = [
+            'valid_id' => [
+                'folder_name' => 'Valid ID',
+                'requirement_id' => 15
+            ],
+        ];
+
+        $folderPath = 'CHAINSAW_PERMITTING/Individual Applications/' . $applicationNo;
+        $results = [];
+        foreach ($filesToUpload as $inputName => $config) {
+            $checklist = AppChecklistEntry::create([
+                'parent_id' => $applicationId,
+                'chklist_id' => $config['requirement_id'],
+                'uploaded_at' => now(),
+            ]);
+            $result = $driveService->storeSingleAttachment(
+                $applicationNo,
+                $request->input('encoded_by'),
+                $request->file($inputName),
+                $applicationId,
+                $folderPath,
+                $config['folder_name'],
+                $checklist->id   // 🔥 IMPORTANT
+            );
+            $uploadResults[$inputName] = $result;
+        }
+
 
         return response()->json([
             'message' => 'Application submitted successfully.',
             'application_id' => $application->id,
-            'application' => $application
+            'application' => $application,
+            'google_drive' => $uploadResults,
+
         ], 201);
-       
     }
 
     public function company_apply(Request $request, GoogleDriveService $driveService)
@@ -167,7 +203,7 @@ class ApplicationController extends Controller
                 ['id' => $request->input('id')], // 🔥 match condition
                 [
                     'application_status' => self::STATUS_DRAFT,
-                    'application_type' => $request->input('application_type'),
+                    'application_type' => 'Company',
                     'classification' => $request->input('classification'),
                     'transaction_type' => $request->input('type_of_transaction'),
                     'application_no' => $request->input('application_no'),
@@ -190,7 +226,6 @@ class ApplicationController extends Controller
             $applicationId = $application->id;
 
             // Upload files to Google Drive
-            // Upload files + create checklist entries properly
             $filesToUpload = [
                 'request_letter' => [
                     'folder_name' => 'Request Letter',
@@ -308,8 +343,12 @@ class ApplicationController extends Controller
     public function getBarangays(Request $request)
     {
         $regCode = '04';
-        $provCode = $request->query('prov_code');
-        $munCode = $request->query('mun_code');
+        $provCode = $request->input('prov_code');
+        $munCode  = (int)$request->input('mun_code');
+
+        if (!$provCode || !$munCode) {
+            return response()->json([]);
+        }
 
         $barangays = DB::table('geo_map')
             ->select(
@@ -323,20 +362,9 @@ class ApplicationController extends Controller
                 'bgy_code',
                 'bgy_name'
             )
-            ->where('reg_code', $regCode)
+            ->where('reg_code', 04)
             ->where('prov_code', $provCode)
             ->where('mun_code', $munCode)
-            ->groupBy(
-                'reg_code',
-                'reg_name',
-                'geo_code',
-                'prov_code',
-                'prov_name',
-                'mun_code',
-                'mun_name',
-                'bgy_code',
-                'bgy_name'
-            )
             ->get();
 
         return response()->json($barangays);
@@ -450,16 +478,16 @@ class ApplicationController extends Controller
             $provinceSuffix = match ($officeId) {
                 1 => 'CAV',
                 2 => 'LAG',
-				6 => 'CSTAX',
+                6 => 'CSTAX',
                 3 => 'BAT',
-				7 => 'CLIPA',
-				8 => 'CCALACA',
+                7 => 'CLIPA',
+                8 => 'CCALACA',
                 4 => 'RIZ',
                 5 => 'QUE',
-				9 => 'CCALAUUAG',
-				10 => 'CCATANAUAN',
-				11 => 'CCTAYABAS',
-				12 => 'CCREAL',
+                9 => 'CCALAUUAG',
+                10 => 'CCATANAUAN',
+                11 => 'CCTAYABAS',
+                12 => 'CCREAL',
                 default => 'X',
             };
 
@@ -520,14 +548,14 @@ class ApplicationController extends Controller
                 'ac.applicant_complete_address',
                 'ac.company_address',
                 'ac.authorized_representative',
-				DB::raw("
+                DB::raw("
 					CONCAT(
 						ac.applicant_lastname, ', ',
 						ac.applicant_firstname, ' ',
 						IFNULL(ac.applicant_middlename, '')
 					) AS applicant_name
-				") ,
-			    'ap.official_receipt',
+				"),
+                'ap.official_receipt',
                 'ap.permit_fee',
                 'ap.date_of_payment',
                 'ac.created_at',
@@ -597,11 +625,14 @@ class ApplicationController extends Controller
             ->leftJoin('users as u', 'u.id', '=', 'ac.encoded_by')
             ->leftJoin('tbl_office as o', 'o.id', '=', 'u.office_id')
             ->leftJoin('tbl_roles as r', 'r.id', '=', 'u.role_id')
+            ->leftJoin('tbl_application_attachments as aa', 'aa.application_id', '=', 'ac.id')
             ->select([
                 'ac.id',
                 'u.name as registered_by',
                 'o.office_title',
                 'r.role_title',
+                'aa.file_url',
+                'aa.file_name',
 
                 'ac.applicant_lastname as last_name',
                 'ac.applicant_firstname as first_name',
@@ -613,8 +644,15 @@ class ApplicationController extends Controller
                 'ac.applicant_telephone_no as telephone_no',
                 'ac.applicant_email_address as email_address',
 
-                'ac.applicant_complete_address',
                 'ac.classification',
+                'ac.applicant_province_c as i_province',
+                'ac.applicant_city_mun_c as i_city_mun',
+                'ac.applicant_brgy_c as i_barangay',
+                'ac.applicant_complete_address  as i_complete_address',
+                'ac.company_c_province',
+                'ac.company_c_city_mun',
+                'ac.company_c_barangay',
+                'ac.company_address',
 
                 's.status_title',
                 'ac.application_no',

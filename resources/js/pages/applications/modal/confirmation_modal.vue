@@ -31,7 +31,7 @@ const requireConfirmation = () => {
         header: 'Are you sure?',
         message: 'Please confirm to proceed.',
         accept: () => {
-            updateApplicationStatus(statusType); // update to status 1
+            updateApplicationStatus(1); // update to status 1
         },
         reject: () => {
             toast.add({
@@ -51,7 +51,7 @@ const updateApplicationStatus = async (status) => {
     try {
         const response = await axios.post(route('applications.updateStatus'), {
             id: props.applicationId,
-            status: status_type
+            status: 1
         })
 
         toast.add({
@@ -112,7 +112,7 @@ const updateApplicationStatus = async (status) => {
     <!-- Submit Button -->
     <Button
       @click="requireConfirmation"
-      class="w-full bg-[#004D40] hover:bg-sky-500 transition-colors text-white"
+      class="w-full bg-green-900 hover:bg-green-500 transition-colors text-white"
       :disabled="isLoading"
     ><LoaderCircle
         v-if="isLoading"

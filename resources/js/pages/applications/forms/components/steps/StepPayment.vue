@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive,watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -66,6 +66,20 @@ const submitStep = () => {
     remarks: payment.remarks
   })
 }
+watch(
+  () => props.form,
+  (val) => {
+    if (!val) return
+
+    payment.official_receipt = val.official_receipt ?? ''
+    payment.permit_fee = val.permit_fee ?? 500
+    payment.date_of_payment = val.date_of_payment
+        ? val.date_of_payment.slice(0, 10)
+        : ''
+    payment.remarks = val.remarks ?? ''
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <template>

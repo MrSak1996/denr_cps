@@ -142,16 +142,7 @@ onMounted(() => {
                 </h1>
 
                 <div class="flex items-center gap-6">
-                    <a href="#" class="text-gray-600 dark:text-gray-300 hover:text-red-500">
-                        Home
-                    </a>
-                    <a href="#" class="text-gray-600 dark:text-gray-300 hover:text-red-500">
-                        About
-                    </a>
-                    <a href="#" class="text-gray-600 dark:text-gray-300 hover:text-red-500">
-                        Contact
-                    </a>
-
+                  
                     <Link v-if="$page.props.auth.user" :href="route('applications.pending_application')"
                         class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
                         Dashboard

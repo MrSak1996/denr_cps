@@ -30,7 +30,7 @@ const suppliers = ref([
             {
                 name: '',
                 models: [
-                    { model: '', quantity: 1, serial_no: '' }
+                    { model: '', quantity: 1 }
                 ]
             }
         ]
@@ -51,7 +51,7 @@ const addSupplier = () => {
         brands: [
             {
                 name: '',
-                models: [{ model: '', quantity: 1, serial_no: '' }]
+                models: [{ model: '', quantity: 1 }]
             }
         ]
     })
@@ -67,7 +67,7 @@ Brand Functions
 const addBrand = (supplier: any) => {
     supplier.brands.push({
         name: '',
-        models: [{ model: '', quantity: 1, serial_no: '' }]
+        models: [{ model: '', quantity: 1}]
     })
 }
 
@@ -82,7 +82,6 @@ const addModel = (brand: any) => {
     brand.models.push({
         model: '',
         quantity: 1,
-        serial_no: ''
     })
 }
 
@@ -123,12 +122,12 @@ const cancel = () => {
             <div class="grid grid-cols-2 gap-4">
 
                 <FloatLabel>
-                    <InputText v-model="supplier.supplier_name" v-letters-only-uppercase class="w-full" />
+                    <InputText v-model="supplier.supplier_name"  class="w-full" />
                     <label>Supplier Name</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="supplier.supplier_address" v-letters-only-uppercase class="w-full" />
+                    <InputText v-model="supplier.supplier_address"  class="w-full" />
                     <label>Supplier Address</label>
                 </FloatLabel>
 
@@ -138,7 +137,7 @@ const cancel = () => {
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="supplier.issued_by" class="w-full" v-letters-only-uppercase />
+                    <InputText v-model="supplier.issued_by" class="w-full" />
                     <label>Issued By</label>
                 </FloatLabel>
 
@@ -192,11 +191,7 @@ const cancel = () => {
                         </template>
                     </Column>
 
-                    <Column header="Serial No">
-                        <template #body="slotProps">
-                            <InputText v-model="slotProps.data.serial_no" class="w-full" />
-                        </template>
-                    </Column>
+                   
 
                     <Column header="Action" style="width:80px">
                         <template #body="slotProps">

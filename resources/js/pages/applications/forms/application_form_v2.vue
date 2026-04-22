@@ -26,6 +26,7 @@ const { showPrivacyDialog, hasAgreedPrivacy, checkConsent, accept } = usePrivacy
 const form = ref({
     application_no: '',
     application_id: null
+
 })
 
 /* 🔥 SINGLE SOURCE OF TRUTH */
@@ -56,22 +57,25 @@ const nextStep = async (payload: any) => {
 
     try {
         if (currentStep.value === 1) {
-            const res = await saveApplicant({
-                ...payload,
-                application_type: payload.application_type
-            })
+                const res = await saveApplicant({
+                    ...payload,
+                    application_type: payload.application_type
+                })
 
-            toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 })
-            next()
+                toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 })
+                next()
 
-            router.visit(route('applications.create.citizen', {
-                application_id: form.value.application_id,
-                type: props.type,
-                step: currentStep.value
-            }), {
-                preserveState: true,
-                preserveScroll: true
-            })
+                router.visit(route('applications.create.citizen', {
+                    application_id: form.value.application_id,
+                    type: props.type,
+                    step: currentStep.value
+                }), {
+                    preserveState: true,
+                    preserveScroll: true
+                })
+            
+
+
         }
 
         else if (currentStep.value === 2) {
@@ -169,9 +173,34 @@ const loadReviewData = async () => {
     files.value = res.files
 }
 
+const loadExistingApplication = async () => {
+    const id = form.value.application_id
+    if (!id) return
+
+    try {
+        const res = await getApplicationReview(id)
+
+        application.value = res.application
+        suppliers.value = res.suppliers
+        files.value = res.files
+
+        // 🔥 Fill form so StepApplicant shows saved data
+        form.value = {
+            ...form.value,
+            ...res.application,
+            i_province: Number(res.application.i_province),
+            i_city_mun: Number(res.application.i_city_mun),
+            i_barangay: Number(res.application.i_barangay)
+        }
+
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 const goBack = () => {
     prevStep()
-
+    loadExistingApplication();
     router.visit(route('applications.create.citizen', {
         application_id: form.value.application_id,
         type: props.type,
@@ -188,29 +217,51 @@ watch(currentStep, async (step) => {
 })
 
 onMounted(async () => {
-    // ✅ Restore ID from URL
     if (props.application_id) {
         form.value.application_id = props.application_id
     }
 
-    // ❗ If no application → must show privacy
     if (!form.value.application_id) {
         showPrivacyDialog.value = true
         return
     }
 
-    // ✅ Check if user already accepted privacy
     const hasConsent = await checkConsent(form.value.application_id)
 
     if (!hasConsent) {
         showPrivacyDialog.value = true
     }
 
-    // ✅ Load review if step 4
-    if (currentStep.value === 4) {
-        await loadReviewData()
-    }
+    await loadExistingApplication()
 })
+
+// onMounted(async () => {
+//     // ✅ Restore ID from URL
+//     if (props.application_id) {
+//         form.value.application_id = props.application_id
+//     }
+
+//     // ❗ If no application → must show privacy
+//     if (!form.value.application_id) {
+//         showPrivacyDialog.value = true
+//         return
+//     }
+
+//     // ✅ Check if user already accepted privacy
+//     const hasConsent = await checkConsent(form.value.application_id)
+
+//     if (!hasConsent) {
+//         showPrivacyDialog.value = true
+//     }
+
+//     // ✅ Load review if step 4
+//     // if (currentStep.value === 4) {
+//     //     await loadReviewData()
+//     // }
+//     if (form.value.application_id) {
+//         await loadExistingApplication()
+//     }
+// })
 </script>
 
 <template>

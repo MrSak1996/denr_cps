@@ -71,7 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('applications.pending_application');
 
         Route::get('{id}/view', [ApplicationController::class, 'view'])->name('applications.view');
-        Route::get('{id}/edit', [ApplicationController::class, 'edit'])->name('applications.edit');
+        // Route::get('{id}/edit', [ApplicationController::class, 'edit'])->name('applications.edit');
 
         Route::post('updateStatus', [ApplicationController::class, 'updateStatus'])->name('applications.updateStatus');
 

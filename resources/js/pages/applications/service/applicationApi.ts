@@ -1,9 +1,21 @@
 import axios from 'axios'
 
 export const saveApplicant = async (payload: any) => {
-    const res = await axios.post('/api/chainsaw/apply', payload)
+    const formData = new FormData()
+
+    Object.keys(payload).forEach((key) => {
+        formData.append(key, payload[key])
+    })
+
+    const res = await axios.post('/api/chainsaw/apply', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
+
     return res.data
 }
+
 export const saveCompanyApplication = async (payload: any) => {
     const formData = new FormData()
 

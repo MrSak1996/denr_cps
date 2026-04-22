@@ -153,12 +153,25 @@ const handleAcceptPrivacy = async () => {
 }
 
 const supplierSaved = async (data: any) => {
-    suppliers.value = data
+     try {
+        suppliers.value = data
 
-    await saveSupplierInfo({
-        suppliers: data,
-        application_id: form.value.application_id
-    })
+        await saveSupplierInfo({
+            suppliers: data,
+            application_id: form.value.application_id
+        })
+
+        toast.add({
+            severity: 'success',
+            summary: 'Saved',
+            detail: 'Supplier Information successfully saved',
+            life: 3000
+        })
+
+        return true // ✅ signal success
+    } catch (e) {
+        return false
+    }
 }
 
 const loadReviewData = async () => {

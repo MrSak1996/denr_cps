@@ -103,9 +103,9 @@ const handleFileUpload = (event: Event, field: string | null) => {
 const handleSupplierSaved = async (data: any) => {
     const success = await emit('supplierSaved', data)
 
-    if (success) {
-        defaultSupplierDialog.value = false
-    }
+    setTimeout(() => {
+        defaultSupplierDialog.value = false;
+    }, 2000);
 }
 
 /* -------------------------------------------------------
@@ -130,17 +130,11 @@ const submitStep = () => {
 
             <!-- Supplier Dialog -->
             <Dialog v-model:visible="defaultSupplierDialog" modal header="Supplier Form">
-                <ChainsawSupplierForm
-                    @cancel="defaultSupplierDialog = false"
-                    @save="handleSupplierSaved"
-                />
+                <ChainsawSupplierForm @cancel="defaultSupplierDialog = false" @save="handleSupplierSaved" />
             </Dialog>
 
             <!-- Open Dialog -->
-            <Button
-                class="w-full bg-blue-900 hover:bg-blue-700"
-                @click="defaultSupplierDialog = true"
-            >
+            <Button class="w-full bg-blue-900 hover:bg-blue-700" @click="defaultSupplierDialog = true">
                 Chainsaw Supplier Form
             </Button>
 
@@ -159,8 +153,7 @@ const submitStep = () => {
                 </label>
 
                 <div
-                    class="relative mt-2 flex h-[330px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-blue-400 bg-white transition hover:bg-blue-50"
-                >
+                    class="relative mt-2 flex h-[330px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-blue-400 bg-white transition hover:bg-blue-50">
                     <MonitorUp :size="64" class="mb-4 h-12 w-12 text-blue-400" />
 
                     <p class="mb-2 text-center text-sm text-gray-700">
@@ -170,12 +163,9 @@ const submitStep = () => {
                         PDF only, max 5MB
                     </p>
 
-                    <input
-                        type="file"
-                        accept="application/pdf"
+                    <input type="file" accept="application/pdf"
                         class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                        @change="(e) => handleFileUpload(e, uploadType)"
-                    />
+                        @change="(e) => handleFileUpload(e, uploadType)" />
                 </div>
             </div>
 
@@ -185,28 +175,20 @@ const submitStep = () => {
             </div>
 
             <!-- Actions -->
-            <div
-                :class="[
-                    'w-full pt-6',
-                    currentStep > 1 ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
-                ]"
-            >
-                <Button
-                    v-if="currentStep > 1"
-                    @click="$emit('back')"
-                    class="w-full bg-gray-300 hover:bg-gray-400"
-                >
+            <div :class="[
+                'w-full pt-6',
+                currentStep > 1 ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
+            ]">
+                <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
                     Back
                 </Button>
 
-                <Button
-                    :disabled="isProcessing"
+                <Button :disabled="isProcessing"
                     class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white"
-                    @click="submitStep"
-                >
+                    @click="submitStep">
                     {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
                 </Button>
-                
+
             </div>
 
         </Fieldset>
