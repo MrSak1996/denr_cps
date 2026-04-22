@@ -740,10 +740,12 @@ const nextStep = async () => {
 const saveCompanyApplication = async () => {
     isLoading.value = true;
     isloadingSpinner.value = false;
+    const applicationId = page.props.id;
 
     const formData = new FormData();
     formData.append('request_letter', company_form.request_letter);
     formData.append('soc_certificate', company_form.soc_certificate);
+    formData.append('id', applicationId);
 
     try {
         const response = await insertFormData(
@@ -789,12 +791,13 @@ const saveCompanyApplication = async () => {
 const submitChainsawForm = async () => {
     isLoading.value = true;
     console.log(props.application);
-    const applicationId = getApplicationIdFromUrl();
-
+    const applicationId = page.props.id;
+    const application_no = page.props.application_no;
+    const application_type = page.props.application_type;
     try {
         const formData = new FormData();
 
-        formData.append('id', company_form.id);
+        formData.append('id', applicationId);
         formData.append('applicant_type', applicationData.value.application_type);
 
         // Example for first supplier
@@ -866,15 +869,17 @@ const submitORPayment = async () => {
     isLoading.value = true;
     isloadingSpinner.value = true;
 
-    const applicationId = getApplicationIdFromUrl();
-    const urlParams = new URLSearchParams(window.location.search);
-    const application_type = urlParams.get('type');
+    const applicationId = page.props.id;
+    const application_no = page.props.application_no;
+    const application_type = page.props.application_type;
+
     const formData = new FormData();
+
     formData.append('id', applicationId);
     formData.append('applicant_type', application_type);
     formData.append('official_receipt', payment_form.official_receipt);
     formData.append('permit_fee', payment_form.permit_fee);
-    formData.append('application_no', applicationData.value.application_no);
+    formData.append('application_no', application_no);
     formData.append('or_copy', payment_form.or_copy);
     formData.append('uploaded_by', userId);
 
@@ -896,28 +901,31 @@ const submitORPayment = async () => {
             life: 3000
         });
 
-        const newApplicationId = response.data.application_id;
+        const newApplicationId =
+            response.data.application_id || applicationId;
 
         router.get(
             route('applications.index', {
                 application_id: newApplicationId,
-                type: 'company',
+                type: application_type,
                 step: 4
             })
         );
 
         return true;
+
     } catch (error) {
-        console.error('Failed to save payment details:', error);
+        console.error(error);
 
         toast.add({
             severity: 'error',
             summary: 'Failed',
-            detail: 'There was an error saving the application.',
+            detail: 'There was an error saving the payment details.',
             life: 3000
         });
 
         return false;
+
     } finally {
         isLoading.value = false;
         isloadingSpinner.value = false;
@@ -1651,6 +1659,7 @@ onMounted(() => {
                 </div>
             </Fieldset>
         </div>
+
         <div v-if="currentStep === 3" class="space-y-6">
             <Fieldset legend="Payment of Application Fee" :toggleable="false">
                 <!-- <div v-if="isLoading"

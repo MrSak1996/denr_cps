@@ -164,7 +164,7 @@ class ApplicationController extends Controller
         try {
 
             $application = ChainsawIndividualApplication::updateOrCreate(
-                ['application_no' => $request->input('application_no')], // 🔥 match condition
+                ['id' => $request->input('id')], // 🔥 match condition
                 [
                     'application_status' => self::STATUS_DRAFT,
                     'application_type' => $request->input('application_type'),
