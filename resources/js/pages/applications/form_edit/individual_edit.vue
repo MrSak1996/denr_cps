@@ -991,7 +991,7 @@ const getApplicantFile = async (application_id) => {
 
 const individualRequirements = computed(() =>
     assessmentRows.value.filter(
-        r => r.application_type === 'individual'
+        r => r.application_type === 'Individual'
     )
 )
 
@@ -1739,7 +1739,7 @@ onMounted(() => {
                 Return Application
             </Button>
             <Button v-else-if="individual_form.status_id === 1 || [1, 2, 3].includes(currentStep)"
-                class="ml-auto bg-blue-900 w-full" @click="nextStep">
+                class="ml-auto bg-blue-900 w-full h-[250]" @click="nextStep">
                 <Send />
                 Save as Draft
             </Button>

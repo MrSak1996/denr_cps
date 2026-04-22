@@ -100,9 +100,12 @@ const handleFileUpload = (event: Event, field: string | null) => {
 /* -------------------------------------------------------
 | SUPPLIER HANDLER (FIXED EMIT)
 ------------------------------------------------------- */
-const handleSupplierSaved = (data: any) => {
-    emit('supplierSaved', data)
-    defaultSupplierDialog.value = false
+const handleSupplierSaved = async (data: any) => {
+    const success = await emit('supplierSaved', data)
+
+    if (success) {
+        defaultSupplierDialog.value = false
+    }
 }
 
 /* -------------------------------------------------------
