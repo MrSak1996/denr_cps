@@ -42,7 +42,7 @@ Route::middleware(['auth', 'verified'])
             $application_id,
             $type
         ) {
-            $step = 1; // default start step (you can later compute last saved step)
+            $step = 4; // default start step (you can later compute last saved step)
 
             $view = $type === 'Company'
                 ? 'applications/forms/company_application_form'

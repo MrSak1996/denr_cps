@@ -97,7 +97,7 @@ const handleImageUpload = (event: Event, field: string) => {
     toast.add({
         severity: 'success',
         summary: 'Uploaded',
-        detail: 'Image uploaded successfully.',
+        detail: 'This is a valid file.',
         life: 3000
     })
 }

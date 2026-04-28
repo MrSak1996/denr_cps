@@ -161,6 +161,20 @@ const supplierSaved = async (data: any) => {
     }
 }
 
+const submitAndContinue = async (data:any) => {
+       router.visit(route('applications.pending_application'), {
+                preserveState: true,
+                preserveScroll: true
+            })
+
+     toast.add({
+            severity: 'success',
+            summary: 'Saved',
+            detail: 'Application successfully saved!',
+            life: 3000
+        })
+}
+
 const loadReviewData = async () => {
     const id = form.value.application_id
 
@@ -275,7 +289,7 @@ onMounted(async () => {
                 <div class="space-y-6 p-6">
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack"
+                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack" @submit="submitAndContinue"
                         @supplierSaved="supplierSaved" />
                 </div>
 

@@ -35,15 +35,15 @@ onMounted(() => {
         getDownloadCount(item.id);
     });
 });
-onMounted(async () => {
+// onMounted(async () => {
 
 
-    const data = await ProductService.getProducts(userId);
-    products.value = data;
-    products.value.forEach((item) => {
-        getDownloadCount(item.id);
-    });
-});
+//     const data = await ProductService.getProducts(userId);
+//     products.value = data;
+//     products.value.forEach((item) => {
+//         getDownloadCount(item.id);
+//     });
+// });
 
 const STATUS_DRAFT = 1;
 const STATUS_FOR_REVIEW_EVALUATION = 2;
@@ -618,33 +618,30 @@ const getDownloadCount = async (application_id) => {
             <Column header="Action" :exportable="false" style="min-width: 8rem">
                 <template #body="{ data }">
 
-                    <Link :href="route('applications.edit', { id: data.id, type: data.application_type })"
-                        class="mr-2 inline-flex items-center justify-center bg-green-700 text-white rounded-md px-3 py-2 hover:bg-green-600">
-                        <EyeIcon :size="15" />
-                    </Link>
+                       <!-- v-if="[STATUS_DRAFT, 25].includes(data.application_status)" -->
                         <Link
-                            v-if="[STATUS_DRAFT, 25].includes(data.application_status)"
+                         
                             :href="route('applications.edit', {
-                                id: data.id,
+                                application_id: data.id,
                                 type: data.application_type
                             })"
+
                         class="mr-2 inline-flex items-center justify-center bg-orange-700 text-white rounded-md px-3 py-2 hover:bg-orange-600">
                         <SquarePen :size="16" />
                     </Link>
 
 
 
-                    <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"
+                    <!-- <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"
                         :disabled="(downloadCount[data.id] ?? 0) >= 3" @click="generatePdf(data)"
                         style="background-color: #0D47A1;">
                         <PrinterCheck :size="15" />
 
-                    </Button>
+                    </Button> -->
 
 
                 </template>
             </Column>
-            <!-- <Column expander style="width: 5rem" /> -->
             <Column field="application_type" header="Application Type" sortable />
             <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
                 <template #body="{ data }">
@@ -670,10 +667,6 @@ const getDownloadCount = async (application_id) => {
                         <Tag :value="data.status_title" :severity="data.application_status >= 17 ? 'danger' : 'success'"
                             class=" mb-2" stlye="text-align:left !important;" />
 
-                        <!-- <button v-if="data.status_title === 'Returned to Technical Staff'"
-                            class="px-3 py-1 rounded bg-blue-600 text-white text-xs" @click="openCommentModal(data)">
-                            View Comments
-                        </button> -->
                     </div>
                 </template>
             </Column>
@@ -683,73 +676,6 @@ const getDownloadCount = async (application_id) => {
 
 
 
-            <!-- <template #expansion="slotProps">
-                <div class="p-4">
-                    <h5 class="font-semibold mb-2 flex items-center gap-2">
-                        <Info />
-                        Chainsaw Information
-                    </h5>
-                    <DataTable size="small" showGridlines :value="[slotProps.data]">
-                        <Column field="date_endorsed_tsd_chief" header="Date Endorsed by CENRO" sortable :headerStyle="{
-                            backgroundColor: '#0D47A1',
-                            color: '#fff',
-                            fontWeight: 'bold'
-                        }" />
-                        <Column field="date_received_penro_chief" header="Date Received by PENRO" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">d
-                        </Column>
-                        <Column header="Date Received by RO" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column header="Date Received by LPDD" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="date_received_fus_chief_chief" header="Date Received by FUS" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="application_type" header="Application Type" sortable style="min-width: 5rem"
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }" />
-
-                        <Column header="Type of Transaction" field="transaction_type" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }" />
-
-
-
-                        <Column field="sex" header="Sex" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column v-if="slotProps.data.application_type === 'Individual'"
-                            field="applicant_complete_address" header="Address" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column v-else field="company_address" header="Company Address" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-
-                        <Column field="permit_no" header="Permit Number" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="date_received_red" header="Date Approved/Signed" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="permit_validity" header="Date of Expiration" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="permit_fee" header="Transaction Fee" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-
-                        </Column>
-
-                        <Column field="date_of_payment" header="Date Paid" sortable style="min-width: 4rem"
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }" />
-                        <Column header="Remarks" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-
-                    </DataTable>
-                </div>
-
-            </template> -->
 
 
 
