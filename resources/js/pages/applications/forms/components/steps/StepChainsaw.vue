@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import axios from 'axios';
 import Select from 'primevue/select'
 import Fieldset from 'primevue/fieldset'
 import Dialog from 'primevue/dialog'
@@ -7,11 +8,14 @@ import FloatLabel from 'primevue/floatlabel'
 import { Button } from '@/components/ui/button'
 import ChainsawSupplierForm from '@/components/ChainsawSupplierForm.vue'
 import { MonitorUp } from 'lucide-vue-next'
-
+import InputText from 'primevue/inputtext'
+import { useToast } from 'primevue/usetoast';
+import FileCard from '../../file_card.vue';
 /* -------------------------------------------------------
 | EMITS (FIXED)
 ------------------------------------------------------- */
 const emit = defineEmits(['next', 'back', 'supplierSaved'])
+const PREFIX = 'DENR-IV-A-';
 
 /* -------------------------------------------------------
 | PROPS
@@ -21,13 +25,23 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    suppliers: {
+        type: Array,
+        default: () => []
+    },
     application_type: String,
     currentStep: Number,
+    mode: String,
+    files: Array,
     isProcessing: {
         type: Boolean,
         default: false
     }
 })
+const toast = useToast();
+
+const isEdit = computed(() => props.mode === 'edit');
+const isCreate = computed(() => props.mode === 'create');
 
 /* -------------------------------------------------------
 | STATE
@@ -39,7 +53,29 @@ const files = ref({
     affidavit: null,
     permit: null
 })
-
+const showFiles = computed(() => {
+    return (props.files || [])
+        .map((file: any) => ({
+            id: file.id,
+            application_type: file.application_type,
+            application_id: file.application_id,
+            attachment_id: file.attachment_id,
+            name: file.file_name,
+            url: file.file_url,
+        }))
+        .filter((file: any) =>
+            typeof file.name === 'string' &&
+            file.application_id === props.form.id && (
+                file.name.startsWith('notarized_affidavit_') ||
+                file.name.startsWith('mayors_permit_') ||
+                file.name.startsWith('permit_')
+            )
+        );
+});
+const showModal = ref(false);
+const selectedFileToUpdate = ref(null);
+const updateFileInput = ref(null);
+const selectedFile = ref<any>(null);
 /* -------------------------------------------------------
 | OPTIONS
 ------------------------------------------------------- */
@@ -60,20 +96,21 @@ const options = [
 /* -------------------------------------------------------
 | COMPUTED UPLOAD TYPE
 ------------------------------------------------------- */
-const uploadType = computed(() => {
-    const purpose = props.form.purpose
-
-    if (['For selling / re-selling', 'Forestry/landscaping service provider'].includes(purpose)) {
+const getUploadType = (purpose: string | null) => {
+    if (['For selling / re-selling', 'Forestry/landscaping service provider'].includes(purpose ?? '')) {
         return 'mayorDTI'
     }
+
     if (purpose === 'Other legal purpose(s)') {
         return 'affidavit'
     }
+
     if (purpose === 'Other Supporting Documents') {
         return 'permit'
     }
+
     return null
-})
+}
 
 /* -------------------------------------------------------
 | FILE HANDLER
@@ -96,7 +133,15 @@ const handleFileUpload = (event: Event, field: string | null) => {
 
     files.value[field] = file
 }
+const formData = computed(() => props.form);
 
+
+const permitNo = computed({
+    get: () => formData.value.permit_no || PREFIX,
+    set: (value) => {
+        formData.value.permit_no = value.startsWith(PREFIX) ? value : PREFIX + value;
+    },
+});
 /* -------------------------------------------------------
 | SUPPLIER HANDLER (FIXED EMIT)
 ------------------------------------------------------- */
@@ -120,17 +165,61 @@ const submitStep = () => {
         ...files.value
     })
 }
+const onFileChange = (e: Event, supplier: any) => {
+    const type = getUploadType(supplier.purpose)
+    handleFileUpload(e, type)
+}
+const openFileModal = (file: any) => {
+    selectedFile.value = file;
+    showModal.value = true;
+};
+const handleFileUpdate = async (event) => {
+    const newFile = event.target.files[0];
+    if (!newFile || !selectedFileToUpdate.value) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('application_id', selectedFileToUpdate.value.application_id);
+        formData.append('application_type', selectedFileToUpdate.value.application_type);
+        formData.append('file', newFile);
+        formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
+        formData.append('name', selectedFileToUpdate.value.name);
+
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        // Update file list
+        const updatedIndex = files.value.findIndex((f) => f.id === selectedFileToUpdate.value.id);
+        if (updatedIndex !== -1) {
+            files.value[updatedIndex] = response.data.updatedFile;
+        }
+
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'File updated successfully', life: 3000 });
+    } catch (error) {
+        console.error(error);
+        toast.add({ severity: 'error', summary: 'Successful', detail: 'Failed to update the file.', life: 3000 });
+    } finally {
+        updateFileInput.value.value = ''; // reset file input
+        selectedFileToUpdate.value = null;
+    }
+};
+const triggerUpdateFile = (file) => {
+    selectedFileToUpdate.value = file;
+    updateFileInput.value.click();
+};
 </script>
 
 <template>
     <div class="space-y-6">
-        <h2 class="text-xl font-semibold">Chainsaw Information</h2>
+        <h2 class="text-xl font-semibold">Chainsaw Information {{ isCreate }}</h2>
 
         <Fieldset legend="Chainsaw Information">
 
             <!-- Supplier Dialog -->
             <Dialog v-model:visible="defaultSupplierDialog" modal header="Supplier Form">
-                <ChainsawSupplierForm @cancel="defaultSupplierDialog = false" @save="handleSupplierSaved" />
+                <ChainsawSupplierForm :supplierData=props.suppliers @cancel="defaultSupplierDialog = false"
+                    @save="handleSupplierSaved" />
             </Dialog>
 
             <!-- Open Dialog -->
@@ -139,39 +228,64 @@ const submitStep = () => {
             </Button>
 
             <!-- Purpose -->
-            <div class="mt-6">
+            <div class="mt-6 grid gap-4 md:grid-cols-3">
                 <FloatLabel>
-                    <Select v-model="props.form.purpose" :options="options" class="w-full" />
+                    <InputText v-model="props.form.application_no" :disabled="isEdit" class="w-full" readonly />
+                    <label>Application No.</label>
+                </FloatLabel>
+
+                <FloatLabel>
+                    <InputText v-model="permitNo"  :disabled="isEdit" class="w-full" readonly />
+                    <label>Permit No.</label>
+                </FloatLabel>
+            </div>
+
+            <div v-for="(supplier, index) in suppliers" :key="index" class="mt-6">
+                <FloatLabel>
+                    <Select v-model="supplier.purpose" :options="options" class="w-full" />
                     <label>Purpose of Purchase</label>
                 </FloatLabel>
             </div>
 
-            <!-- Dynamic Upload -->
-            <div v-if="uploadType" class="mt-6">
-                <label class="text-sm font-medium">
-                    Upload Required Document
-                </label>
+              <div class="mb-3" v-if="isEdit">
+                <div class="container">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal" @updateFile="triggerUpdateFile"/>
+                    </div>
+                </div>
+                <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
 
-                <div
+            </div>
+
+            <div v-else v-for="(supplier, index) in suppliers" :key="index" class="mt-6">
+
+                <!-- ✅ SHOW ONLY IN CREATE MODE AND ONLY IF TYPE EXISTS -->
+                <div v-if="getUploadType(supplier.purpose)"
                     class="relative mt-2 flex h-[330px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-blue-400 bg-white transition hover:bg-blue-50">
+                    <label class="text-sm font-medium">
+                        Upload Required Document
+                    </label>
                     <MonitorUp :size="64" class="mb-4 h-12 w-12 text-blue-400" />
 
                     <p class="mb-2 text-center text-sm text-gray-700">
                         Drag & drop file or click to upload
                     </p>
+
                     <p class="text-center text-xs text-gray-400">
                         PDF only, max 5MB
                     </p>
 
                     <input type="file" accept="application/pdf"
                         class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                        @change="(e) => handleFileUpload(e, uploadType)" />
+                        @change="(e) => onFileChange(e, supplier)" />
                 </div>
-            </div>
 
-            <!-- No Upload -->
-            <div v-else class="p-4 text-gray-600 bg-gray-100 rounded">
-                No additional documents required.
+                <!-- ❌ SHOW ONLY IN CREATE MODE BUT NO TYPE -->
+                <div v-else-if="isCreate && !getUploadType(supplier.purpose)"
+                    class="p-4 text-gray-600 bg-gray-100 rounded mt-2">
+                    No required document for this purpose.
+                </div>
+
             </div>
 
             <!-- Actions -->

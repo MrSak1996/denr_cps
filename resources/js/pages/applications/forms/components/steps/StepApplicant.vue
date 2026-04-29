@@ -50,15 +50,21 @@ const city_mun_opts = ref([]);
 const barangay_opts = ref([]);
 
 const files = computed(() => {
-    return (props.files || []).map((file: any) => ({
-        id: file.id,
-        application_type: file.application_type,
-        application_id: file.application_id,
-        attachment_id: file.attachment_id,
-        name: file.file_name,
-        url: file.file_url,
-    }));
+    return (props.files || [])
+        .map((file: any) => ({
+            id: file.id,
+            application_type: file.application_type,
+            application_id: file.application_id,
+            attachment_id: file.attachment_id,
+            name: file.file_name,
+            url: file.file_url,
+        }))
+        .filter((file: any) =>
+            typeof file.name === 'string' &&
+            file.name.startsWith('valid_id_')
+        );
 });
+
 
 // default date only if empty
 if (!props.form.date_applied) {
@@ -139,7 +145,7 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post('http://localhost:8000/api/files/update', formData, {
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
 
@@ -260,12 +266,12 @@ onMounted(async () => {
         <Fieldset legend="Chainsaw Application">
             <div class="mt-4 grid gap-4 md:grid-cols-3">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" class="w-full" readonly />
+                    <InputText v-model="props.form.application_no" :disabled="isEdit" class="w-full" readonly />
                     <label>Application No.</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="permitNo" class="w-full" readonly />
+                    <InputText v-model="permitNo" class="w-full":disabled="isEdit" readonly />
                     <label>Permit No.</label>
                 </FloatLabel>
             </div>

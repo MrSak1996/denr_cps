@@ -27,10 +27,6 @@ createInertiaApp({
         ),
     setup({ el, App, props, plugin }) {
         const app = createApp({ render: () => h(App, props) });
-
-        // app.directive('letters-only-uppercase', lettersOnlyUppercase);
-        // app.directive('letters-numbers-dash-uppercase', lettersNumbersDashUppercase);
-
         app.use(plugin)
             .use(PrimeVue, {
                 theme: {

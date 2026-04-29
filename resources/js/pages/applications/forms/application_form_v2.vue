@@ -25,6 +25,7 @@ const props = defineProps({
     mode: String,
 });
 const isEdit = computed(() => props.mode === 'edit');
+const isCreate = computed(() => props.mode === 'create');
 
 const { currentStep, next, prevStep } = useApplicationStepper(props.step);
 
@@ -69,11 +70,14 @@ const nextStep = async (payload: any) => {
             if (props.mode == 'edit') {
                 const res = await saveApplicant({
                     ...payload,
+                    mode:isEdit,
                     encoded_by:userId,
                     application_type: payload.application_type,
                 });
-                Object.assign(form.value, res.application);
                 form.value.application_id = res.application_id;
+                Object.assign(form.value, res.application);
+            
+
 
 
                 toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 });
@@ -250,7 +254,7 @@ const goBack = () => {
         route('applications.edit', {
             application_id: form.value.application_id,
             type: props.type,
-            // step: currentStep.value,
+            step: currentStep.value,
             // mode:'edit'
         }),
         {
@@ -259,6 +263,16 @@ const goBack = () => {
         },
     );
 };
+
+watch(currentStep, async (step) => {
+    if (step === 2) {
+        await loadExistingApplication(); // 🔥 ensure form is filled
+    }
+
+    if (step === 4) {
+        await loadReviewData();
+    }
+});
 
 watch(currentStep, async (step) => {
     if (step === 4) {
@@ -271,19 +285,21 @@ onMounted(async () => {
         form.value.application_id = props.application_id;
     }
 
-    if(!isEdit)
-    {
-        if (!form.value.application_id) {
-        showPrivacyDialog.value = true;
-        return;
-    }
+    // if(isCreate)
+    // {
+    //     if (!form.value.application_id) {
+    //     showPrivacyDialog.value = true;
+    //     return;
+    // }
 
-    const hasConsent = await checkConsent(form.value.application_id);
+    // const hasConsent = await checkConsent(form.value.application_id);
 
-    if (!hasConsent) {
-        showPrivacyDialog.value = true;
-    }
-    }
+    // if (!hasConsent) {
+    //     showPrivacyDialog.value = true;
+    // }
+    // }else{
+
+    // }
     
 
     await loadExistingApplication();
@@ -298,10 +314,19 @@ onMounted(async () => {
             <div class="box">
                 <Toast />
                 <div class="space-y-6 p-6">
-                    <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
-                        :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack" :mode="props.mode"
-                        @supplierSaved="supplierSaved" />
+                    <component :is="activeComponent" 
+                    :application="application" 
+                    :form="form" 
+                    :suppliers="suppliers"
+                    :application_type="type" 
+                    :isProcessing="isProcessing" 
+                    :currentStep="currentStep"
+                    :supplier="suppliers" 
+                    :files="files" 
+                    @next="nextStep" 
+                    @back="goBack" 
+                    :mode="props.mode"
+                    @supplierSaved="supplierSaved" />
                 </div>
 
                 <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"

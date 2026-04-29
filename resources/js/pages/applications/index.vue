@@ -57,7 +57,7 @@ const getApplicationDetails = async () => {
 
     try {
         const { data } = await axios.get(
-            `http://localhost:8000/api/getApplicationDetails/${applicationId}`
+            `https://cps.denrcalabarzon.com/api/getApplicationDetails/${applicationId}`
         );
         applicationData.value = data?.data ?? [];
     } catch (error) {
