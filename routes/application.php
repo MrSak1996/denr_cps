@@ -11,39 +11,47 @@ Route::middleware(['auth', 'verified'])
         Route::get('/index', [ApplicationController::class, 'index'])
             ->name('applications.index');
 
-        Route::get('/create/business/{application_id?}/{type?}/{step?}', function (
-            $application_id = null,
-            $type = 'Company',
-            $step = 1
-        ) {
-            return Inertia::render('applications/forms/company_application_form', [
-                'application_id' => $application_id,
-                'type' => $type,
-                'step' => (int) $step,
-            ]);
-        })->name('applications.create.business');
-
-        // ✅ SINGLE CLEAN DYNAMIC ROUTE (CITIZEN)
-        Route::get('/create/citizen/{application_id?}/{type?}/{step?}', function (
-            $application_id = null,
-            $type = 'Individual',
-            $step = 1
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE - CITIZEN
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/create/citizen/{application_id?}', function (
+            $application_id = null
         ) {
             return Inertia::render('applications/forms/application_form_v2', [
                 'application_id' => $application_id,
-                'type' => $type,
-                'step' => (int) $step,
+                'type' => 'Individual',
+                'step' => 1,
+                'mode' => 'create',
             ]);
         })->name('applications.create.citizen');
 
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE - BUSINESS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/create/business/{application_id?}', function (
+            $application_id = null
+        ) {
+            return Inertia::render('applications/forms/company_application_form', [
+                'application_id' => $application_id,
+                'type' => 'Company',
+                'step' => 1,
+                'mode' => 'create',
+            ]);
+        })->name('applications.create.business');
 
-        // EDIT APPLICATION
+        /*
+        |--------------------------------------------------------------------------
+        | EDIT APPLICATION
+        |--------------------------------------------------------------------------
+        */
         Route::get('/edit/{application_id}/{type}', function (
             $application_id,
             $type
         ) {
-            $step = 1; // default start step (you can later compute last saved step)
-
             $view = $type === 'Company'
                 ? 'applications/forms/company_application_form'
                 : 'applications/forms/application_form_v2';
@@ -51,7 +59,8 @@ Route::middleware(['auth', 'verified'])
             return Inertia::render($view, [
                 'application_id' => $application_id,
                 'type' => $type,
-                'step' => $step,
+                'step' => 1,
+                'mode' => 'edit',
             ]);
         })->name('applications.edit');
     });

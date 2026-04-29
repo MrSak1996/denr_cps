@@ -114,49 +114,6 @@
                     </tr>
                 </tbody>
             </table>
-
-            <!-- Onsite Validation -->
-            <!-- <table class="mt-4 min-w-full border border-gray-300 rounded-lg bg-white" v-if="!isDraft">
-                <thead class="bg-blue-900 text-white">
-                    <tr>
-                        <th class="px-3 py-2 border" colspan="2">FOR ONSITE VALIDATION / INSPECTION</th>
-                    </tr>
-                </thead>
-                <tbody v-if="company_form.findings !== null && company_form.recommendations !== null">
-                    <tr>
-                        <td class="px-3 py-2 border font-medium">Findings</td>
-                        <td class="px-3 py-2 border">
-                            <textarea v-model="company_form.findings" class="form-control w-full" rows="3"
-                                placeholder="Enter findings..." />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="px-3 py-2 border font-medium">Recommendations</td>
-                        <td class="px-3 py-2 border">
-                            <textarea v-model="company_form.recommendations" class="form-control w-full" rows="3"
-                                placeholder="Enter recommendations..." />
-                        </td>
-                    </tr>
-                </tbody>
-                <tbody v-else>
-                    <tr>
-                        <td class="px-3 py-2 border font-medium">Findings</td>
-                        <td class="px-3 py-2 border">
-                            <textarea :value="onsite.findings" class="form-control w-full" rows="3"
-                                placeholder="Enter findings..."
-                                @input="$emit('update-onsite', { field: 'findings', value: $event.target.value })" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="px-3 py-2 border font-medium">Recommendations</td>
-                        <td class="px-3 py-2 border">
-                            <textarea :value="onsite.recommendations" class="form-control w-full" rows="3"
-                                placeholder="Enter recommendations..."
-                                @input="$emit('update-onsite', { field: 'recommendations', value: $event.target.value })" />
-                        </td>
-                    </tr>
-                </tbody>
-            </table> -->
         </div>
     </Fieldset>
 </template>

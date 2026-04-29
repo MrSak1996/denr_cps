@@ -1,188 +1,220 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, defineAsyncComponent, watch } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router,usePage } from '@inertiajs/vue3';
 
-import AppLayout from '@/layouts/AppLayout.vue'
-import Dialog from 'primevue/dialog'
-import Checkbox from 'primevue/checkbox'
-import Button from 'primevue/button'
-import Toast from 'primevue/toast'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue';
+
+import AppLayout from '@/layouts/AppLayout.vue';
+import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
+import Dialog from 'primevue/dialog';
+import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
-import { usePrivacyConsent } from './composables/usePrivacyConsent'
-import { useApplicationStepper } from './composables/useApplicationStepper'
-import { saveApplicant, saveChainsaw, savePayment, saveSupplierInfo, getApplicationReview } from '../service/applicationApi'
+import { getApplicationReview, saveApplicant, saveChainsaw, savePayment, saveSupplierInfo, updateApplicant } from '../service/applicationApi';
+import { useApplicationStepper } from './composables/useApplicationStepper';
+import { usePrivacyConsent } from './composables/usePrivacyConsent';
+import { UserRoundIcon } from 'lucide-vue-next';
+const page = usePage();
+
+const userId = page.props.auth?.user?.id;
 
 const props = defineProps({
     application_id: [String, Number, null],
     step: Number,
-    type: String
-})
+    type: String,
+    mode: String,
+});
+const isEdit = computed(() => props.mode === 'edit');
 
-const { currentStep, next, prevStep } = useApplicationStepper(props.step)
+const { currentStep, next, prevStep } = useApplicationStepper(props.step);
 
-const { showPrivacyDialog, hasAgreedPrivacy, checkConsent, accept } = usePrivacyConsent()
+const { showPrivacyDialog, hasAgreedPrivacy, checkConsent, accept } = usePrivacyConsent();
 
 const form = ref({
     application_no: '',
-    application_id: null
-
-})
+    application_id: null,
+});
 
 /* 🔥 SINGLE SOURCE OF TRUTH */
-const application = ref<any>({})
-const suppliers = ref<any[]>([])
-const files = ref([])
-const isProcessing = ref(false)
-const defaultSupplierDialog = ref(false)
+const application = ref<any>({});
+const suppliers = ref<any[]>([]);
+const files = ref([]);
+const isProcessing = ref(false);
+const defaultSupplierDialog = ref(false);
 const toast = useToast();
 
 /* Lazy components */
-const StepApplicant = defineAsyncComponent(() => import('./components/steps/StepApplicant.vue'))
-const StepChainsaw = defineAsyncComponent(() => import('./components/steps/StepChainsaw.vue'))
-const StepPayment = defineAsyncComponent(() => import('./components/steps/StepPayment.vue'))
-const StepReview = defineAsyncComponent(() => import('./components/steps/StepReview.vue'))
+const StepApplicant = defineAsyncComponent(() => import('./components/steps/StepApplicant.vue'));
+const StepChainsaw = defineAsyncComponent(() => import('./components/steps/StepChainsaw.vue'));
+const StepPayment = defineAsyncComponent(() => import('./components/steps/StepPayment.vue'));
+const StepReview = defineAsyncComponent(() => import('./components/steps/StepReview.vue'));
 
-const activeComponent = computed(() => ({
-    1: StepApplicant,
-    2: StepChainsaw,
-    3: StepPayment,
-    4: StepReview
-}[currentStep.value]))
+const activeComponent = computed(
+    () =>
+        ({
+            1: StepApplicant,
+            2: StepChainsaw,
+            3: StepPayment,
+            4: StepReview,
+        })[currentStep.value],
+);
 
 /* 🔥 MAIN STEPPER LOGIC */
 const nextStep = async (payload: any) => {
-    if (isProcessing.value) return
-    isProcessing.value = true
+    if (isProcessing.value) return;
+    isProcessing.value = true;
 
     try {
         if (currentStep.value === 1) {
+            if (props.mode == 'edit') {
                 const res = await saveApplicant({
                     ...payload,
-                    application_type: payload.application_type
-                })
+                    encoded_by:userId,
+                    application_type: payload.application_type,
+                });
+                Object.assign(form.value, res.application);
+                form.value.application_id = res.application_id;
 
-                toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 })
-                next()
 
-                router.visit(route('applications.create.citizen', {
+                toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 });
+                next();
+
+            } else {
+                const res = await saveApplicant({
+                    ...payload,
+                    mode: isEdit,
+                    application_type: payload.application_type,
+                });
+
+                toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 });
+                next();
+
+                router.visit(
+                    route('applications.create.citizen', {
+                        application_id: form.value.application_id,
+                        type: props.type,
+                        step: currentStep.value,
+                    }),
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                    },
+                );
+            }
+
+        } else if (currentStep.value === 2) {
+            const res = await saveChainsaw(
+                {
+                    ...payload,
+                    suppliers: suppliers.value,
+                    application_type: payload.application_type,
+                },
+                form.value.application_id,
+            );
+
+            toast.add({ severity: 'success', summary: 'Saved', detail: 'Chainsaw saved', life: 3000 });
+            next();
+
+            router.visit(
+                route('applications.create.citizen', {
                     application_id: form.value.application_id,
                     type: props.type,
-                    step: currentStep.value
-                }), {
+                    step: currentStep.value,
+                }),
+                {
                     preserveState: true,
-                    preserveScroll: true
-                })
-            
+                    preserveScroll: true,
+                },
+            );
+        } else if (currentStep.value === 3) {
+            const res = await savePayment(
+                {
+                    ...payload,
+                    application_type: payload.application_type,
+                },
+                form.value.application_id,
+            );
 
+            toast.add({ severity: 'success', summary: 'Saved', detail: 'Payment saved', life: 3000 });
+            next();
 
+            router.visit(
+                route('applications.create.citizen', {
+                    application_id: form.value.application_id,
+                    type: props.type,
+                    step: currentStep.value,
+                }),
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
         }
-
-        else if (currentStep.value === 2) {
-            const res = await saveChainsaw({
-                ...payload,
-                suppliers: suppliers.value,
-                application_type: payload.application_type,
-            }, form.value.application_id)
-
-
-            toast.add({ severity: 'success', summary: 'Saved', detail: 'Chainsaw saved', life: 3000 })
-            next()
-
-            router.visit(route('applications.create.citizen', {
-                application_id: form.value.application_id,
-                type: props.type,
-                step: currentStep.value
-            }), {
-                preserveState: true,
-                preserveScroll: true
-            })
-        }
-
-        else if (currentStep.value === 3) {
-            const res = await savePayment({
-                ...payload,
-                application_type: payload.application_type,
-            }, form.value.application_id)
-
-            toast.add({ severity: 'success', summary: 'Saved', detail: 'Payment saved', life: 3000 })
-            next()
-
-            router.visit(route('applications.create.citizen', {
-                application_id: form.value.application_id,
-                type: props.type,
-                step: currentStep.value
-            }), {
-                preserveState: true,
-                preserveScroll: true
-            })
-        }
-
     } catch (error: any) {
-        console.error(error)
+        console.error(error);
         toast.add({
             severity: 'error',
             summary: 'Error',
             detail: error?.response?.data?.message || 'Something went wrong',
             life: 4000,
-        })
+        });
     } finally {
-        isProcessing.value = false
+        isProcessing.value = false;
     }
-}
+};
 
 /* Privacy */
 const handleAcceptPrivacy = async () => {
-    const data = await accept()
-    form.value.application_no = data.application_no
-    form.value.application_id = data.application_id
-    showPrivacyDialog.value = false
-}
+    const data = await accept();
+    form.value.application_no = data.application_no;
+    form.value.application_id = data.application_id;
+    showPrivacyDialog.value = false;
+};
 
 const supplierSaved = async (data: any) => {
     try {
-        suppliers.value = data
+        suppliers.value = data;
 
         await saveSupplierInfo({
             suppliers: data,
-            application_id: form.value.application_id
-        })
+            application_id: form.value.application_id,
+        });
 
         toast.add({
             severity: 'success',
             summary: 'Saved',
             detail: 'Supplier Information successfully saved',
-            life: 3000
-        })
+            life: 3000,
+        });
 
-        return true // ✅ signal success
+        return true; // ✅ signal success
     } catch (e) {
-        return false
+        return false;
     }
-}
+};
 
 const loadReviewData = async () => {
-    const id = form.value.application_id
+    const id = form.value.application_id;
 
-    if (!id) return
+    if (!id) return;
 
-    const res = await getApplicationReview(id)
+    const res = await getApplicationReview(id);
 
-    application.value = res.application
-    suppliers.value = res.suppliers
-    files.value = res.files
-}
+    application.value = res.application;
+    suppliers.value = res.suppliers;
+    files.value = res.files;
+};
 
 const loadExistingApplication = async () => {
-    const id = form.value.application_id
-    if (!id) return
+    const id = form.value.application_id;
+    if (!id) return;
 
     try {
-        const res = await getApplicationReview(id)
+        const res = await getApplicationReview(id);
 
-        application.value = res.application
-        suppliers.value = res.suppliers
-        files.value = res.files
+        application.value = res.application;
+        suppliers.value = res.suppliers;
+        files.value = res.files;
 
         // 🔥 Fill form so StepApplicant shows saved data
         form.value = {
@@ -190,78 +222,58 @@ const loadExistingApplication = async () => {
             ...res.application,
             i_province: Number(res.application.i_province),
             i_city_mun: Number(res.application.i_city_mun),
-            i_barangay: Number(res.application.i_barangay)
-        }
-
+            i_barangay: Number(res.application.i_barangay),
+        };
     } catch (error) {
-        console.error(error)
+        console.error(error);
     }
-}
+};
 
 const goBack = () => {
-    prevStep()
+    prevStep();
     loadExistingApplication();
-    router.visit(route('applications.create.citizen', {
-        application_id: form.value.application_id,
-        type: props.type,
-        step: currentStep.value
-    }), {
-        preserveState: true,
-        preserveScroll: true
-    })
-}
+    router.visit(
+        route('applications.edit', {
+            application_id: form.value.application_id,
+            type: props.type,
+            // step: currentStep.value,
+            // mode:'edit'
+        }),
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
+    );
+};
+
 watch(currentStep, async (step) => {
     if (step === 4) {
-        await loadReviewData()
+        await loadReviewData();
     }
-})
+});
 
 onMounted(async () => {
     if (props.application_id) {
-        form.value.application_id = props.application_id
+        form.value.application_id = props.application_id;
     }
 
-    if (!form.value.application_id) {
-        showPrivacyDialog.value = true
-        return
+    if(!isEdit)
+    {
+        if (!form.value.application_id) {
+        showPrivacyDialog.value = true;
+        return;
     }
 
-    const hasConsent = await checkConsent(form.value.application_id)
+    const hasConsent = await checkConsent(form.value.application_id);
 
     if (!hasConsent) {
-        showPrivacyDialog.value = true
+        showPrivacyDialog.value = true;
     }
+    }
+    
 
-    await loadExistingApplication()
-})
-
-// onMounted(async () => {
-//     // ✅ Restore ID from URL
-//     if (props.application_id) {
-//         form.value.application_id = props.application_id
-//     }
-
-//     // ❗ If no application → must show privacy
-//     if (!form.value.application_id) {
-//         showPrivacyDialog.value = true
-//         return
-//     }
-
-//     // ✅ Check if user already accepted privacy
-//     const hasConsent = await checkConsent(form.value.application_id)
-
-//     if (!hasConsent) {
-//         showPrivacyDialog.value = true
-//     }
-
-//     // ✅ Load review if step 4
-//     // if (currentStep.value === 4) {
-//     //     await loadReviewData()
-//     // }
-//     if (form.value.application_id) {
-//         await loadExistingApplication()
-//     }
-// })
+    await loadExistingApplication();
+});
 </script>
 
 <template>
@@ -270,40 +282,40 @@ onMounted(async () => {
     <AppLayout>
         <div class="flex flex-col gap-6 rounded-xl p-4 sm:grid-cols-3">
             <div class="box">
-
                 <Toast />
                 <div class="space-y-6 p-6">
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack"
+                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack" :mode="props.mode"
                         @supplierSaved="supplierSaved" />
                 </div>
 
                 <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"
                     :draggable="false" :style="{ width: '500px' }">
                     <div class="space-y-4 text-sm text-gray-700">
-                        <p> In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process
-                            your
-                            personal information solely for the purpose of processing your Chainsaw Purchase System.
+                        <p>
+                            In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process
+                            your personal information solely
+                            for the purpose of processing your Chainsaw Purchase System.
                         </p>
                         <p>Your data will be treated confidentially and will not be shared without your consent unless
-                            required
-                            by law.</p>
+                            required by law.</p>
                         <div class="mt-4 flex items-start gap-2">
-                            <Checkbox v-model="hasAgreedPrivacy" binary /> <label class="text-sm"> I have read and agree
-                                to the
-                                Data Privacy Policy. </label>
+                            <Checkbox v-model="hasAgreedPrivacy" binary />
+                            <label class="text-sm"> I have read and agree to the Data Privacy Policy. </label>
                         </div>
-                    </div> <template #footer> <Button label="Decline" class="p-button-text"
-                            @click="router.get(route('applications.create.citizen'))">Decline</Button> <Button
-                            label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
-                            @click="handleAcceptPrivacy">Agree & Continue</Button> </template>
+                    </div>
+                    <template #footer>
+                        <Button label="Decline" class="p-button-text"
+                            @click="router.get(route('applications.create.citizen'))">Decline</Button>
+                        <Button label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
+                            @click="handleAcceptPrivacy">Agree & Continue</Button>
+                    </template>
                 </Dialog>
             </div>
         </div>
     </AppLayout>
 </template>
-
 
 <style scoped>
 .box {
@@ -341,7 +353,9 @@ onMounted(async () => {
     background-color: #22c55e;
     /* green-500 */
     color: white;
-    transition: background-color 0.3s ease, filter 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        filter 0.3s ease;
 }
 
 /* Hover effect */

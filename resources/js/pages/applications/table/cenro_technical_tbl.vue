@@ -1,49 +1,30 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { router, usePage, Link } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { Send, SquarePen, EyeIcon, Trash, Undo2, Edit2, Info, PrinterCheck } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, reactive, ref } from 'vue';
 import FileCard from '../forms/file_card.vue';
-import { ProductService } from '../service/ProductService';
-import { Link, usePage } from '@inertiajs/vue3';
 import ReusableConfirmDialog from '../modal/endorsed_modal.vue';
+import { ProductService } from '../service/ProductService';
+import { PrinterCheck, BadgeCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2, SquarePen } from 'lucide-vue-next';
 
-import Toast from 'primevue/toast';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-
+import Toast from 'primevue/toast';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import DatePicker from 'primevue/datepicker';
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
 import Tag from 'primevue/tag';
-import DatePicker from 'primevue/datepicker';
+import Button from 'primevue/button';
 
 const page = usePage();
 const userId = page.props.auth.user.id;
 const officeId = page.props.auth.user.office_id;
-
-onMounted(() => {
-
-    ProductService.getProducts(userId).then((data) => (products.value = data));
-    products.value.forEach((item) => {
-        getDownloadCount(item.id);
-    });
-});
-onMounted(async () => {
-
-
-    const data = await ProductService.getProducts(userId);
-    products.value = data;
-    products.value.forEach((item) => {
-        getDownloadCount(item.id);
-    });
-});
 
 const STATUS_DRAFT = 1;
 const STATUS_FOR_REVIEW_EVALUATION = 2;
@@ -76,6 +57,7 @@ const STATUS_RETURN_TO_TECHNICAL_STAFF = 24;
 const toast = useToast();
 const dt = ref();
 const products = ref([]);
+
 const downloadCount = ref({});
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
@@ -88,12 +70,11 @@ const loadingRouting = ref(false);
 const loadingComment = ref(false);
 const confirmDialogRef = ref<any>(null);
 
-
 const showFileModal = ref(false);
 const selectedFile = ref(null);
-const selectedFileToUpdate = ref(null)
-const updateFileInput = ref(null)
-const expandedRows = ref<Record<number, boolean>>({})
+const selectedFileToUpdate = ref(null);
+const updateFileInput = ref(null);
+const expandedRows = ref<Record<number, boolean>>({});
 
 const product = ref({});
 const signatories_data = ref({});
@@ -110,9 +91,9 @@ const statuses = ref([
 const brands = ref([
     {
         name: '',
-        models: [{ model: '', quantity: 1 }]
-    }
-])
+        models: [{ model: '', quantity: 1 }],
+    },
+]);
 const applicationDetails = ref(null);
 const files = ref([]);
 const formatCurrency = (value) => {
@@ -226,9 +207,6 @@ const openFileModal = async (data) => {
     showModal.value = true;
 };
 
-
-
-
 const openFile = (file) => {
     selectedFile.value = file;
     showFileModal.value = true;
@@ -258,7 +236,7 @@ const editableChainsaw = reactive({});
 
 const getApplicantFile = async (id) => {
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicantFile/${id}`);
+        const response = await axios.get(`http://localhost:8000/api/getApplicantFile/${id}`);
         if (response.data.status && Array.isArray(response.data.data)) {
             files.value = response.data.data.map((file) => ({
                 attachment_id: file.id,
@@ -278,22 +256,18 @@ const getApplicantFile = async (id) => {
 };
 
 const loadBrands = async (id) => {
-
-
-    const res = await axios.get(
-        `https://cps.denrcalabarzon.com/api/chainsaw/${id}/brands`
-    )
+    const res = await axios.get(`http://localhost:8000/api/chainsaw/${id}/brands`);
 
     // If data exists, overwrite
     if (res.data.length) {
-        brands.value = res.data
+        brands.value = res.data;
     }
-}
+};
 
 const getApplicationDetails = async (id) => {
     isloadingSpinner.value = true;
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicationDetails/${id}`);
+        const response = await axios.get(`http://localhost:8000/api/getApplicationDetails/${id}`);
         applicationDetails.value = response.data.data;
         await getApplicantFile(id);
         loadBrands(id);
@@ -308,7 +282,7 @@ const getApplicationDetails = async (id) => {
 const getSignatories = async () => {
     isloadingSpinner.value = true;
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getSignatories`);
+        const response = await axios.get(`http://localhost:8000/api/getSignatories`);
         signatories_data.value = response.data;
         return response.data.data;
     } catch (error) {
@@ -319,11 +293,13 @@ const getSignatories = async () => {
 };
 
 const viewApplication = (data, type) => {
-    router.visit(route('applications.index', {
-        application_id: data.id,
-        type: data.application_type.toLowerCase()
-    }))
-}
+    router.visit(
+        route('applications.index', {
+            application_id: data.id,
+            type: data.application_type.toLowerCase(),
+        }),
+    );
+};
 
 const editProduct = (product) => {
     // Example: go to /applications/123/edit
@@ -339,7 +315,7 @@ const saveApplicantDetails = async () => {
     try {
         isloadingSpinner.value = true;
 
-        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateApplicantDetails/${applicationDetails.value.id}`, editableApplicant);
+        const response = await axios.put(`http://localhost:8000/api/updateApplicantDetails/${applicationDetails.value.id}`, editableApplicant);
 
         if (response.data.status === 'success') {
             toast.add({
@@ -376,7 +352,7 @@ const saveChainsawDetails = async () => {
     try {
         isloadingSpinner.value = true;
 
-        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateChainsawInformation/${applicationDetails.value.id}`, editableChainsaw);
+        const response = await axios.put(`http://localhost:8000/api/updateChainsawInformation/${applicationDetails.value.id}`, editableChainsaw);
 
         if (response.data.status === 'success') {
             toast.add({
@@ -407,7 +383,6 @@ const saveChainsawDetails = async () => {
         isloadingSpinner.value = false;
     }
 };
-
 
 // =============================
 // Toggle Edit States
@@ -462,7 +437,7 @@ const handleEndorseApplicationStatus = async () => {
         isloadingSpinner.value = true;
 
         // Send PUT request to update the application status to 'endorsed'
-        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateApplicationStatus/${applicationDetails.value.id}`, {
+        const response = await axios.put(`http://localhost:8000/api/updateApplicationStatus/${applicationDetails.value.id}`, {
             status: 4, //ENDORSED Only update the status field
         });
 
@@ -498,42 +473,40 @@ const handleEndorseApplicationStatus = async () => {
 };
 
 const triggerUpdateFile = (file) => {
-    selectedFileToUpdate.value = file
-    updateFileInput.value.click()
-}
+    selectedFileToUpdate.value = file;
+    updateFileInput.value.click();
+};
 
 const handleFileUpdate = async (event) => {
-    const newFile = event.target.files[0]
-    if (!newFile || !selectedFileToUpdate.value) return
+    const newFile = event.target.files[0];
+    if (!newFile || !selectedFileToUpdate.value) return;
 
     try {
-        const formData = new FormData()
-        formData.append('application_id', selectedFileToUpdate.value.application_id)
-        formData.append('file', newFile)
-        formData.append('attachment_id', selectedFileToUpdate.value.attachment_id)
-        formData.append('name', selectedFileToUpdate.value.name)
+        const formData = new FormData();
+        formData.append('application_id', selectedFileToUpdate.value.application_id);
+        formData.append('file', newFile);
+        formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
+        formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+        const response = await axios.post('http://localhost:8000/api/files/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
-        })
+        });
 
         // Update file list
-        const updatedIndex = files.value.findIndex(f => f.id === selectedFileToUpdate.value.id)
+        const updatedIndex = files.value.findIndex((f) => f.id === selectedFileToUpdate.value.id);
         if (updatedIndex !== -1) {
-            files.value[updatedIndex] = response.data.updatedFile
+            files.value[updatedIndex] = response.data.updatedFile;
         }
 
         toast.add({ severity: 'success', summary: 'Successful', detail: 'File updated successfully', life: 3000 });
-
     } catch (error) {
-        console.error(error)
+        console.error(error);
         toast.add({ severity: 'error', summary: 'Successful', detail: 'Failed to update the file.', life: 3000 });
-
     } finally {
-        updateFileInput.value.value = '' // reset file input
-        selectedFileToUpdate.value = null
+        updateFileInput.value.value = ''; // reset file input
+        selectedFileToUpdate.value = null;
     }
-}
+};
 
 // -------------------------
 // Row expand/collapse handlers
@@ -546,20 +519,19 @@ const onRowExpand = (event: { originalEvent: Event; data: Customer }) => {
     expandedRows.value = {
         ...expandedRows.value,
         [event.data.id]: true,
-    }
-}
+    };
+};
 
 const onRowCollapse = (event?: { originalEvent: Event; data: Customer }) => {
     if (event) {
-        const { [event.data.id]: _, ...rest } = expandedRows.value
-        expandedRows.value = rest
+        const { [event.data.id]: _, ...rest } = expandedRows.value;
+        expandedRows.value = rest;
     } else {
-        expandedRows.value = {}
+        expandedRows.value = {};
     }
-}
+};
 
 // const generatePdf = async (data) => {
-
 
 //     const response = await axios.post(`/api/${data.id}/generate-table-pdf`, {
 //         method: 'POST',
@@ -570,17 +542,16 @@ const onRowCollapse = (event?: { originalEvent: Event; data: Customer }) => {
 //     console.log(json); // check your Laravel response
 // };
 const generatePdf = (data) => {
-    window.open(`/permit/print/${data.id}`, "_blank"); //MULTIPLE BRANDS AND MODELS
-
+    window.open(`/permit/print/${data.id}`, '_blank'); //MULTIPLE BRANDS AND MODELS
 };
 
 const getDownloadCount = async (application_id) => {
     try {
-        const response = await axios.get('https://cps.denrcalabarzon.com/api/applicationDownloads', {
+        const response = await axios.get('http://localhost:8000/api/applicationDownloads', {
             params: {
                 application_id: application_id,
-                userId: userId
-            }
+                userId: userId,
+            },
         });
 
         downloadCount.value[application_id] = response.data.count;
@@ -589,21 +560,31 @@ const getDownloadCount = async (application_id) => {
         downloadCount.value[application_id] = 0;
     }
 };
-
-
+onMounted(() => {
+    applicantsTable();
+    // products.value.forEach((item) => {
+    //     getDownloadCount(item.id);
+    // });
+});
+const applicantsTable = async () => {
+    try {
+        const { applications: applicationData } = await ProductService.getProducts(userId);
+        products.value = applicationData;
+    } catch (error) {
+        console.error('Error fetching applications:', error);
+    }
+};
 </script>
 
 <template>
     <div class="flex flex-col gap-4 rounded-xl p-4">
         <Toast />
-
-        <DataTable ref="dt" size="small" v-model:expandedRows="expandedRows" :value="products" dataKey="id" stripedRows
-            showGridlines :paginator="true" :rows="10" :filters="filters" filterDisplay="menu"
+        <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="products" dataKey="id"
+            :paginator="true" :rows="20" :filters="filters" filterDisplay="menu"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
             :rowsPerPageOptions="[5, 10, 25]"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="scroll"
-            class="w-full text-sm" @rowExpand="onRowExpand" @rowCollapse="onRowCollapse" tableStyle="min-width: 60rem">
-
+            class="w-full text-sm">
             <template #header>
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <!-- <h4 class="m-0 font-semibold">Manage Products</h4> -->
@@ -617,31 +598,27 @@ const getDownloadCount = async (application_id) => {
             </template>
             <Column header="Action" :exportable="false" style="min-width: 8rem">
                 <template #body="{ data }">
-
-                    <Link :href="route('applications.edit', { id: data.id, type: data.application_type })"
-                        class="mr-2 inline-flex items-center justify-center bg-green-700 text-white rounded-md px-3 py-2 hover:bg-green-600">
-                        <EyeIcon :size="15" />
-                    </Link>
-                        <Link
-                            v-if="[STATUS_DRAFT, 25].includes(data.application_status)"
-                            :href="route('applications.edit', {
-                                id: data.id,
-                                type: data.application_type
-                            })"
-                        class="mr-2 inline-flex items-center justify-center bg-orange-700 text-white rounded-md px-3 py-2 hover:bg-orange-600">
+                    <Link v-if="[STATUS_DRAFT,STATUS_APPROVED_BY_RED,25].includes(data.application_status)" :href="route('applications.edit', {
+                        application_id: data.id,
+                        type: data.application_type,
+                    })
+                        "
+                        class="mr-2 inline-flex items-center justify-center rounded-md bg-orange-700 px-3 py-2 text-white hover:bg-orange-600">
                         <SquarePen :size="16" />
                     </Link>
-
-
-
                     <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"
                         :disabled="(downloadCount[data.id] ?? 0) >= 3" @click="generatePdf(data)"
                         style="background-color: #0D47A1;">
                         <PrinterCheck :size="15" />
 
                     </Button>
+                    <!-- 
+                    <Button 
+                        :disabled="(downloadCount[data.id] ?? 0) >= 3" @click="openFileModal(data)"
+                        style="background-color: #0D47A1;">
+                        <PrinterCheck :size="15" />
 
-
+                    </Button> -->
                 </template>
             </Column>
             <!-- <Column expander style="width: 5rem" /> -->
@@ -657,103 +634,13 @@ const getDownloadCount = async (application_id) => {
                 </template>
             </Column>
             <Column header="Applicant Name" style="min-width: 12rem">
-
                 <template #body="slotProps">
                     {{ slotProps.data.authorized_representative || slotProps.data.applicant_name }}
-                </template>
-
-            </Column>
-
-            <Column field="status_title" header="Status" sortable style="min-width: 12rem">
-                <template #body="{ data }">
-                    <div class="flex flex-col ">
-                        <Tag :value="data.status_title" :severity="data.application_status >= 17 ? 'danger' : 'success'"
-                            class=" mb-2" stlye="text-align:left !important;" />
-
-                        <!-- <button v-if="data.status_title === 'Returned to Technical Staff'"
-                            class="px-3 py-1 rounded bg-blue-600 text-white text-xs" @click="openCommentModal(data)">
-                            View Comments
-                        </button> -->
-                    </div>
                 </template>
             </Column>
 
             <Column header="Classification" field="classification" sortable></Column>
             <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
-
-
-
-            <!-- <template #expansion="slotProps">
-                <div class="p-4">
-                    <h5 class="font-semibold mb-2 flex items-center gap-2">
-                        <Info />
-                        Chainsaw Information
-                    </h5>
-                    <DataTable size="small" showGridlines :value="[slotProps.data]">
-                        <Column field="date_endorsed_tsd_chief" header="Date Endorsed by CENRO" sortable :headerStyle="{
-                            backgroundColor: '#0D47A1',
-                            color: '#fff',
-                            fontWeight: 'bold'
-                        }" />
-                        <Column field="date_received_penro_chief" header="Date Received by PENRO" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">d
-                        </Column>
-                        <Column header="Date Received by RO" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column header="Date Received by LPDD" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="date_received_fus_chief_chief" header="Date Received by FUS" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="application_type" header="Application Type" sortable style="min-width: 5rem"
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }" />
-
-                        <Column header="Type of Transaction" field="transaction_type" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }" />
-
-
-
-                        <Column field="sex" header="Sex" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column v-if="slotProps.data.application_type === 'Individual'"
-                            field="applicant_complete_address" header="Address" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column v-else field="company_address" header="Company Address" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-
-                        <Column field="permit_no" header="Permit Number" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="date_received_red" header="Date Approved/Signed" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="permit_validity" header="Date of Expiration" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-                        <Column field="permit_fee" header="Transaction Fee" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-
-                        </Column>
-
-                        <Column field="date_of_payment" header="Date Paid" sortable style="min-width: 4rem"
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }" />
-                        <Column header="Remarks" sortable
-                            :headerStyle="{ backgroundColor: '#0D47A1', color: '#fff', fontWeight: 'bold' }">
-                        </Column>
-
-                    </DataTable>
-                </div>
-
-            </template> -->
-
-
-
-
         </DataTable>
     </div>
     <ReusableConfirmDialog ref="confirmDialogRef" />
@@ -764,14 +651,10 @@ const getDownloadCount = async (application_id) => {
         </div>
 
         <div v-else-if="applicationDetails">
-
-
             <!-- Applicant Details -->
             <Fieldset legend="Applicant Details" :toggleable="true">
                 <div class="mb-4 flex items-center justify-between">
                     <h3 class="text-lg font-semibold">Applicant Details</h3>
-
-
                 </div>
 
                 <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-4 text-sm text-gray-800 md:grid-cols-2">
@@ -807,7 +690,6 @@ const getDownloadCount = async (application_id) => {
                         <span class="w-24 font-semibold">Applicant Name:</span>
                         <span v-if="!editState.applicant">{{ applicationDetails.first_name }} {{
                             applicationDetails.middle_name }} {{ applicationDetails.last_name }}</span>
-
                     </div>
                     <div class="flex items-center" v-else>
                         <span class="w-24 font-semibold">Company Name:</span>
@@ -851,7 +733,6 @@ const getDownloadCount = async (application_id) => {
             <!-- Chainsaw Information -->
             <Fieldset legend="Chainsaw Information" :toggleable="true">
                 <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-4 text-sm text-gray-800 md:grid-cols-2">
-
                     <div class="flex">
                         <span class="w-48 font-semibold">Permit Validity:</span>
                         <Tag :value="applicationDetails.permit_validity" severity="danger" />
@@ -884,7 +765,7 @@ const getDownloadCount = async (application_id) => {
 
                     <!-- ✅ Brands & Models -->
                     <div class="md:col-span-2">
-                        <span class="block mb-2 font-semibold">Chainsaw Details:</span>
+                        <span class="mb-2 block font-semibold">Chainsaw Details:</span>
 
                         <div v-for="(brand, bIndex) in brands" :key="bIndex"
                             class="mb-4 rounded-lg border bg-gray-50 p-4">
@@ -893,11 +774,11 @@ const getDownloadCount = async (application_id) => {
                                 <span class="ml-2">{{ brand.name }}</span>
                             </div>
 
-                            <table class="w-full text-sm border">
+                            <table class="w-full border text-sm">
                                 <thead class="bg-blue-900 text-white">
                                     <tr>
                                         <th class="px-3 py-2 text-left">Model</th>
-                                        <th class="px-3 py-2 text-center w-32">Quantity</th>
+                                        <th class="w-32 px-3 py-2 text-center">Quantity</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -909,13 +790,11 @@ const getDownloadCount = async (application_id) => {
                             </table>
                         </div>
                     </div>
-
                 </div>
             </Fieldset>
 
             <Fieldset legend="Registration Information">
-
-                <table class="w-full text-sm border border-gray-300">
+                <table class="w-full border border-gray-300 text-sm">
                     <thead class="bg-blue-900 text-white">
                         <tr>
                             <th class="px-3 py-2 text-left">Field</th>
@@ -926,7 +805,7 @@ const getDownloadCount = async (application_id) => {
                         <tr class="border-t border-gray-300">
                             <td class="px-3 py-2 font-semibold">Encoded By</td>
                             <td class="px-3 py-2">
-                                <Tag severity="success">{{ applicationDetails.registered_by }}</Tag><br>
+                                <Tag severity="success">{{ applicationDetails.registered_by }}</Tag><br />
                                 {{ applicationDetails.office_title }} - {{ applicationDetails.role_title }}
                             </td>
                         </tr>
@@ -936,14 +815,12 @@ const getDownloadCount = async (application_id) => {
                         </tr>
                     </tbody>
                 </table>
-
             </Fieldset>
 
             <!-- Uploaded Files Section -->
             <Fieldset legend="Uploaded Files" :toggleable="true">
                 <div class="container">
                     <div class="file-list grid grid-cols-1 gap-2 md:grid-cols-2">
-
                         <FileCard v-for="(file, index) in files" :key="index" :file="file" @openPreview="openFile"
                             @updateFile="triggerUpdateFile" />
                     </div>
@@ -960,8 +837,6 @@ const getDownloadCount = async (application_id) => {
             </Dialog>
         </div>
     </Dialog>
-
-
 
     <Dialog v-model:visible="showCommentsModal" modal header="Comments" :style="{ width: '50vw' }">
         <div class="overflow-x-auto">
@@ -996,13 +871,10 @@ const getDownloadCount = async (application_id) => {
                                 })
                             }}
                         </td>
-
                     </tr>
-
                 </tbody>
             </table>
             <!-- Table -->
-
         </div>
     </Dialog>
 </template>

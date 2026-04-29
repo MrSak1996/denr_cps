@@ -124,7 +124,7 @@ class ApplicationController extends Controller
         // Create the application using the validated data
         // $validated['date_applied'] = \Carbon\Carbon::parse($request->date_applied)->format('Y-m-d');
         $application = ChainsawIndividualApplication::updateOrCreate(
-            ['application_no' => $request->input('application_no')],
+            ['id' => $request->input('id')],
             [
                 'application_status' => self::STATUS_DRAFT,
                 'application_type' => 'Individual',
@@ -165,30 +165,50 @@ class ApplicationController extends Controller
             ],
         ];
 
-        $folderPath = 'CHAINSAW_PERMITTING/Individual Applications/' . $applicationNo;
-        $results = [];
-        foreach ($filesToUpload as $inputName => $config) {
-            $checklist = AppChecklistEntry::create([
-                'parent_id' => $applicationId,
-                'chklist_id' => $config['requirement_id'],
-                'uploaded_at' => now(),
-            ]);
-            $result = $driveService->storeSingleAttachment(
-                $applicationNo,
-                $request->input('encoded_by'),
-                $request->file($inputName),
-                $applicationId,
-                $folderPath,
-                $config['folder_name'],
-                $checklist->id   // 🔥 IMPORTANT
-            );
-            $uploadResults[$inputName] = $result;
+        $uploadResults = [];
+
+        $isEdit = filter_var($request->mode, FILTER_VALIDATE_BOOLEAN);
+
+        if (!$isEdit) {
+
+            $filesToUpload = [
+                'valid_id' => [
+                    'folder_name' => 'Valid ID',
+                    'requirement_id' => 15
+                ],
+            ];
+
+            $folderPath = 'CHAINSAW_PERMITTING/Individual Applications/' . $applicationNo;
+
+            foreach ($filesToUpload as $inputName => $config) {
+
+                if ($request->hasFile($inputName)) {
+
+                    $checklist = AppChecklistEntry::create([
+                        'parent_id' => $applicationId,
+                        'chklist_id' => $config['requirement_id'],
+                        'uploaded_at' => now(),
+                    ]);
+
+                    $result = $driveService->storeSingleAttachment(
+                        $applicationNo,
+                        $request->input('encoded_by'),
+                        $request->file($inputName),
+                        $applicationId,
+                        $folderPath,
+                        $config['folder_name'],
+                        $checklist->id
+                    );
+
+                    $uploadResults[$inputName] = $result;
+                }
+            }
         }
 
 
         return response()->json([
             'message' => 'Application submitted successfully.',
-            'application_id' => $application->id,
+            'application_id' => $applicationId,
             'application' => $application,
             'google_drive' => $uploadResults,
 
@@ -759,10 +779,13 @@ class ApplicationController extends Controller
             $data = DB::table('denr_chainsaw.tbl_app_checklist_entry as e')
                 ->leftJoin('denr_chainsaw.tbl_app_permitchecklist as ap', 'ap.id', '=', 'e.chklist_id')
                 ->leftJoin('denr_chainsaw.tbl_application_attachments as aa', 'aa.checklist_entry_id', '=', 'e.id')
+                ->leftJoin('denr_chainsaw.tbl_application_checklist as ac', 'ac.id', '=', 'aa.application_id')
                 ->select(
+                    'ac.application_type',
                     'e.id as checklist_entry_id',
                     'ap.id as permit_checklist_id',
                     'aa.id as file_id',
+                    'aa.application_id',
                     'ap.requirement',
                     'e.answer',
                     'e.remarks',
@@ -1068,6 +1091,7 @@ class ApplicationController extends Controller
         try {
             // ✅ Step 1. Validate input
             $validated = $request->validate([
+                'application_type' => 'required|string',
                 'application_id' => 'required|exists:tbl_application_checklist,id',
                 'attachment_id' => 'required|integer|exists:tbl_application_attachments,id',
                 'file' => 'required|file|max:2048',
@@ -1130,7 +1154,12 @@ class ApplicationController extends Controller
             $filePrefix = $folderMap[$fileType]['prefix'];
 
             // ✅ Step 5. Build Google Drive folder path
-            $folderPath = "CHAINSAW_PERMITTING/Company Applications/{$application->application_no}/{$subFolder}";
+            $application_type = $request->application_type;
+            $mainFolder = $application_type === 'Individual'
+                ? 'Individual Applications'
+                : 'Company Applications';
+
+            $folderPath = "CHAINSAW_PERMITTING/{$mainFolder}/{$application->application_no}/{$subFolder}";
 
             // ✅ Step 6. Call service to replace file
             $result = $driveService->replaceAttachment(

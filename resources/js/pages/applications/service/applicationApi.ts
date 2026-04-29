@@ -16,6 +16,7 @@ export const saveApplicant = async (payload: any) => {
     return res.data
 }
 
+
 export const saveCompanyApplication = async (payload: any) => {
     const formData = new FormData()
 
