@@ -10,7 +10,7 @@ import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
-import { getApplicationReview, saveApplicant, saveChainsaw, savePayment, saveSupplierInfo, updateApplicant } from '../service/applicationApi';
+import { getApplicationReview, saveApplicant, saveChainsaw, savePayment, saveSupplierInfo } from '../service/applicationApi';
 import { useApplicationStepper } from './composables/useApplicationStepper';
 import { usePrivacyConsent } from './composables/usePrivacyConsent';
 import { UserRoundIcon } from 'lucide-vue-next';
@@ -192,6 +192,20 @@ const supplierSaved = async (data: any) => {
         return false;
     }
 };
+
+const submitAndContinue = async (data:any) => {
+       router.visit(route('applications.pending_application'), {
+                preserveState: true,
+                preserveScroll: true
+            })
+
+     toast.add({
+            severity: 'success',
+            summary: 'Saved',
+            detail: 'Application successfully saved!',
+            life: 3000
+        })
+}
 
 const loadReviewData = async () => {
     const id = form.value.application_id;

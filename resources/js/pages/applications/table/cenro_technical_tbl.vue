@@ -621,7 +621,6 @@ const applicantsTable = async () => {
                     </Button> -->
                 </template>
             </Column>
-            <!-- <Column expander style="width: 5rem" /> -->
             <Column field="application_type" header="Application Type" sortable />
             <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
                 <template #body="{ data }">

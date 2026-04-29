@@ -19,12 +19,18 @@ const props = defineProps({
     required: true
   },
   application: Object,
+  application_type: String,
+
   supplier: Array,
   files: Array
 })
 
-
-
+const save = () => {
+    emit('submit', {
+        ...props.form,
+        application_type: props.application_type
+    })
+}
 
 const applicationData = computed(() => props.application || {})
 
@@ -255,7 +261,13 @@ const formatDate = (date: any) => {
 
     <div class="grid grid-cols-2 gap-4">
       <Button variant="outline" @click="emit('back')">Back</Button>
-      <ConfirmModal class="w-full" :applicationId="Number(props.form.application_id)" :role_id="roleId" />
+      
+      <Button
+        class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white"        @click="save"
+      >
+        Save & Continue
+      </Button>
+      <!-- <ConfirmModal class="w-full" :applicationId="Number(props.form.application_id)" :role_id="roleId" /> -->
     </div>
   </div>
 </template>
