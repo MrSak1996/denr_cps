@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { reactive,watch } from 'vue'
+import { reactive, watch, computed,ref} from 'vue'
 import { Button } from '@/components/ui/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import FloatLabel from 'primevue/floatlabel'
 import Fieldset from 'primevue/fieldset'
-
+import FileCard from '../../file_card.vue'
+import Dialog from 'primevue/dialog'
 const emit = defineEmits(['next', 'back'])
 
 const props = defineProps({
@@ -14,13 +15,17 @@ const props = defineProps({
     required: true
   },
   application_type: String,
+  mode: String,
   currentStep: Number,
+  files: Array,
   isProcessing: {
     type: Boolean,
     default: false
   }
 })
 
+const isEdit = computed(() => props.mode === 'edit');
+const isCreate = computed(() => props.mode === 'create');
 /* ✅ Single source of truth */
 const payment = reactive({
   application_attachment_id: 0,
@@ -31,6 +36,11 @@ const payment = reactive({
   remarks: ''
 })
 
+const showModal = ref(false);
+const selectedFileToUpdate = ref(null);
+const updateFileInput = ref(null);
+const selectedFile = ref<any>(null);
+
 /* ✅ File upload handler */
 const handleORFileUpload = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -40,6 +50,32 @@ const handleORFileUpload = (event: Event) => {
 }
 
 /* ✅ Submit with validation */
+// const submitStep = () => {
+//   if (props.isProcessing) return
+
+//   if (!payment.official_receipt) {
+//     alert('O.R Number is required')
+//     return
+//   }
+
+//   if (!payment.or_copy) {
+//     alert('Please upload the Official Receipt file')
+//     return
+//   }
+
+//   emit('next', {
+//     ...props.form,
+//     application_id: props.form.application_id,
+//     application_type: props.application_type,
+
+//     // 🔥 FLATTEN PAYMENT (IMPORTANT)
+//     official_receipt: payment.official_receipt,
+//     permit_fee: payment.permit_fee,
+//     or_copy: payment.or_copy,
+//     date_of_payment: payment.date_of_payment,
+//     remarks: payment.remarks
+//   })
+// }
 const submitStep = () => {
   if (props.isProcessing) return
 
@@ -48,7 +84,8 @@ const submitStep = () => {
     return
   }
 
-  if (!payment.or_copy) {
+  // ✅ Only require file in CREATE mode
+  if (props.mode === 'create' && !payment.or_copy) {
     alert('Please upload the Official Receipt file')
     return
   }
@@ -58,14 +95,17 @@ const submitStep = () => {
     application_id: props.form.application_id,
     application_type: props.application_type,
 
-    // 🔥 FLATTEN PAYMENT (IMPORTANT)
     official_receipt: payment.official_receipt,
     permit_fee: payment.permit_fee,
-    or_copy: payment.or_copy,
+
+    // ✅ Only send file if exists
+    ...(payment.or_copy && { or_copy: payment.or_copy }),
+
     date_of_payment: payment.date_of_payment,
     remarks: payment.remarks
   })
 }
+
 watch(
   () => props.form,
   (val) => {
@@ -74,12 +114,44 @@ watch(
     payment.official_receipt = val.official_receipt ?? ''
     payment.permit_fee = val.permit_fee ?? 500
     payment.date_of_payment = val.date_of_payment
-        ? val.date_of_payment.slice(0, 10)
-        : ''
+      ? val.date_of_payment.slice(0, 10)
+      : ''
     payment.remarks = val.remarks ?? ''
   },
   { immediate: true, deep: true }
 )
+
+const showFiles = computed(() => {
+    return (props.files || [])
+        .map((file: any) => ({
+            id: file.id,
+            application_type: file.application_type,
+            application_id: file.application_id,
+            attachment_id: file.attachment_id,
+            name: file.file_name,
+            url: file.file_url,
+        }))
+        .filter((file: any) =>
+            typeof file.name === 'string' &&
+            file.application_id === props.form.id && (
+                file.name.startsWith('official_receipt')
+            )
+        );
+});
+
+const openFileModal = (file: any) => {
+    selectedFile.value = file;
+    showModal.value = true;
+};
+const triggerUpdateFile = (file) => {
+    selectedFileToUpdate.value = file;
+    updateFileInput.value.click();
+};
+const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    return url.replace('/view', '/preview');
+};
+
 </script>
 
 <template>
@@ -91,44 +163,40 @@ watch(
 
           <!-- Application No -->
           <FloatLabel>
-            <InputText
-              v-model="props.form.application_no"
-              disabled
-              class="w-full font-bold"
-            />
+            <InputText v-model="props.form.application_no" disabled class="w-full font-bold" />
             <label>Application No.</label>
           </FloatLabel>
 
           <!-- OR Number -->
           <FloatLabel>
-            <InputText
-              v-model="payment.official_receipt"
-              class="w-full"
-            />
+            <InputText v-model="payment.official_receipt" class="w-full" />
             <label>O.R No.</label>
           </FloatLabel>
 
           <!-- Fee -->
           <FloatLabel>
-            <InputNumber
-              v-model="payment.permit_fee"
-              class="w-full"
-            />
+            <InputNumber v-model="payment.permit_fee" class="w-full" />
             <label>Permit Fee</label>
           </FloatLabel>
 
           <!-- Date of Payment -->
           <FloatLabel>
-            <InputText
-              v-model="payment.date_of_payment"
-              type="date"
-              class="w-full"
-            />
+            <InputText v-model="payment.date_of_payment" type="date" class="w-full" />
             <label>Date of Payment</label>
           </FloatLabel>
 
           <!-- File Upload -->
-          <div class="md:col-span-2">
+          <div v-if="isEdit" class="md:col-span-2" >
+            <div class="container">
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal"
+                  @updateFile="triggerUpdateFile" />
+              </div>
+            </div>
+            <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
+
+          </div>
+          <div v-else class="md:col-span-2">
             <label class="text-sm font-medium">
               Upload Official Receipt
             </label>
@@ -138,12 +206,8 @@ watch(
                 {{ payment.or_copy ? payment.or_copy.name : 'Click to upload (.jpg, .jpeg, .pdf)' }}
               </span>
 
-              <input
-                type="file"
-                accept=".jpg,.jpeg,.pdf"
-                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                @change="handleORFileUpload"
-              />
+              <input type="file" accept=".jpg,.jpeg,.pdf"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" @change="handleORFileUpload" />
             </div>
           </div>
 
@@ -156,20 +220,17 @@ watch(
       'w-full pt-6',
       currentStep > 1 ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
     ]">
-      <Button
-        v-if="currentStep > 1"
-        @click="$emit('back')"
-        class="w-full bg-gray-300 hover:bg-gray-400"
-      >
+      <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
         Back
       </Button>
 
-      <Button
-        :disabled="isProcessing"
-        class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white"        @click="submitStep"
-      >
+      <Button :disabled="isProcessing"
+        class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="submitStep">
         {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
       </Button>
+       <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+            <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500" allow="autoplay"></iframe>
+        </Dialog>
     </div>
   </div>
 </template>

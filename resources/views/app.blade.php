@@ -33,7 +33,7 @@
         <title inertia>{{ config('app.name', 'Chainsaw Permit System') }}</title>
 
         <link rel="icon" href="/images/denr_logo.png" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/images/denr_logo.png" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/images/denr_logo.png">
 
         <!-- <link rel="preconnect" href="https://fonts.bunny.net">

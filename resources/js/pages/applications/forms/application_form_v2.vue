@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router,usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue';
 
@@ -67,42 +67,29 @@ const nextStep = async (payload: any) => {
 
     try {
         if (currentStep.value === 1) {
-            if (props.mode == 'edit') {
-                const res = await saveApplicant({
-                    ...payload,
-                    mode:isEdit,
-                    encoded_by:userId,
-                    application_type: payload.application_type,
-                });
-                form.value.application_id = res.application_id;
-                Object.assign(form.value, res.application);
-            
+            const res = await saveApplicant({
+                ...payload,
+                mode: props.mode, // ✅ send actual mode
+                encoded_by: userId,
+                application_type: payload.application_type,
+            });
 
+            // ✅ always sync application_id + form
+            form.value.application_id = res.application_id;
+            Object.assign(form.value, res.application);
 
+            toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 });
+            next();
 
-                toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 });
-                next();
-
-            } else {
-                const res = await saveApplicant({
-                    ...payload,
-                    mode: isEdit,
-                    application_type: payload.application_type,
-                });
-
-                toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 });
-                next();
-
+            // ✅ only redirect in create mode
+            if (isCreate.value) {
                 router.visit(
                     route('applications.create.citizen', {
                         application_id: form.value.application_id,
                         type: props.type,
                         step: currentStep.value,
                     }),
-                    {
-                        preserveState: true,
-                        preserveScroll: true,
-                    },
+                    { preserveState: true, preserveScroll: true }
                 );
             }
 
@@ -110,50 +97,52 @@ const nextStep = async (payload: any) => {
             const res = await saveChainsaw(
                 {
                     ...payload,
+                    mode: props.mode,
                     suppliers: suppliers.value,
                     application_type: payload.application_type,
                 },
-                form.value.application_id,
+                form.value.application_id
             );
 
             toast.add({ severity: 'success', summary: 'Saved', detail: 'Chainsaw saved', life: 3000 });
             next();
 
-            router.visit(
-                route('applications.create.citizen', {
-                    application_id: form.value.application_id,
-                    type: props.type,
-                    step: currentStep.value,
-                }),
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                },
-            );
+            if (isCreate.value) {
+                router.visit(
+                    route('applications.create.citizen', {
+                        application_id: form.value.application_id,
+                        type: props.type,
+                        step: currentStep.value,
+                    }),
+                    { preserveState: true, preserveScroll: true }
+                );
+            }
+
         } else if (currentStep.value === 3) {
             const res = await savePayment(
                 {
                     ...payload,
+                    mode: props.mode,
                     application_type: payload.application_type,
                 },
-                form.value.application_id,
+                form.value.application_id
             );
 
             toast.add({ severity: 'success', summary: 'Saved', detail: 'Payment saved', life: 3000 });
             next();
 
-            router.visit(
-                route('applications.create.citizen', {
-                    application_id: form.value.application_id,
-                    type: props.type,
-                    step: currentStep.value,
-                }),
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                },
-            );
+            if (isCreate.value) {
+                router.visit(
+                    route('applications.create.citizen', {
+                        application_id: form.value.application_id,
+                        type: props.type,
+                        step: currentStep.value,
+                    }),
+                    { preserveState: true, preserveScroll: true }
+                );
+            }
         }
+
     } catch (error: any) {
         console.error(error);
         toast.add({
@@ -197,18 +186,18 @@ const supplierSaved = async (data: any) => {
     }
 };
 
-const submitAndContinue = async (data:any) => {
-       router.visit(route('applications.pending_application'), {
-                preserveState: true,
-                preserveScroll: true
-            })
+const submitAndContinue = async (data: any) => {
+    router.visit(route('applications.pending_application'), {
+        preserveState: true,
+        preserveScroll: true
+    })
 
-     toast.add({
-            severity: 'success',
-            summary: 'Saved',
-            detail: 'Application successfully saved!',
-            life: 3000
-        })
+    toast.add({
+        severity: 'success',
+        summary: 'Saved',
+        detail: 'Application successfully saved!',
+        life: 3000
+    })
 }
 
 const loadReviewData = async () => {
@@ -225,6 +214,7 @@ const loadReviewData = async () => {
 
 const loadExistingApplication = async () => {
     const id = form.value.application_id;
+    console.log(id);
     if (!id) return;
 
     try {
@@ -263,6 +253,15 @@ const goBack = () => {
         },
     );
 };
+watch(
+    () => form.value.application_id,
+    async (id) => {
+        if (id) {
+            await loadExistingApplication();
+        }
+    },
+    { immediate: true }
+);
 
 watch(currentStep, async (step) => {
     if (step === 2) {
@@ -274,35 +273,24 @@ watch(currentStep, async (step) => {
     }
 });
 
-watch(currentStep, async (step) => {
-    if (step === 4) {
-        await loadReviewData();
-    }
-});
 
 onMounted(async () => {
-    if (props.application_id) {
+    // 🚫 Skip everything in edit 
+    if (props.mode === 'edit') {
         form.value.application_id = props.application_id;
     }
-
-    if(isCreate)
-    {
-        if (!form.value.application_id) {
-        showPrivacyDialog.value = true;
-        return;
-    }
-
-    const hasConsent = await checkConsent(form.value.application_id);
-
-    if (!hasConsent) {
-        showPrivacyDialog.value = true;
-    }
-    }else{
-
-    }
-    
-
     await loadExistingApplication();
+    // if (props.mode == 'edit') {
+    //     await loadExistingApplication();
+    // }else{
+    //     showPrivacyDialog.value = false;
+    //     const hasConsent = await checkConsent(form.value.application_id);
+
+    //     if (!hasConsent) {
+    //         showPrivacyDialog.value = true;
+    //     }
+
+    // }
 });
 </script>
 
@@ -314,19 +302,11 @@ onMounted(async () => {
             <div class="box">
                 <Toast />
                 <div class="space-y-6 p-6">
-                    <component :is="activeComponent" 
-                    :application="application" 
-                    :form="form" 
-                    :suppliers="suppliers"
-                    :application_type="type" 
-                    :isProcessing="isProcessing" 
-                    :currentStep="currentStep"
-                    :supplier="suppliers" 
-                    :files="files" 
-                    @next="nextStep" 
-                    @back="goBack" 
-                    :mode="props.mode"
-                    @supplierSaved="supplierSaved" />
+                    <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
+                        :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
+                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack" :mode="props.mode"
+                        @supplierSaved="supplierSaved"
+                        @submit="submitAndContinue"/>
                 </div>
 
                 <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"

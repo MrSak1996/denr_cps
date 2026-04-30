@@ -157,14 +157,18 @@ const handleSupplierSaved = async (data: any) => {
 | STEP SUBMIT
 ------------------------------------------------------- */
 const submitStep = () => {
-    if (props.isProcessing) return
+  if (props.isProcessing) return
 
-    emit('next', {
-        purpose: props.form.purpose,
-        application_type: props.application_type,
-        ...files.value
-    })
+  const purpose = props.suppliers.map(s => s.purpose)
+
+  emit('next', {
+    application_type: props.application_type,
+    purpose,
+    suppliers: props.suppliers,
+    ...files.value
+  })
 }
+
 const onFileChange = (e: Event, supplier: any) => {
     const type = getUploadType(supplier.purpose)
     handleFileUpload(e, type)
@@ -212,7 +216,7 @@ const triggerUpdateFile = (file) => {
 
 <template>
     <div class="space-y-6">
-        <h2 class="text-xl font-semibold">Chainsaw Information {{ isCreate }}</h2>
+        <h2 class="text-xl font-semibold">Chainsaw Information</h2>
 
         <Fieldset legend="Chainsaw Information">
 

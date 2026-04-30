@@ -125,14 +125,33 @@ class ChainsawController extends Controller
             $application = ChainsawIndividualApplication::findOrFail($request->id);
 
             $suppliers = json_decode($request->suppliers, true);
-            ChainsawPermittoSell::updateOrCreate(
-                ['application_id' => $application->id],
-                [
-                'purpose' => $request->purpose,
-            ]);
-          
 
-          
+            // get purpose from first supplier
+            $purpose = $suppliers[0]['purpose'] ?? null;
+
+            // if it's an array encoded as string
+            if (is_array($purpose)) {
+                $purpose = $purpose[0] ?? null;
+            }
+
+            // if it's JSON string like ["text"]
+            if (is_string($purpose)) {
+                $decoded = json_decode($purpose, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $purpose = $decoded[0] ?? null;
+                }
+            }
+
+            // optional cleanup of escaped characters
+            $purpose = stripslashes($purpose);
+
+            ChainsawPermittoSell::updateOrCreate(
+                ['application_id' => $request->id],
+                [
+                    'purpose' => $purpose,
+                ]
+            );
+
 
             $filesToUpload = [
                 'mayorDTI' => [
@@ -154,8 +173,8 @@ class ChainsawController extends Controller
             ];
 
             $folderPath = match ($request->application_type) {
-                'individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application->application_no}",
-                'company' => "CHAINSAW_PERMITTING/Company Applications/{$application->application_no}",
+                'Individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application->application_no}",
+                'Company' => "CHAINSAW_PERMITTING/Company Applications/{$application->application_no}",
                 default => "CHAINSAW_PERMITTING/Other/{$application->application_no}",
             };
 
@@ -190,6 +209,7 @@ class ChainsawController extends Controller
 
             return response()->json([
                 'message' => 'Chainsaw application saved successfully',
+                'purpose' => $purpose,
                 'application_id' => $application->id,
                 'google_drive' => $uploadResults,
             ], 201);
@@ -249,7 +269,7 @@ class ChainsawController extends Controller
     //         ], 500);
     //     }
     // }
-   
+
 
     public function updateApplicantDetails(Request $request, $id)
     {
@@ -415,7 +435,7 @@ class ChainsawController extends Controller
 
         foreach ($rows as $row) {
 
-            $supplierKey = $row->supplier_name.'_'.$row->permit_to_sell_no;
+            $supplierKey = $row->supplier_name . '_' . $row->permit_to_sell_no;
 
             if (! isset($suppliers[$supplierKey])) {
                 $suppliers[$supplierKey] = [

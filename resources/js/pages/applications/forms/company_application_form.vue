@@ -16,10 +16,8 @@ import { saveCompanyApplication, saveChainsaw, savePayment, saveSupplierInfo, ge
 const props = defineProps({
     application_id: [String, Number, null],
     step: Number,
-    type: {
-        type: String,
-        default: 'company' // ✅ NEVER undefined
-    }
+    type:String,
+    mode:String
 })
 
 const { currentStep, next, prevStep } = useApplicationStepper(props.step)
