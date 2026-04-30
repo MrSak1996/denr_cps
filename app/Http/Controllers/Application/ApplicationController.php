@@ -488,6 +488,8 @@ class ApplicationController extends Controller
         return DB::transaction(function () {
 
             $user = auth()->user();
+            $encodedBy = $request->user_id;
+
 
             if (! $user) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
@@ -531,7 +533,7 @@ class ApplicationController extends Controller
 
             $app = DB::table('tbl_application_checklist')->insertGetId([
                 'application_no' => $applicationNo,
-                'encoded_by' => $user->id,
+                'encoded_by' => $encodedBy,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
