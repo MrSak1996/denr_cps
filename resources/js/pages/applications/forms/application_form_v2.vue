@@ -169,7 +169,7 @@ const nextStep = async (payload: any) => {
 
 /* Privacy */
 const handleAcceptPrivacy = async () => {
-    const data = await accept();
+    const data = await accept(userId);
     form.value.application_no = data.application_no;
     form.value.application_id = data.application_id;
     showPrivacyDialog.value = false;
