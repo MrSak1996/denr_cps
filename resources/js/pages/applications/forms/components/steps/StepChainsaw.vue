@@ -31,9 +31,7 @@ const props = defineProps({
     },
     application_type: String,
     currentStep: Number,
-    mode:{
-        type: Boolean,
-    },
+    mode: String,
     files: Array,
     isProcessing: {
         type: Boolean,
@@ -42,8 +40,8 @@ const props = defineProps({
 })
 const toast = useToast();
 
-// const props.mode = computed(() => props.mode === 'edit');
-// const isCreate = computed(() => props.mode === 'create');
+const isEdit = computed(() => props.mode === 'edit');
+const isCreate = computed(() => props.mode === 'create');
 
 /* -------------------------------------------------------
 | STATE
@@ -214,7 +212,7 @@ const triggerUpdateFile = (file) => {
 
 <template>
     <div class="space-y-6">
-        <h2 class="text-xl font-semibold">Chainsaw Information</h2>
+        <h2 class="text-xl font-semibold">Chainsaw Information {{ isCreate }}</h2>
 
         <Fieldset legend="Chainsaw Information">
 
@@ -232,12 +230,12 @@ const triggerUpdateFile = (file) => {
             <!-- Purpose -->
             <div class="mt-6 grid gap-4 md:grid-cols-3">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" :disabled="props.mode === 'edit'" class="w-full" readonly />
+                    <InputText v-model="props.form.application_no" :disabled="props.mode === 'edit'"class="w-full" readonly />
                     <label>Application No.</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="permitNo"  :disabled="props.mode" class="w-full" readonly />
+                    <InputText v-model="permitNo"  :disabled="props.mode === 'edit'" class="w-full" readonly />
                     <label>Permit No.</label>
                 </FloatLabel>
             </div>
@@ -249,7 +247,7 @@ const triggerUpdateFile = (file) => {
                 </FloatLabel>
             </div>
 
-              <div class="mb-3" v-if="props.mode">
+              <div class="mb-3" v-if="isEdit">
                 <div class="container">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal" @updateFile="triggerUpdateFile"/>

@@ -139,7 +139,7 @@ $ php -S localhost:8000 -t examples/
 ```
 
 And then browsing to the host and port you specified
-(in the above example, `http://localhost:8000`).
+(in the above example, `https://cps.denrcalabarzon.com`).
 
 ### Basic Example ###
 
