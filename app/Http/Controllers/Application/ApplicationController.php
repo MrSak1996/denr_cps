@@ -483,7 +483,7 @@ class ApplicationController extends Controller
     //     });
     // }
 
-    public function generateApplicationNumber()
+    public function generateApplicationNumber(Request $request)
     {
         return DB::transaction(function () {
 

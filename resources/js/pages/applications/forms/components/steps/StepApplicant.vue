@@ -260,12 +260,12 @@ onMounted(async () => {
         <Fieldset legend="Chainsaw Application">
             <div class="mt-4 grid gap-4 md:grid-cols-3">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" class="w-full" readonly />
+                    <InputText v-model="props.form.application_no" class="w-full" readonly :disabled="isEdit" />
                     <label>Application No.</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="permitNo" class="w-full" readonly />
+                    <InputText v-model="permitNo" class="w-full" readonly :disabled="isEdit" />
                     <label>Permit No.</label>
                 </FloatLabel>
             </div>
@@ -275,14 +275,13 @@ onMounted(async () => {
                     <DatePicker v-model="props.form.date_applied" class="w-full" />
                     <label>Date Applied</label>
                 </FloatLabel>
-
                 <FloatLabel class="mt-2">
-                    <Select v-model="props.form.type_of_transaction" :options="['G2C', 'G2B', 'G2G']" class="w-full" />
+                    <Select v-model="props.form.type_of_transaction" :options="['G2C', 'G2B', 'G2G']" :disabled="isEdit" class="w-full" />
                     <label>Type of Transaction</label>
                 </FloatLabel>
 
                 <FloatLabel class="mt-2">
-                    <Select v-model="props.form.classification" :options="['Simple', 'Complex', 'Highly Technical']" class="w-full" />
+                    <Select v-model="props.form.classification" :options="['Simple', 'Complex', 'Highly Technical']" :disabled="isEdit" class="w-full" />
                     <label>Classification</label>
                 </FloatLabel>
             </div>
@@ -321,11 +320,16 @@ onMounted(async () => {
             <div class="mb-3" v-if="isEdit">
                 <div class="container">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <FileCard v-for="(file, index) in files" :key="index" :file="file" @openPreview="openFileModal" @updateFile="triggerUpdateFile"/>
+                        <FileCard
+                            v-for="(file, index) in files"
+                            :key="index"
+                            :file="file"
+                            @openPreview="openFileModal"
+                            @updateFile="triggerUpdateFile"
+                        />
                     </div>
                 </div>
                 <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
-
             </div>
             <div class="mb-3" v-else>
                 <div class="mt-2 grid gap-6 md:grid-cols-1">

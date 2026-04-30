@@ -20,8 +20,10 @@ export function usePrivacyConsent() {
         return hasConsent
     }
 
-    const generateApplicationNumber = async () => {
-        const res = await axios.get('/generateApplicationNumber')
+    const generateApplicationNumber = async (userId: any) => {
+    const res = await axios.get('/generateApplicationNumber', {
+        params: { user_id: userId }
+    });
 
         return {
             application_no: res.data.application_no,
@@ -29,12 +31,12 @@ export function usePrivacyConsent() {
         }
     }
 
-    const accept = async () => {
+    const accept = async (userId: any) => {
         hasAgreedPrivacy.value = true
         showPrivacyDialog.value = false
         sessionStorage.setItem('privacy_accepted', 'true')
 
-        return await generateApplicationNumber()
+        return await generateApplicationNumber(userId)
     }
 
     const decline = () => {
