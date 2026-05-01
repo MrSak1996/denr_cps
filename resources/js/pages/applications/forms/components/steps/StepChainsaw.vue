@@ -41,6 +41,18 @@ const isLoading = ref(false)
 const selectedFile = ref<any>(null)
 const selectedFileToUpdate = ref<any>(null)
 const updateFileInput = ref<HTMLInputElement | null>(null)
+    /* ------------------------------------------------------- | OPTIONS ------------------------------------------------------- */ 
+    const options = ['For cutting of trees with legal permit', 
+    'For post-calamity clearing operations', 
+    'For farm lot/tree orchard maintenance', 
+    'For maintenance of trees/vegetation within private property', 
+    'For cutting/trimming of trees posing danger within a private property', 
+    'For selling / re-selling', 
+    'For cutting of trees to be used for house repair/perimeter fencing/residential area development', 
+    'For commercial use', 'Forestry/landscaping service provider', 
+    'Other legal purpose(s)', 
+    'Other Supporting Documents',]
+
 
 /* -------------------- PURPOSE (FIXED CORE ISSUE) -------------------- */
 const selectedPurpose = computed(() => {
@@ -206,11 +218,20 @@ const handleSupplierSaved = async (data: any) => {
                 Chainsaw Supplier Form
             </Button>
 
-            <!-- FILES -->
-            <div class="mt-6">
+            <!-- PURPOSE + FILES SECTION -->
+            <div class="mt-6 space-y-6">
 
-                <!-- EDIT MODE FILES -->
-                <div v-if="isEdit && showFiles.length > 0">
+                <!-- PURPOSE SELECT (SINGLE SOURCE OF TRUTH) -->
+                <FloatLabel>
+                    <Select v-model="selectedPurpose" :options="options" class="w-full" />
+                    <label>Purpose of Purchase</label>
+                </FloatLabel>
+
+                <!-- ===================== -->
+                <!-- EDIT MODE: SHOW FILES -->
+                <!-- ===================== -->
+                <div v-if="isEdit && showFiles.length > 0" class="space-y-4">
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FileCard v-for="(file, i) in showFiles" :key="i" :file="file" @openPreview="openFileModal"
                             @updateFile="triggerUpdateFile" />
@@ -219,14 +240,21 @@ const handleSupplierSaved = async (data: any) => {
                     <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
                 </div>
 
-                <!-- UPLOAD (ALWAYS REACTIVE) -->
-                <div v-if="getUploadType(selectedPurpose)" class="mt-6">
-                    <label class="text-sm font-medium">Upload Document</label>
+                <!-- ========================= -->
+                <!-- CREATE MODE: UPLOAD AREA -->
+                <!-- ========================= -->
+                <div v-if="getUploadType(selectedPurpose)" class="space-y-2">
+                    <label class="text-sm font-medium">
+                        Upload Document
+                    </label>
 
-                    <div class="relative mt-2 border-4 border-dashed p-6 rounded-xl bg-gray-50">
+                    <div
+                        class="relative mt-2 border-4 border-dashed p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
                         <MonitorUp class="w-10 h-10 text-blue-400 mb-2" />
 
-                        <p class="text-sm text-gray-600">Click or drag PDF file</p>
+                        <p class="text-sm text-gray-600">
+                            Click or drag PDF file
+                        </p>
 
                         <input type="file" class="absolute inset-0 opacity-0 cursor-pointer"
                             @change="(e) => handleFileUpload(e, getUploadType(selectedPurpose))" />

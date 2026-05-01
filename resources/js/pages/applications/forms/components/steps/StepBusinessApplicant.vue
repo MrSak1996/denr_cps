@@ -285,7 +285,7 @@ onMounted(async () => {
                     <InputError />
                 </div>
                 <FloatLabel>
-                    <InputText id="permit_no" v-model="props.form.permit_no" class="w-full font-bold" />
+                    <InputText id="permit_no" v-model="props.form.permit_no" class="w-full font-bold" :disabled="true" />
                     <label for="permit_no">Permit No.</label>
                 </FloatLabel>
                 <FloatLabel>
