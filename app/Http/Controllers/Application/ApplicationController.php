@@ -485,11 +485,10 @@ class ApplicationController extends Controller
 
     public function generateApplicationNumber(Request $request)
     {
-        return DB::transaction(function () {
+        return DB::transaction(function () use ($request) {
 
             $user = auth()->user();
             $encodedBy = $request->user_id;
-
 
             if (! $user) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
