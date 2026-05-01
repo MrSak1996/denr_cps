@@ -41,7 +41,7 @@ const props = defineProps({
     }
 })
 const toast = useToast();
-
+const formData = computed(() => props.form);
 const isEdit = computed(() => props.mode === 'edit');
 const isCreate = computed(() => props.mode === 'create');
 
@@ -136,8 +136,6 @@ const handleFileUpload = (event: Event, field: string | null) => {
 
     files.value[field] = file
 }
-const formData = computed(() => props.form);
-
 
 const permitNo = computed({
     get: () => formData.value.permit_no || PREFIX,
@@ -180,6 +178,7 @@ const openFileModal = (file: any) => {
     selectedFile.value = file;
     showModal.value = true;
 };
+
 const handleFileUpdate = async (event) => {
     const newFile = event.target.files[0];
     if (!newFile || !selectedFileToUpdate.value) return;
@@ -211,6 +210,7 @@ const handleFileUpdate = async (event) => {
         selectedFileToUpdate.value = null;
     }
 };
+
 const triggerUpdateFile = (file) => {
     selectedFileToUpdate.value = file;
     updateFileInput.value.click();
@@ -243,22 +243,28 @@ const triggerUpdateFile = (file) => {
             </Button>
 
             <!-- Purpose -->
-            <div class="mt-6 grid gap-4 md:grid-cols-3">
+            <div class="mt-6 grid gap-4 md:grid-cols-2">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" :disabled="props.mode === 'edit'" class="w-full"
+                    <InputText v-model="props.form.application_no" :disabled="true" class="w-full font-bold"
                         readonly />
                     <label>Application No.</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="permitNo" :disabled="props.mode === 'edit'" class="w-full" readonly />
+                    <InputText v-model="permitNo" :disabled="true" class="w-full font-bold" readonly />
                     <label>Permit No.</label>
                 </FloatLabel>
             </div>
 
-            <div v-for="(supplier, index) in suppliers" :key="index" class="mt-6">
+            <div v-if="isEdit" v-for="(supplier, index) in suppliers" :key="index" class="mt-6">
                 <FloatLabel>
                     <Select v-model="supplier.purpose" :options="options" class="w-full" />
+                    <label>Purpose of Purchase</label>
+                </FloatLabel>
+            </div>
+            <div v-else class="mt-6">
+                <FloatLabel>
+                    <Select v-model="props.form.purpose" :options="options" class="w-full" />
                     <label>Purpose of Purchase</label>
                 </FloatLabel>
             </div>
