@@ -628,6 +628,11 @@ const applicantsTable = async () => {
                     <b>{{ data.permit_no }}</b>
                 </template>
             </Column>
+             <Column field="status_title" header="Permit No" sortable style="min-width: 10rem">
+                <template #body="{ data }">
+                     <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :'success'" class="text-center" />
+                </template>
+            </Column>
             <Column header="Applicant Name" style="min-width: 12rem">
                 <template #body="slotProps">
                     {{ slotProps.data.authorized_representative || slotProps.data.applicant_name }}

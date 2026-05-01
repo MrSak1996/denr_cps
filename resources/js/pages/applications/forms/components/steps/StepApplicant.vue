@@ -268,7 +268,7 @@ onMounted(async () => {
 <template>
     <div class="space-y-6">
         <!-- Chainsaw Application -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2" v-if="isEdit">
             <Info class="h-5 w-5" />
             <h1 class="text-xl font-semibold">
                 Application Status:

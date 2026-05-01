@@ -7,7 +7,7 @@ import Dialog from 'primevue/dialog'
 import FloatLabel from 'primevue/floatlabel'
 import { Button } from '@/components/ui/button'
 import ChainsawSupplierForm from '@/components/ChainsawSupplierForm.vue'
-import { MonitorUp,Info } from 'lucide-vue-next'
+import { MonitorUp, Info } from 'lucide-vue-next'
 import InputText from 'primevue/inputtext'
 import { useToast } from 'primevue/usetoast';
 import Tag from 'primevue/tag';
@@ -245,8 +245,7 @@ const triggerUpdateFile = (file) => {
             <!-- Purpose -->
             <div class="mt-6 grid gap-4 md:grid-cols-2">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" :disabled="true" class="w-full font-bold"
-                        readonly />
+                    <InputText v-model="props.form.application_no" :disabled="true" class="w-full font-bold" readonly />
                     <label>Application No.</label>
                 </FloatLabel>
 
@@ -256,59 +255,71 @@ const triggerUpdateFile = (file) => {
                 </FloatLabel>
             </div>
 
-            <div v-if="isEdit" v-for="(supplier, index) in suppliers" :key="index" class="mt-6">
-                <FloatLabel>
-                    <Select v-model="supplier.purpose" :options="options" class="w-full" />
-                    <label>Purpose of Purchase</label>
-                </FloatLabel>
-            </div>
-            <div v-else class="mt-6">
-                <FloatLabel>
-                    <Select v-model="props.form.purpose" :options="options" class="w-full" />
-                    <label>Purpose of Purchase</label>
-                </FloatLabel>
-            </div>
-
-            <div class="mb-3" v-if="isEdit">
-                <div class="container">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <FileCard v-for="(file, index) in showFiles" :key="index" :file="file"
-                            @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
+            <div class="mt-6">
+                <!-- ✅ PURPOSE SECTION -->
+                <div v-if="suppliers.length">
+                    <div v-for="(supplier, index) in suppliers" :key="'purpose-' + index" class="mt-4">
+                        <FloatLabel>
+                            <Select v-model="supplier.purpose" :options="options" class="w-full" />
+                            <label>Purpose of Purchase</label>
+                        </FloatLabel>
                     </div>
                 </div>
-                <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
 
+                <div v-else-if="!isEdit">
+                    <FloatLabel>
+                        <Select v-model="props.form.purpose" :options="options" class="w-full" />
+                        <label>Purpose of Purchase</label>
+                    </FloatLabel>
+                </div>
             </div>
 
-            <div v-else v-for="(supplier, index) in suppliers" :key="index" class="mt-6">
+            <!-- ✅ FILE SECTION -->
+            <div class="mb-3 mt-6">
 
-                <!-- ✅ SHOW ONLY IN CREATE MODE AND ONLY IF TYPE EXISTS -->
-                <div v-if="getUploadType(supplier.purpose)"
-                    class="relative mt-2 flex h-[330px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-blue-400 bg-white transition hover:bg-blue-50">
-                    <label class="text-sm font-medium">
-                        Upload Required Document
-                    </label>
-                    <MonitorUp :size="64" class="mb-4 h-12 w-12 text-blue-400" />
+                <!-- ✅ EDIT MODE (files preview/update) -->
+                <div v-if="isEdit">
+                    <div class="container">
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <FileCard v-for="(file, index) in showFiles" :key="'file-' + index" :file="file"
+                                @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
+                        </div>
+                    </div>
 
-                    <p class="mb-2 text-center text-sm text-gray-700">
-                        Drag & drop file or click to upload
-                    </p>
-
-                    <p class="text-center text-xs text-gray-400">
-                        PDF only, max 5MB
-                    </p>
-
-                    <input type="file" accept="application/pdf"
-                        class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                        @change="(e) => onFileChange(e, supplier)" />
+                    <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
                 </div>
 
-                <!-- ❌ SHOW ONLY IN CREATE MODE BUT NO TYPE -->
-                <div v-else-if="isCreate && !getUploadType(supplier.purpose)"
-                    class="p-4 text-gray-600 bg-gray-100 rounded mt-2">
-                    No required document for this purpose.
-                </div>
+                <!-- ✅ CREATE MODE (uploads) -->
+                <div v-else>
+                    <div v-for="(supplier, index) in suppliers" :key="'upload-' + index" class="mt-6">
+                        <!-- Show upload if needed -->
+                        <div v-if="getUploadType(supplier.purpose)"
+                            class="relative mt-2 flex h-[330px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-blue-400 bg-white transition hover:bg-blue-50">
+                            <label class="text-sm font-medium">
+                                Upload Required Document
+                            </label>
 
+                            <MonitorUp class="mb-4 h-12 w-12 text-blue-400" />
+
+                            <p class="mb-2 text-center text-sm text-gray-700">
+                                Drag & drop file or click to upload
+                            </p>
+
+                            <p class="text-center text-xs text-gray-400">
+                                PDF only, max 5MB
+                            </p>
+
+                            <input type="file" accept="application/pdf"
+                                class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                @change="(e) => onFileChange(e, supplier)" />
+                        </div>
+
+                        <!-- No required doc -->
+                        <div v-else class="p-4 text-gray-600 bg-gray-100 rounded mt-2">
+                            No required document for this purpose.
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Actions -->
