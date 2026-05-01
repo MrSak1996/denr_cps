@@ -434,12 +434,12 @@ onMounted(async () => {
             'w-full pt-6',
             isEdit ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
         ]">
-            <Button v-if="isEdit" :disabled="props.isProcessing" type="button"
+            <Button :disabled="props.isProcessing" type="button"
                 class="w-full bg-green-900 text-white transition-colors hover:bg-green-500" @click="save">
                 {{ props.isProcessing ? 'Saving...' : 'Save & Continue' }}
             </Button>
 
-            <Button @click="$emit('proceed')" class="w-full bg-gray-300 hover:bg-gray-400">
+            <Button v-if="isEdit" @click="$emit('proceed')" class="w-full bg-gray-300 hover:bg-gray-400">
                 Next
             </Button>
         </div>
