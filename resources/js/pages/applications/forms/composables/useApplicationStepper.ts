@@ -6,8 +6,9 @@ export function useApplicationStepper(step = 1){
     
 
     const next = () => {
+
         if(currentStep.value < 4) currentStep.value++
-        console.log(currentStep)
+        
     }
 
     const prevStep = () => {

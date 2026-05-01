@@ -630,7 +630,8 @@ const applicantsTable = async () => {
             </Column>
              <Column field="status_title" header="Permit No" sortable style="min-width: 10rem">
                 <template #body="{ data }">
-                     <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :'success'" class="text-center" />
+                     <Tag :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :'success'" class="text-center" v-if="data.application_status == 28">Approved</Tag>
+                     <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :'success'" class="text-center" v-else/>
                 </template>
             </Column>
             <Column header="Applicant Name" style="min-width: 12rem">

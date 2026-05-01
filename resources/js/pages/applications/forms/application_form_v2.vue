@@ -83,6 +83,7 @@ const nextStep = async (payload: any) => {
 
             toast.add({ severity: 'success', summary: 'Saved', detail: 'Applicant saved', life: 3000 });
             next();
+            updateStepInUrl();
 
             // ✅ only redirect in create mode
             if (isCreate.value) {
@@ -109,6 +110,8 @@ const nextStep = async (payload: any) => {
 
             toast.add({ severity: 'success', summary: 'Saved', detail: 'Chainsaw saved', life: 3000 });
             next();
+            updateStepInUrl();
+
 
             if (isCreate.value) {
                 router.visit(
@@ -133,6 +136,8 @@ const nextStep = async (payload: any) => {
 
             toast.add({ severity: 'success', summary: 'Saved', detail: 'Payment saved', life: 3000 });
             next();
+            updateStepInUrl();
+
 
             if (isCreate.value) {
                 router.visit(
@@ -152,6 +157,23 @@ const nextStep = async (payload: any) => {
     } finally {
         isProcessing.value = false;
     }
+};
+const updateStepInUrl = () => {
+    const routeName = isEdit.value
+        ? 'applications.edit'
+        : 'applications.create.citizen';
+
+    router.visit(
+        route(routeName, {
+            application_id: form.value.application_id,
+            type: props.type,
+            step: currentStep.value,
+        }),
+        {
+            preserveState: true,
+            preserveScroll: true,
+        }
+    );
 };
 
 /* Privacy */
@@ -212,7 +234,6 @@ const loadReviewData = async () => {
 
 const loadExistingApplication = async () => {
     const id = form.value.application_id;
-    console.log(id);
     if (!id) return;
 
     try {

@@ -169,6 +169,10 @@ const submitStep = () => {
         ...files.value
     })
 }
+const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    return url.replace('/view', '/preview');
+};
 
 const onFileChange = (e: Event, supplier: any) => {
     const type = getUploadType(supplier.purpose)
@@ -243,84 +247,53 @@ const triggerUpdateFile = (file) => {
             </Button>
 
             <!-- Purpose -->
-            <div class="mt-6 grid gap-4 md:grid-cols-2">
-                <FloatLabel>
-                    <InputText v-model="props.form.application_no" :disabled="true" class="w-full font-bold" readonly />
-                    <label>Application No.</label>
-                </FloatLabel>
-
-                <FloatLabel>
-                    <InputText v-model="permitNo" :disabled="true" class="w-full font-bold" readonly />
-                    <label>Permit No.</label>
-                </FloatLabel>
-            </div>
-
-            <div class="mt-6">
-                <!-- ✅ PURPOSE SECTION -->
-                <div v-if="suppliers.length">
-                    <div v-for="(supplier, index) in suppliers" :key="'purpose-' + index" class="mt-4">
-                        <FloatLabel>
-                            <Select v-model="supplier.purpose" :options="options" class="w-full" />
-                            <label>Purpose of Purchase</label>
-                        </FloatLabel>
-                    </div>
-                </div>
-
-                <div v-else-if="!isEdit">
+            <!-- PURPOSE -->
+        <div class="mt-6">
+            <!-- EDIT -->
+            <div v-if="isEdit">
+                <div v-for="(supplier, i) in suppliers" :key="i" class="mt-4">
                     <FloatLabel>
-                        <Select v-model="props.form.purpose" :options="options" class="w-full" />
+                        <Select v-model="supplier.purpose" :options="options" class="w-full" />
                         <label>Purpose of Purchase</label>
                     </FloatLabel>
                 </div>
             </div>
 
-            <!-- ✅ FILE SECTION -->
-            <div class="mb-3 mt-6">
+            <!-- CREATE -->
+            <div v-else>
+                <FloatLabel>
+                    <Select v-model="props.form.purpose" :options="options" class="w-full" />
+                    <label>Purpose of Purchase</label>
+                </FloatLabel>
+            </div>
+        </div>
 
-                <!-- ✅ EDIT MODE (files preview/update) -->
-                <div v-if="isEdit">
-                    <div class="container">
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <FileCard v-for="(file, index) in showFiles" :key="'file-' + index" :file="file"
-                                @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
-                        </div>
-                    </div>
+        <!-- FILES -->
+        <div class="mt-6">
 
-                    <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
+            <!-- EDIT -->
+            <div v-if="isEdit">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FileCard
+                        v-for="(file, i) in showFiles"
+                        :key="i"
+                        :file="file"
+                        @updateFile="triggerUpdateFile"
+                    />
                 </div>
 
-                <!-- ✅ CREATE MODE (uploads) -->
-                <div v-else>
-                    <div v-for="(supplier, index) in suppliers" :key="'upload-' + index" class="mt-6">
-                        <!-- Show upload if needed -->
-                        <div v-if="getUploadType(supplier.purpose)"
-                            class="relative mt-2 flex h-[330px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-blue-400 bg-white transition hover:bg-blue-50">
-                            <label class="text-sm font-medium">
-                                Upload Required Document
-                            </label>
+                <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
+            </div>
 
-                            <MonitorUp class="mb-4 h-12 w-12 text-blue-400" />
-
-                            <p class="mb-2 text-center text-sm text-gray-700">
-                                Drag & drop file or click to upload
-                            </p>
-
-                            <p class="text-center text-xs text-gray-400">
-                                PDF only, max 5MB
-                            </p>
-
-                            <input type="file" accept="application/pdf"
-                                class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                                @change="(e) => onFileChange(e, supplier)" />
-                        </div>
-
-                        <!-- No required doc -->
-                        <div v-else class="p-4 text-gray-600 bg-gray-100 rounded mt-2">
-                            No required document for this purpose.
-                        </div>
-                    </div>
+            <!-- CREATE -->
+            <div v-else>
+                <div v-if="getUploadType(props.form.purpose)" class="upload-box">
+                    <MonitorUp class="mb-2" />
+                    <input type="file"
+                        @change="(e)=>handleFileUpload(e, getUploadType(props.form.purpose))" />
                 </div>
             </div>
+        </div>
 
             <!-- Actions -->
             <div :class="[
@@ -346,6 +319,10 @@ const triggerUpdateFile = (file) => {
                 <span>Saving, please wait...</span>
                 <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
             </div>
+        </Dialog>
+         <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+            <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
+                allow="autoplay"></iframe>
         </Dialog>
     </div>
 </template>
