@@ -7,9 +7,11 @@ import Dialog from 'primevue/dialog'
 import FloatLabel from 'primevue/floatlabel'
 import { Button } from '@/components/ui/button'
 import ChainsawSupplierForm from '@/components/ChainsawSupplierForm.vue'
-import { MonitorUp } from 'lucide-vue-next'
+import { MonitorUp,Info } from 'lucide-vue-next'
 import InputText from 'primevue/inputtext'
 import { useToast } from 'primevue/usetoast';
+import Tag from 'primevue/tag';
+import ProgressBar from 'primevue/progressbar';
 import FileCard from '../../file_card.vue';
 /* -------------------------------------------------------
 | EMITS (FIXED)
@@ -73,6 +75,7 @@ const showFiles = computed(() => {
         );
 });
 const showModal = ref(false);
+const isLoading = ref(false);
 const selectedFileToUpdate = ref(null);
 const updateFileInput = ref(null);
 const selectedFile = ref<any>(null);
@@ -157,16 +160,16 @@ const handleSupplierSaved = async (data: any) => {
 | STEP SUBMIT
 ------------------------------------------------------- */
 const submitStep = () => {
-  if (props.isProcessing) return
+    if (props.isProcessing) return
+    isLoading.value = true;
+    const purpose = props.suppliers.map(s => s.purpose)
 
-  const purpose = props.suppliers.map(s => s.purpose)
-
-  emit('next', {
-    application_type: props.application_type,
-    purpose,
-    suppliers: props.suppliers,
-    ...files.value
-  })
+    emit('next', {
+        application_type: props.application_type,
+        purpose,
+        suppliers: props.suppliers,
+        ...files.value
+    })
 }
 
 const onFileChange = (e: Event, supplier: any) => {
@@ -216,8 +219,16 @@ const triggerUpdateFile = (file) => {
 
 <template>
     <div class="space-y-6">
-        <h2 class="text-xl font-semibold">Chainsaw Information</h2>
+        <div class="flex items-center gap-2">
+            <Info class="h-5 w-5" />
+            <h1 class="text-xl font-semibold">
+                Application Status:
+            </h1>
 
+            <Tag severity="danger">
+                {{ props.form.status_title }}
+            </Tag>
+        </div>
         <Fieldset legend="Chainsaw Information">
 
             <!-- Supplier Dialog -->
@@ -234,12 +245,13 @@ const triggerUpdateFile = (file) => {
             <!-- Purpose -->
             <div class="mt-6 grid gap-4 md:grid-cols-3">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" :disabled="props.mode === 'edit'"class="w-full" readonly />
+                    <InputText v-model="props.form.application_no" :disabled="props.mode === 'edit'" class="w-full"
+                        readonly />
                     <label>Application No.</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="permitNo"  :disabled="props.mode === 'edit'" class="w-full" readonly />
+                    <InputText v-model="permitNo" :disabled="props.mode === 'edit'" class="w-full" readonly />
                     <label>Permit No.</label>
                 </FloatLabel>
             </div>
@@ -251,10 +263,11 @@ const triggerUpdateFile = (file) => {
                 </FloatLabel>
             </div>
 
-              <div class="mb-3" v-if="isEdit">
+            <div class="mb-3" v-if="isEdit">
                 <div class="container">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal" @updateFile="triggerUpdateFile"/>
+                        <FileCard v-for="(file, index) in showFiles" :key="index" :file="file"
+                            @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
                     </div>
                 </div>
                 <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
@@ -310,5 +323,12 @@ const triggerUpdateFile = (file) => {
             </div>
 
         </Fieldset>
+
+        <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
+            <div class="flex flex-col items-center gap-4 py-4">
+                <span>Saving, please wait...</span>
+                <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
+            </div>
+        </Dialog>
     </div>
 </template>

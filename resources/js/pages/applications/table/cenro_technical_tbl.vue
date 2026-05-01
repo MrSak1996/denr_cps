@@ -601,9 +601,11 @@ const applicantsTable = async () => {
                     <Link v-if="[STATUS_DRAFT,STATUS_APPROVED_BY_RED,25].includes(data.application_status)" :href="route('applications.edit', {
                         application_id: data.id,
                         type: data.application_type,
+                        step: data.application_status !== 1 ? 4 : 1
+
                     })
                         "
-                        class="mr-2 inline-flex items-center justify-center rounded-md bg-orange-700 px-3 py-2 text-white hover:bg-orange-600">
+                        class="mr-2 inline-flex items-center justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
                         <SquarePen :size="16" />
                     </Link>
                     <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"
@@ -612,13 +614,7 @@ const applicantsTable = async () => {
                         <PrinterCheck :size="15" />
 
                     </Button>
-                    <!-- 
-                    <Button 
-                        :disabled="(downloadCount[data.id] ?? 0) >= 3" @click="openFileModal(data)"
-                        style="background-color: #0D47A1;">
-                        <PrinterCheck :size="15" />
-
-                    </Button> -->
+                
                 </template>
             </Column>
             <Column field="application_type" header="Application Type" sortable />

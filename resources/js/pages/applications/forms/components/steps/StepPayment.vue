@@ -1,13 +1,20 @@
 <script setup lang="ts">
+import axios from 'axios'
 import { reactive, watch, computed,ref} from 'vue'
 import { Button } from '@/components/ui/button'
+import { useToast } from 'primevue/usetoast';
+import { Info } from 'lucide-vue-next'
+
+import ProgressBar from 'primevue/progressbar';
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import FloatLabel from 'primevue/floatlabel'
 import Fieldset from 'primevue/fieldset'
 import FileCard from '../../file_card.vue'
 import Dialog from 'primevue/dialog'
+import Tag from 'primevue/tag';
 const emit = defineEmits(['next', 'back'])
+const toast = useToast();
 
 const props = defineProps({
   form: {
@@ -37,6 +44,7 @@ const payment = reactive({
 })
 
 const showModal = ref(false);
+const isLoading = ref(false);
 const selectedFileToUpdate = ref(null);
 const updateFileInput = ref(null);
 const selectedFile = ref<any>(null);
@@ -48,6 +56,21 @@ const handleORFileUpload = (event: Event) => {
 
   payment.or_copy = file
 }
+const files = computed(() => {
+    return (props.files || [])
+        .map((file: any) => ({
+            id: file.id,
+            application_type: file.application_type,
+            application_id: file.application_id,
+            attachment_id: file.attachment_id,
+            name: file.file_name,
+            url: file.file_url,
+        }))
+        .filter((file: any) =>
+            typeof file.name === 'string' &&
+            file.name.startsWith('valid_id_')
+        );
+});
 
 /* ✅ Submit with validation */
 // const submitStep = () => {
@@ -78,7 +101,7 @@ const handleORFileUpload = (event: Event) => {
 // }
 const submitStep = () => {
   if (props.isProcessing) return
-
+  isLoading.value = true;
   if (!payment.official_receipt) {
     alert('O.R Number is required')
     return
@@ -151,15 +174,56 @@ const getEmbedUrl = (url: string) => {
     if (!url) return '';
     return url.replace('/view', '/preview');
 };
+const handleFileUpdate = async (event) => {
+    const newFile = event.target.files[0];
+    if (!newFile || !selectedFileToUpdate.value) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('application_id', selectedFileToUpdate.value.application_id);
+        formData.append('application_type', selectedFileToUpdate.value.application_type);
+        formData.append('file', newFile);
+        formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
+        formData.append('name', selectedFileToUpdate.value.name);
+
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        // Update file list
+        const updatedIndex = files.value.findIndex((f) => f.id === selectedFileToUpdate.value.id);
+        if (updatedIndex !== -1) {
+            files.value[updatedIndex] = response.data.updatedFile;
+        }
+
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'File updated successfully', life: 3000 });
+    } catch (error) {
+        console.error(error);
+        toast.add({ severity: 'error', summary: 'Successful', detail: 'Failed to update the file.', life: 3000 });
+    } finally {
+        updateFileInput.value.value = ''; // reset file input
+        selectedFileToUpdate.value = null;
+    }
+};
 
 </script>
 
 <template>
   <div class="space-y-6">
+    <div class="flex items-center gap-2">
+            <Info class="h-5 w-5" />
+            <h1 class="text-xl font-semibold">
+                Application Status:
+            </h1>
+
+            <Tag severity="danger">
+                {{ props.form.status_title }}
+            </Tag>
+        </div>
     <Fieldset legend="Payment of Application Fee">
 
       <div :class="{ 'pointer-events-none opacity-60': isProcessing }">
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 mt-4">
 
           <!-- Application No -->
           <FloatLabel>
@@ -232,5 +296,11 @@ const getEmbedUrl = (url: string) => {
             <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500" allow="autoplay"></iframe>
         </Dialog>
     </div>
+    <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
+            <div class="flex flex-col items-center gap-4 py-4">
+                <span>Saving, please wait...</span>
+                <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
+            </div>
+        </Dialog>
   </div>
 </template>

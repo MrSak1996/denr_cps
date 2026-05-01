@@ -61,6 +61,9 @@ const activeComponent = computed(
 );
 
 /* 🔥 MAIN STEPPER LOGIC */
+const proceed = async() => {
+    next();
+}
 const nextStep = async (payload: any) => {
     if (isProcessing.value) return;
     isProcessing.value = true;
@@ -145,12 +148,7 @@ const nextStep = async (payload: any) => {
 
     } catch (error: any) {
         console.error(error);
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error?.response?.data?.message || 'Something went wrong',
-            life: 4000,
-        });
+        toast.add({ severity: 'error', summary: 'Error', detail: error?.response?.data?.message || 'Something went wrong', life: 4000, });
     } finally {
         isProcessing.value = false;
     }
@@ -304,7 +302,7 @@ onMounted(async () => {
                 <div class="space-y-6 p-6">
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack" :mode="props.mode"
+                        :supplier="suppliers" :files="files" @proceed="proceed" @next="nextStep" @back="goBack" :mode="props.mode"
                         @supplierSaved="supplierSaved"
                         @submit="submitAndContinue"/>
                 </div>

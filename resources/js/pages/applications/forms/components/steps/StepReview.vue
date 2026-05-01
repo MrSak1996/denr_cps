@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { usePage } from '@inertiajs/vue3';
-
+import { Info } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import Fieldset from 'primevue/fieldset'
 import Dialog from 'primevue/dialog'
 import FileCard from '../../file_card.vue'
 import Tag from 'primevue/tag'
+
 import ConfirmModal from '../../../modal/confirmation_modal.vue';
 const page = usePage();
 
@@ -73,7 +74,16 @@ const formatDate = (date: any) => {
 
 <template>
   <div class="space-y-6">
-    <h2 class="text-xl font-semibold">Review & Submit</h2>
+    <div class="flex items-center gap-2">
+            <Info class="h-5 w-5" />
+            <h1 class="text-xl font-semibold">
+                Application Status:
+            </h1>
+
+            <Tag severity="danger">
+                {{ props.form.status_title }}
+            </Tag>
+        </div>
 
     <Fieldset legend="Applicant Details" :toggleable="true">
       <!-- Applicant Info (non-file fields) -->

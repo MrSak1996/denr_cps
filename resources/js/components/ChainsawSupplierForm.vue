@@ -186,7 +186,7 @@ const cancel = () => emit('cancel')
                     <InputText
                         v-model="supplier.permit_to_sell_no"
                         class="w-full"
-                        v-letters-numbers-dash-uppercase
+                        
                     />
                     <label>Permit To Sell No</label>
                 </FloatLabel>
