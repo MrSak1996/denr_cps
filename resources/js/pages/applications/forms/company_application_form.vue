@@ -112,15 +112,15 @@ const loadExistingApplication = async () => {
         suppliers.value = res.suppliers
         files.value = res.files
 
-        const { i_province, i_city_mun, i_barangay, ...rest } =
+        const { company_c_province, company_c_city_mun, company_c_barangay, ...rest } =
             res.application
 
         form.value = {
             ...form.value,
             ...rest,
-            i_province: Number(i_province),
-            i_city_mun: Number(i_city_mun),
-            i_barangay: Number(i_barangay),
+            company_c_province: Number(company_c_province),
+            company_c_city_mun: Number(company_c_city_mun),
+            company_c_barangay: Number(company_c_barangay),
         }
     } catch (error) {
         console.error(error)

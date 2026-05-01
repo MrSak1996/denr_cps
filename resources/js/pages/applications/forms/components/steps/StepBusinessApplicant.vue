@@ -185,6 +185,7 @@ const loadMunicipalities = async (province: any) => {
         console.error('Municipality load error:', error);
     }
 };
+
 const loadBarangays = async (city: any) => {
     if (!city) {
         barangay_opts.value = [];
@@ -205,6 +206,8 @@ const loadBarangays = async (city: any) => {
         console.error('Barangay load error:', error);
     }
 };
+
+
 onMounted(async () => {
     await getProvinceCode();
 
@@ -376,7 +379,7 @@ onMounted(async () => {
                 </FloatLabel>
 
                 <FloatLabel>
-                    <Select v-model="props.form.company_c_province" :options="prov_name" optionLabel="name"
+                    <Select v-model="props.form.c_province" :options="prov_name" optionLabel="name"
                         optionValue="id" class="w-full" />
                     <label>Province</label>
                 </FloatLabel>

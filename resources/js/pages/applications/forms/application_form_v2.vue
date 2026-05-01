@@ -17,6 +17,7 @@ import { useToast } from 'primevue/usetoast'
 
 import {
     getApplicationReview,
+    getRoutingHistory,
     saveApplicant,
     saveChainsaw,
     savePayment,
@@ -70,6 +71,8 @@ const form = ref({
 const application = ref<any>({})
 const suppliers = ref<any[]>([])
 const files = ref<any[]>([])
+const routingHistory = ref([]);
+
 const isProcessing = ref(false)
 const defaultSupplierDialog = ref(false)
 
@@ -136,6 +139,17 @@ const loadReviewData = async () => {
     application.value = res.application
     suppliers.value = res.suppliers
     files.value = res.files
+}
+
+const fetchRoutingHistory = async () => {
+    const id = form.value.application_id
+    if (!id) return
+
+    try {
+        routingHistory.value = await getRoutingHistory(id)
+    } catch (error) {
+        console.error(error)
+    }
 }
 
 /* -------------------- STEP NAVIGATION -------------------- */
@@ -320,8 +334,14 @@ watch(
 )
 
 watch(currentStep, async (step) => {
-    if (step === 2) await loadExistingApplication()
-    if (step === 4) await loadReviewData()
+    if (step === 2) {
+        await loadExistingApplication()
+    }
+
+    if (step === 4) {
+        await loadReviewData()
+        await fetchRoutingHistory()
+    }
 })
 
 /* -------------------- INIT -------------------- */
@@ -359,7 +379,7 @@ onMounted(async () => {
                 <div class="space-y-6 p-6">
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :files="files" @proceed="proceed" @next="nextStep" @back="goBack"
+                        :supplier="suppliers" :routingHistory="routingHistory" :files="files" @proceed="proceed" @next="nextStep" @back="goBack"
                         :mode="props.mode" @supplierSaved="supplierSaved" />
                 </div>
 

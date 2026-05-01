@@ -23,10 +23,13 @@ const props = defineProps({
   application_type: String,
   mode: String,
   supplier: Array,
-  files: Array
+  files: Array,
+  routingHistory: Array
 })
+const routingHistory = computed(() => props.routingHistory || []);
 const isEdit = computed(() => props.mode === 'edit');
-
+const isRoutingCollapsed = ref(true)
+const isChainsawInfoCollapsed = ref(true)
 const save = () => {
   emit('submit', {
     ...props.form,
@@ -71,6 +74,49 @@ const formatDate = (date: any) => {
     day: '2-digit',
   })
 }
+
+const getDateField = (item) => {
+  if (item.route_order == 2) return item.date_received_rps_chief;
+
+  if (item.route_order == 4 && item.action == 'Submitted to CHIEF RPS')
+    return item.date_endorsed_chiefrps;
+
+  if (item.route_order == 4 && item.action == 'Received by the CENRO Officer')
+    return item.date_cenro_chief_received;
+
+  if (item.route_order == 6) return item.date_received_penro_technical;
+  if (item.route_order == 8) return item.date_received_penro_rps_chief;
+  if (item.route_order == 10) return item.date_received_penro_tsd_chief;
+  if (item.route_order == 12) return item.date_received_penro_chief;
+  if (item.route_order == 14) return item.date_received_region_technical;
+  if (item.route_order == 16) return item.date_received_fus_chief;
+  if (item.route_order == 18) return item.date_received_lpddchief;
+  if (item.route_order == 20) return item.date_received_ardts;
+  if (item.route_order == 22) return item.date_received_red;
+
+  return null;
+};
+
+const getEndorsedDate = (item) => {
+  if (item.route_order == 1) return item.date_endorsed_chiefrps;
+
+  if (item.route_order == 3 && item.action != 'Returned to Technical Staff')
+    return item.date_endorsed_cenro_chief;
+
+  if (item.route_order == 5 && item.action === 'Submitted to PENRO Technical Staff')
+    return item.date_endorsed_penro_technical;
+
+  if (item.route_order == 7) return item.date_endorsed_penro_chief_rps;
+  if (item.route_order == 9) return item.date_endorsed_penro_chief_tsd;
+  if (item.route_order == 11) return item.date_endorsed_penro;
+  if (item.route_order == 13) return item.date_endorsed_region_technical;
+  if (item.route_order == 15) return item.date_endorsed_fus_chief;
+  if (item.route_order == 17) return item.date_endorsed_lpddchief;
+  if (item.route_order == 19) return item.date_endorsed_ardts;
+  if (item.route_order == 21) return item.date_endorse_red;
+
+  return null;
+};
 </script>
 
 <template>
@@ -149,8 +195,119 @@ const formatDate = (date: any) => {
         </div>
       </div>
     </Fieldset>
+    <Fieldset legend="Routing History" toggleable v-model:collapsed="isRoutingCollapsed">
+      <table class="min-w-full rounded-lg border border-gray-300 bg-white text-[12px]">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border px-4 py-2 text-left">#</th>
+            <th class="border px-4 py-2 text-left">Sender</th>
+            <th class="border px-4 py-2 text-left">Route Details</th>
+            <th class="border px-4 py-2 text-left">Receiver</th>
+            <th class="border px-4 py-2 text-left">Date Returned</th>
+            <th class="border px-4 py-2 text-left">Date Received</th>
+            <th class="border px-4 py-2 text-left">Date Endorsed</th>
+            <th class="border px-4 py-2 text-left">Remarks</th>
+          </tr>
+        </thead>
 
-    <Fieldset legend="Chainsaw Information" :toggleable="true">
+        <tbody>
+          <tr v-for="(item, index) in routingHistory" :key="index" class="hover:bg-gray-50">
+            <!-- # -->
+            <td class="border px-4">
+              {{ index + 1 }}
+            </td>
+
+            <!-- Sender -->
+            <td class="border px-4" style="width: 10rem">
+              <div v-if="[2, 4, 6, 8, 10].includes(item.route_order)"></div>
+
+              <div v-else>
+                <b>{{ item.sender_role }}</b><br />
+                <i>{{ item.sender }}</i>
+              </div>
+            </td>
+
+            <!-- Route details -->
+            <td class="border px-4" style="width: 7rem">
+              <b>Route No. 2026-00{{ item.route_order }}</b>
+            </td>
+
+            <!-- Receiver -->
+            <td class="border px-4" style="width: 20rem">
+              <b>{{ item.receiver_role }}</b><br />
+
+              <Tag v-if="item.action === 'Received'" severity="danger" size="small"> Received
+              </Tag>
+
+              <Tag v-else-if="item.action === 'Endorsed'" severity="info" size="small"> Endorsed
+              </Tag>
+
+              <Tag
+                v-else-if="item.action == 'Returned to Technical Staff' || item.action == 'Returned to PENRO Technical Staff'"
+                severity="danger" size="small">
+                {{ item.action }}
+
+              </Tag>
+              <Tag v-else severity="success" size="small">
+                {{ item.action }}
+
+              </Tag>
+
+
+
+              <br />
+            </td>
+            <!-- Date Retured -->
+            <td class="birder px-4">
+              <span
+                v-if="item.action == 'Returned to Technical Staff' || item.action === 'Returned to PENRO Technical Staff'">
+                {{
+                  new Date(item.updated_at).toLocaleString('en-PH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true,
+                  })
+
+                }}
+              </span>
+            </td>
+
+            <!-- Date Received -->
+            <td class="border px-4">
+              <span>
+                {{ formatDate(getDateField(item)) }}
+              </span>
+
+            </td>
+
+            <!-- Date Endorsed -->
+            <td class="border px-4">
+
+              <span>
+                {{ formatDate(getEndorsedDate(item)) }}
+              </span>
+
+
+            </td>
+
+            <!-- Remarks -->
+            <td class="border px-4">
+              {{ item.remarks ?? '-' }}
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr v-if="routingHistory.length === 0">
+            <td colspan="5" class="p-4 text-center text-gray-500">No routing history found</td>
+          </tr>
+        </tbody>
+      </table>
+    </Fieldset>
+    <Fieldset legend="Chainsaw Information" toggleable v-model:collapsed="isChainsawInfoCollapsed">
       <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-4 text-sm text-gray-800 md:grid-cols-2">
         <div class="md:col-span-2">
           <table class="w-full border border-gray-300 text-sm">
@@ -257,7 +414,7 @@ const formatDate = (date: any) => {
       </div>
     </Fieldset>
 
-    <Fieldset legend="Uploaded Files" :toggleable="true">
+    <Fieldset legend="Uploaded Files">
       <div class="container">
         <div class="file-list">
           <FileCard v-for="(file, index) in files" :key="index" :file="file" @openPreview="openFileModal" />

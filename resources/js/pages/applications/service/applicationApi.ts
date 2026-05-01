@@ -115,3 +115,8 @@ export const getApplicationReview = async (id: any) => {
     }
 }
 
+export const getRoutingHistory = async (id: any) => {
+    const res = await axios.get(`/api/application-routing/${id}`)
+    return res.data || []
+}
+

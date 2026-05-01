@@ -248,53 +248,58 @@ const triggerUpdateFile = (file) => {
 
             <!-- Purpose -->
             <!-- PURPOSE -->
-        <div class="mt-6">
-            <!-- EDIT -->
-            <div v-if="isEdit && suppliers.length >= 1">
-                <div v-for="(supplier, i) in suppliers" :key="i" class="mt-4">
+            <div class="mt-6">
+                <!-- EDIT -->
+                <div v-if="isEdit && suppliers.length >= 1">
+                    <div v-for="(supplier, i) in suppliers" :key="i" class="mt-4">
+                        <FloatLabel>
+                            <Select v-model="supplier.purpose" :options="options" class="w-full" />
+                            <label>Purpose of Purchase</label>
+                        </FloatLabel>
+                    </div>
+                </div>
+
+                <!-- CREATE -->
+                <div v-else>
                     <FloatLabel>
-                        <Select v-model="supplier.purpose" :options="options" class="w-full" />
+                        <Select v-model="props.form.purpose" :options="options" class="w-full" />
                         <label>Purpose of Purchase</label>
                     </FloatLabel>
                 </div>
             </div>
 
-            <!-- CREATE -->
-            <div v-else>
-                <FloatLabel>
-                    <Select v-model="props.form.purpose" :options="options" class="w-full" />
-                    <label>Purpose of Purchase</label>
-                </FloatLabel>
-            </div>
-        </div>
+            <!-- FILES -->
+            <div class="mt-6">
 
-        <!-- FILES -->
-        <div class="mt-6">
+                <!-- EDIT -->
+                <div v-if="isEdit">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FileCard v-for="(file, i) in showFiles" :key="i" :file="file" @openPreview="openFileModal"
+                            @updateFile="triggerUpdateFile" />
+                    </div>
 
-            <!-- EDIT -->
-            <div v-if="isEdit">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FileCard
-                        v-for="(file, i) in showFiles"
-                        :key="i"
-                        :file="file"
-                        @openPreview="openFileModal"
-                        @updateFile="triggerUpdateFile"
-                    />
+                    <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
                 </div>
 
-                <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
-            </div>
+                <!-- CREATE -->
+                <div v-else>
+                    <div v-if="getUploadType(props.form.purpose)" class="upload-box">
+                        <label class="text-sm font-medium text-gray-700">Upload {{ props.form.purpose }}</label>
+                        <div
+                            class="relative mt-1 flex h-[330px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-blue-400 bg-white transition hover:bg-blue-50">
+                            <MonitorUp :size="64" class="mb-4 h-12 w-12 text-blue-400" />
 
-            <!-- CREATE -->
-            <div v-else>
-                <div v-if="getUploadType(props.form.purpose)" class="upload-box">
-                    <MonitorUp class="mb-2" />
-                    <input type="file"
-                        @change="(e)=>handleFileUpload(e, getUploadType(props.form.purpose))" />
+                            <p class="mb-2 text-center text-sm text-gray-700">
+                                Drag & drop files here or click to upload
+                            </p>
+                            <p class="text-center text-xs text-gray-400">Allowed: PDF
+                                only, max 5 MB</p>
+                            <input type="file" @change="(e) => handleFileUpload(e, getUploadType(props.form.purpose))" />
+
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
             <!-- Actions -->
             <div :class="[
@@ -321,7 +326,7 @@ const triggerUpdateFile = (file) => {
                 <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
             </div>
         </Dialog>
-         <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+        <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
             <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
                 allow="autoplay"></iframe>
         </Dialog>
