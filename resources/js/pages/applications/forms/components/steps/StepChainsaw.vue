@@ -278,6 +278,7 @@ const triggerUpdateFile = (file) => {
                         v-for="(file, i) in showFiles"
                         :key="i"
                         :file="file"
+                        @openPreview="openFileModal"
                         @updateFile="triggerUpdateFile"
                     />
                 </div>

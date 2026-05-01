@@ -1,180 +1,134 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, defineAsyncComponent, watch } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
+import {
+    computed,
+    defineAsyncComponent,
+    onMounted,
+    ref,
+    watch,
+} from 'vue'
 
 import AppLayout from '@/layouts/AppLayout.vue'
-import Dialog from 'primevue/dialog'
-import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
+import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'primevue/usetoast'
 
-import { usePrivacyConsent } from './composables/usePrivacyConsent'
+import {
+    getApplicationReview,
+    saveApplicant,
+    saveChainsaw,
+    savePayment,
+    saveSupplierInfo,
+} from '../service/applicationApi'
+
 import { useApplicationStepper } from './composables/useApplicationStepper'
-import { saveCompanyApplication, saveChainsaw, savePayment, saveSupplierInfo, getApplicationReview } from '../service/applicationApi'
+import { usePrivacyConsent } from './composables/usePrivacyConsent'
+import { UserRoundIcon } from 'lucide-vue-next'
+
+/* -------------------- PAGE + PROPS -------------------- */
+
+const page = usePage()
+const userId = page.props.auth?.user?.id
 
 const props = defineProps({
     application_id: [String, Number, null],
     step: Number,
-    type:String,
-    mode:String
+    type: String,
+    mode: String,
 })
+
+const isEdit = computed(() => props.mode === 'edit')
+const isCreate = computed(() => props.mode === 'create')
+
+/* -------------------- STEPPER -------------------- */
 
 const { currentStep, next, prevStep } = useApplicationStepper(props.step)
 
-const { showPrivacyDialog, hasAgreedPrivacy, checkConsent, accept } = usePrivacyConsent()
+/* keep step synced with URL */
+watch(
+    () => props.step,
+    (step) => {
+        currentStep.value = Number(step || 1)
+    },
+    { immediate: true }
+)
+
+/* -------------------- PRIVACY -------------------- */
+
+const { showPrivacyDialog, hasAgreedPrivacy, checkConsent, accept } =
+    usePrivacyConsent()
+
+/* -------------------- STATE -------------------- */
 
 const form = ref({
     application_no: '',
-    application_id: null
+    application_id: null,
 })
 
-/* 🔥 SINGLE SOURCE OF TRUTH */
 const application = ref<any>({})
 const suppliers = ref<any[]>([])
-const files = ref([])
+const files = ref<any[]>([])
 const isProcessing = ref(false)
 const defaultSupplierDialog = ref(false)
-const toast = useToast();
 
-/* Lazy components */
-const StepBusinessApplicant = defineAsyncComponent(() => import('./components/steps/StepBusinessApplicant.vue'))
-const StepChainsaw = defineAsyncComponent(() => import('./components/steps/StepChainsaw.vue'))
-const StepPayment = defineAsyncComponent(() => import('./components/steps/StepPayment.vue'))
-const StepReview = defineAsyncComponent(() => import('./components/steps/StepReview.vue'))
+const toast = useToast()
 
-const activeComponent = computed(() => ({
-    1: StepBusinessApplicant,
-    2: StepChainsaw,
-    3: StepPayment,
-    4: StepReview
-}[currentStep.value]))
+/* -------------------- LAZY COMPONENTS -------------------- */
 
-/* 🔥 MAIN STEPPER LOGIC */
-const nextStep = async (payload: any) => {
-    if (isProcessing.value) return
-    isProcessing.value = true
+const StepBusinessApplicant = defineAsyncComponent(() =>
+    import('./components/steps/StepBusinessApplicant.vue')
+)
+const StepChainsaw = defineAsyncComponent(() =>
+    import('./components/steps/StepChainsaw.vue')
+)
+const StepPayment = defineAsyncComponent(() =>
+    import('./components/steps/StepPayment.vue')
+)
+const StepReview = defineAsyncComponent(() =>
+    import('./components/steps/StepReview.vue')
+)
+
+const activeComponent = computed(() => {
+    return {
+        1: StepBusinessApplicant,
+        2: StepChainsaw,
+        3: StepPayment,
+        4: StepReview,
+    }[currentStep.value]
+})
+
+/* -------------------- LOAD DATA -------------------- */
+
+const loadExistingApplication = async () => {
+    const id = form.value.application_id
+    if (!id) return
 
     try {
-        const basePayload = {
-            application_type: props.type || 'company' // ✅ SOURCE OF TRUTH
+        const res = await getApplicationReview(id)
+
+        application.value = res.application
+        suppliers.value = res.suppliers
+        files.value = res.files
+
+        const { i_province, i_city_mun, i_barangay, ...rest } =
+            res.application
+
+        form.value = {
+            ...form.value,
+            ...rest,
+            i_province: Number(i_province),
+            i_city_mun: Number(i_city_mun),
+            i_barangay: Number(i_barangay),
         }
-
-        if (currentStep.value === 1) {
-            const res = await saveCompanyApplication({
-                ...payload,
-                ...basePayload
-            })
-
-            form.value.application_id = res.application_id
-            form.value.application_no = res.application?.application_no
-
-            toast.add({
-                severity: 'success',
-                summary: 'Saved',
-                detail: 'Applicant saved',
-                life: 3000
-            })
-
-            next()
-
-            router.visit(route('applications.create.business', {
-                application_id: form.value.application_id,
-                type: props.type,
-                step: currentStep.value
-            }), {
-                preserveState: true,
-                preserveScroll: true
-            })
-        }
-
-        else if (currentStep.value === 2) {
-            await saveChainsaw({
-                ...payload,
-                suppliers: suppliers.value,
-                ...basePayload
-            }, form.value.application_id)
-
-            toast.add({ severity: 'success', summary: 'Saved', detail: 'Chainsaw saved', life: 3000 })
-
-            next()
-
-            router.visit(route('applications.create.business', {
-                application_id: form.value.application_id,
-                type: props.type,
-                step: currentStep.value
-            }), {
-                preserveState: true,
-                preserveScroll: true
-            })
-        }
-
-        else if (currentStep.value === 3) {
-            await savePayment({
-                ...payload,
-                ...basePayload
-            }, form.value.application_id)
-
-            toast.add({ severity: 'success', summary: 'Saved', detail: 'Payment saved', life: 3000 })
-
-            next()
-
-            router.visit(route('applications.create.business', {
-                application_id: form.value.application_id,
-                type: props.type,
-                step: currentStep.value
-            }), {
-                preserveState: true,
-                preserveScroll: true
-            })
-        }
-
-    } catch (error: any) {
+    } catch (error) {
         console.error(error)
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error?.response?.data?.message || 'Something went wrong',
-            life: 4000,
-        })
-    } finally {
-        isProcessing.value = false
-    }
-}
-
-/* Privacy */
-const handleAcceptPrivacy = async () => {
-    const data = await accept()
-    form.value.application_no = data.application_no
-    form.value.application_id = data.application_id
-    showPrivacyDialog.value = false
-}
-
-const supplierSaved = async (data: any) => {
-     try {
-        suppliers.value = data
-
-        await saveSupplierInfo({
-            suppliers: data,
-            application_id: form.value.application_id
-        })
-
-        toast.add({
-            severity: 'success',
-            summary: 'Saved',
-            detail: 'Supplier Information successfully saved',
-            life: 3000
-        })
-
-        return true // ✅ signal success
-    } catch (e) {
-        return false
     }
 }
 
 const loadReviewData = async () => {
     const id = form.value.application_id
-
     if (!id) return
 
     const res = await getApplicationReview(id)
@@ -184,46 +138,213 @@ const loadReviewData = async () => {
     files.value = res.files
 }
 
+/* -------------------- STEP NAVIGATION -------------------- */
+
+const updateStepInUrl = () => {
+    const routeName = isEdit.value
+        ? 'applications.edit'
+        : 'applications.create.citizen'
+
+    router.visit(
+        route(routeName, {
+            application_id: form.value.application_id,
+            type: props.type,
+            step: currentStep.value,
+        }),
+        {
+            preserveState: true,
+            preserveScroll: true,
+        }
+    )
+}
+
+const proceed = async () => {
+    next()
+}
+
+/* -------------------- MAIN FLOW -------------------- */
+
+const nextStep = async (payload: any) => {
+    if (isProcessing.value) return
+    isProcessing.value = true
+
+    try {
+        let res: any
+
+        if (currentStep.value === 1) {
+            res = await saveApplicant({
+                ...payload,
+                mode: props.mode,
+                encoded_by: userId,
+                application_type: payload.application_type,
+            })
+
+            form.value.application_id = res.application_id
+            Object.assign(form.value, res.application)
+
+            toast.add({
+                severity: 'success',
+                summary: 'Saved',
+                detail: 'Applicant saved',
+                life: 3000,
+            })
+
+        } else if (currentStep.value === 2) {
+            res = await saveChainsaw(
+                {
+                    ...payload,
+                    mode: props.mode,
+                    suppliers: suppliers.value,
+                    application_type: payload.application_type,
+                },
+                form.value.application_id
+            )
+
+            toast.add({
+                severity: 'success',
+                summary: 'Saved',
+                detail: 'Chainsaw saved',
+                life: 3000,
+            })
+
+        } else if (currentStep.value === 3) {
+            res = await savePayment(
+                {
+                    ...payload,
+                    mode: props.mode,
+                    application_type: payload.application_type,
+                },
+                form.value.application_id
+            )
+
+            toast.add({
+                severity: 'success',
+                summary: 'Saved',
+                detail: 'Payment saved',
+                life: 3000,
+            })
+        }
+
+        next()
+        updateStepInUrl()
+
+        if (isCreate.value) {
+            router.visit(
+                route('applications.create.citizen', {
+                    application_id: form.value.application_id,
+                    type: props.type,
+                    step: currentStep.value,
+                }),
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                }
+            )
+        }
+    } catch (error: any) {
+        console.error(error)
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+                error?.response?.data?.message || 'Something went wrong',
+            life: 4000,
+        })
+    } finally {
+        isProcessing.value = false
+    }
+}
+
+/* -------------------- SUPPLIER -------------------- */
+
+const supplierSaved = async (data: any) => {
+    try {
+        suppliers.value = data
+
+        await saveSupplierInfo({
+            suppliers: data,
+            application_id: form.value.application_id,
+        })
+
+        toast.add({
+            severity: 'success',
+            summary: 'Saved',
+            detail: 'Supplier Information successfully saved',
+            life: 3000,
+        })
+
+        return true
+    } catch {
+        return false
+    }
+}
+
+/* -------------------- BACK -------------------- */
+
 const goBack = () => {
     prevStep()
+    loadExistingApplication()
 
-    router.visit(route('applications.create.business', {
-        application_id: form.value.application_id,
-        type: props.type,
-        step: currentStep.value
-    }), {
-        preserveState: true,
-        preserveScroll: true
-    })
+    router.visit(
+        route('applications.edit', {
+            application_id: form.value.application_id,
+            type: props.type,
+            step: currentStep.value,
+        }),
+        {
+            preserveState: true,
+            preserveScroll: true,
+        }
+    )
 }
+
+/* -------------------- PRIVACY -------------------- */
+
+const handleAcceptPrivacy = async () => {
+    const data = await accept(userId)
+
+    form.value.application_no = data.application_no
+    form.value.application_id = data.application_id
+
+    showPrivacyDialog.value = false
+}
+
+/* -------------------- WATCHERS -------------------- */
+
+watch(
+    () => form.value.application_id,
+    async (id) => {
+        if (id) await loadExistingApplication()
+    },
+    { immediate: true }
+)
+
 watch(currentStep, async (step) => {
-    if (step === 4) {
-        await loadReviewData()
-    }
+    if (step === 2) await loadExistingApplication()
+    if (step === 4) await loadReviewData()
 })
 
+/* -------------------- INIT -------------------- */
+
 onMounted(async () => {
-    // ✅ Restore ID from URL
-    if (props.application_id) {
+    if (props.mode === 'edit') {
         form.value.application_id = props.application_id
     }
 
-    // ❗ If no application → must show privacy
-    if (!form.value.application_id) {
-        showPrivacyDialog.value = true
-        return
+    if (props.step) {
+        currentStep.value = Number(props.step)
     }
 
-    // ✅ Check if user already accepted privacy
-    const hasConsent = await checkConsent(form.value.application_id)
+    await loadExistingApplication()
 
-    if (!hasConsent) {
-        showPrivacyDialog.value = true
-    }
+    if (props.mode !== 'edit') {
+        showPrivacyDialog.value = false
 
-    // ✅ Load review if step 4
-    if (currentStep.value === 4) {
-        await loadReviewData()
+        const hasConsent = await checkConsent(form.value.application_id)
+
+        if (!hasConsent) {
+            showPrivacyDialog.value = true
+        }
     }
 })
 </script>
@@ -231,48 +352,43 @@ onMounted(async () => {
 <template>
 
     <Head title="Chainsaw Purchase System" />
-
     <AppLayout>
         <div class="flex flex-col gap-6 rounded-xl p-4 sm:grid-cols-3">
             <div class="box">
-
                 <Toast />
-
                 <div class="space-y-6 p-6">
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :files="files" @next="nextStep" @back="goBack"
-                        @supplierSaved="supplierSaved" />
+                        :supplier="suppliers" :files="files" @proceed="proceed" @next="nextStep" @back="goBack"
+                        :mode="props.mode" @supplierSaved="supplierSaved" @submit="submitAndContinue" />
                 </div>
 
                 <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"
                     :draggable="false" :style="{ width: '500px' }">
                     <div class="space-y-4 text-sm text-gray-700">
-                        <p> In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process
-                            your
-                            personal information solely for the purpose of processing your Chainsaw Purchase System.
+                        <p>
+                            In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>, we collect and process
+                            your personal information solely
+                            for the purpose of processing your Chainsaw Purchase System.
                         </p>
                         <p>Your data will be treated confidentially and will not be shared without your consent unless
-                            required
-                            by law.</p>
+                            required by law.</p>
                         <div class="mt-4 flex items-start gap-2">
-                            <Checkbox v-model="hasAgreedPrivacy" binary /> <label class="text-sm"> I have read and agree
-                                to
-                                the
-                                Data Privacy Policy. </label>
+                            <Checkbox v-model="hasAgreedPrivacy" binary />
+                            <label class="text-sm"> I have read and agree to the Data Privacy Policy. </label>
                         </div>
-                    </div> <template #footer> <Button label="Decline" class="p-button-text"
-                            @click="router.get(route('applications.create.business'))">Decline</Button> <Button
-                            label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
-                            @click="handleAcceptPrivacy">Agree & Continue</Button> </template>
+                    </div>
+                    <template #footer>
+                        <Button label="Decline" class="p-button-text"
+                            @click="router.get(route('applications.create.citizen'))">Decline</Button>
+                        <Button label="Agree & Continue" :disabled="!hasAgreedPrivacy" class="bg-green-900 text-white"
+                            @click="handleAcceptPrivacy">Agree & Continue</Button>
+                    </template>
                 </Dialog>
             </div>
         </div>
     </AppLayout>
 </template>
-
-
-
 
 <style scoped>
 .box {
@@ -310,7 +426,9 @@ onMounted(async () => {
     background-color: #22c55e;
     /* green-500 */
     color: white;
-    transition: background-color 0.3s ease, filter 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        filter 0.3s ease;
 }
 
 /* Hover effect */

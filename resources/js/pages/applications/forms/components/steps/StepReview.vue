@@ -276,7 +276,7 @@ const formatDate = (date: any) => {
       <Button class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="save">
         Save & Continue
       </Button>
-      <!-- <ConfirmModal class="w-full" :applicationId="Number(props.form.application_id)" :role_id="roleId" /> -->
+      <ConfirmModal v-if="isEdit" class="w-full" :applicationId="Number(props.form.application_id)" :role_id="roleId" />
     </div>
   </div>
 </template>
