@@ -218,20 +218,20 @@ onMounted(async () => {
 
             // reset only if user changed manually
             if (oldVal && province !== oldVal) {
-                props.form.c_city_mun = '';
-                props.form.c_barangay = '';
+                props.form.company_c_city_mun = '';
+                props.form.company_c_barangay = '';
                 barangay_opts.value = [];
             }
         },
         { immediate: true },
     );
     watch(
-        () => props.form.c_city_mun,
+        () => props.form.company_c_city_mun,
         async (city, oldVal) => {
             await loadBarangays(city);
 
             if (oldVal && city !== oldVal) {
-                props.form.c_barangay = '';
+                props.form.company_c_barangay = '';
             }
         },
         { immediate: true },
@@ -379,19 +379,19 @@ onMounted(async () => {
                 </FloatLabel>
 
                 <FloatLabel>
-                    <Select v-model="props.form.c_province" :options="prov_name" optionLabel="name"
+                    <Select v-model="props.form.company_c_province" :options="prov_name" optionLabel="name"
                         optionValue="id" class="w-full" />
                     <label>Province</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <Select filter v-model="props.form.c_city_mun" :options="city_mun_opts" optionLabel="name"
+                    <Select filter v-model="props.form.company_c_city_mun" :options="city_mun_opts" optionLabel="name"
                         optionValue="id" class="w-full" />
                     <label>Municipality</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <Select filter v-model="props.form.c_barangay" :options="barangay_opts" optionLabel="name"
+                    <Select filter v-model="props.form.company_c_barangay" :options="barangay_opts" optionLabel="name"
                         optionValue="id" class="w-full" />
                     <label>Barangay</label>
                 </FloatLabel>

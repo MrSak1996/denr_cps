@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import axios from 'axios';
 import { ref, computed } from 'vue'
 import { usePage } from '@inertiajs/vue3';
 import { Info } from 'lucide-vue-next'
@@ -7,13 +8,16 @@ import Fieldset from 'primevue/fieldset'
 import Dialog from 'primevue/dialog'
 import FileCard from '../../file_card.vue'
 import Tag from 'primevue/tag'
-
+import AssessmentTable from '@/pages/applications/form_edit/assessment_tbl.vue';
 import ConfirmModal from '../../../modal/confirmation_modal.vue';
 const page = usePage();
 
 const emit = defineEmits(['back', 'submit'])
 const roleId = page.props.auth?.user?.role_id;
-
+const onsite = ref({
+  findings: '',
+  recommendations: ''
+});
 const props = defineProps({
   form: {
     type: Object,
@@ -30,6 +34,9 @@ const routingHistory = computed(() => props.routingHistory || []);
 const isEdit = computed(() => props.mode === 'edit');
 const isRoutingCollapsed = ref(true)
 const isChainsawInfoCollapsed = ref(true)
+const isCollapsed = ref(true)
+const assessmentRows = ref([])
+
 const save = () => {
   emit('submit', {
     ...props.form,
@@ -61,6 +68,30 @@ const openFileModal = (file: any) => {
   showModal.value = true
 }
 
+
+const companyRequirements = computed(() =>
+  assessmentRows.value.filter(r => r.applicant_type === 'company')
+);
+const updateAssessment = (checklist_entry_id, assessment) => {
+  const row = companyRequirements.value.find(
+    r => r.checklist_entry_id === checklist_entry_id
+  );
+  if (row) {
+    row.assessment = assessment;
+    row.is_saved = false; // unlock save again if changed
+  }
+};
+const updateRemarks = (checklist_entry_id, remarks) => {
+  const row = companyRequirements.value.find(
+    r => r.checklist_entry_id === checklist_entry_id
+  );
+  if (row) {
+    row.remarks = remarks;
+    row.is_saved = false;
+  }
+}; const updateOnsite = ({ field, value }) => {
+  onsite.value[field] = value;
+};
 const getEmbedUrl = (url: string) => {
   if (!url) return ''
   return url.replace('/view', '/preview')
@@ -116,6 +147,107 @@ const getEndorsedDate = (item) => {
   if (item.route_order == 21) return item.date_endorse_red;
 
   return null;
+};
+const getApplicantFile = async (application_id) => {
+  try {
+    const checklistRes = await axios.get(
+      `https://cps.denrcalabarzon.com/api/getChecklistEntries/${application_id}`
+    );
+
+    const attachmentsRes = await axios.get(
+      `https://cps.denrcalabarzon.com/api/getApplicantFile/${application_id}`
+    );
+
+    if (checklistRes.data.status && attachmentsRes.data.status) {
+      const checklistEntries = checklistRes.data.data;
+      const attachments = attachmentsRes.data.data;
+      const attachmentsMap = attachments.reduce((acc, file) => {
+        const id = file.checklist_entry_id;
+
+        if (!acc[id]) {
+          acc[id] = {
+            original: null,
+            resubmissions: []
+          };
+        }
+
+        if (file.file_name) {
+          if (/_v\d+\./i.test(file.file_name)) {
+            // ✅ resubmitted file
+            acc[id].resubmissions.push(file);
+          } else {
+            // ✅ original file
+            acc[id].original = file;
+          }
+        }
+
+        return acc;
+      }, {});
+      assessmentRows.value = checklistEntries.map(entry => {
+        const entryAttachments = attachmentsMap[entry.checklist_entry_id] || [];
+
+        const files = attachmentsMap[entry.checklist_entry_id] || {
+          original: null,
+          resubmissions: []
+        };
+
+        return {
+          ...entry,
+          application_type: entry.applicant_type, // normalize here
+          // permit_checklist_id: entry.chklist_id ?? null,
+
+          permit_checklist_id: entry.permit_checklist_id ?? null,
+          original_file: files.original,
+          attachments: files.original ? [files.original] : [], // for your existing VIEW button
+          resubmissions: files.resubmissions.sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          ),
+          requirement: entry.requirement || 'N/A',
+          assessment: entry.assessment ?? null,
+          is_saved: Boolean(entry.assessment)
+        };
+      });
+
+
+    }
+  } catch (err) {
+    console.error('Error loading applicant data:', err);
+  }
+};
+const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
+  try {
+    isLoading.value = true; // ✅ SHOW LOADING OVERLAY
+
+    const formData = new FormData();
+    files.forEach(file => formData.append('files[]', file));
+    formData.append('uploaded_by', userId);
+    formData.append('checklist_entry_id', checklistId.toString());
+    formData.append('application_no', company_form.application_no);
+    formData.append('application_id', page.props.application.id);
+
+    // Example API endpoint
+    const response = await axios.post('/api/resubmit-files', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    // Assume response returns the uploaded files with timestamps
+    const uploadedFiles = response.data.files; // [{file_name, uploaded_at}, ...]
+
+    // Find the row and push new resubmissions
+    const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
+    if (row) {
+      row.resubmissions.push(...uploadedFiles);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false; // ✅ HIDE LOADING OVERLAY
+  }
+};
+const handleRemoveResubmission = (checklistId: number, index: number) => {
+  const row = companyRequirements.find(r => r.checklist_entry_id === checklistId);
+  if (!row || !row.resubmissions[index]) return;
+  row.resubmissions.splice(index, 1);
 };
 </script>
 
@@ -414,7 +546,13 @@ const getEndorsedDate = (item) => {
       </div>
     </Fieldset>
 
-    <Fieldset legend="Uploaded Files">
+    <AssessmentTable v-if="props.form.application_type === 'Company'" title="Company Applicant Requirements"
+      :collapsed="isCollapsed.value" :application_status="props.form.status_title" :roleId="roleId"
+      :rows="companyRequirements" :onsite="onsite" @view-file="openFileModal" @update-assessment="updateAssessment"
+      @update-remarks="updateRemarks" @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
+      @remove-resubmission="handleRemoveResubmission" />
+
+    <!-- <Fieldset legend="Uploaded Files">
       <div class="container">
         <div class="file-list">
           <FileCard v-for="(file, index) in files" :key="index" :file="file" @openPreview="openFileModal" />
@@ -425,14 +563,11 @@ const getEndorsedDate = (item) => {
         <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
           allow="autoplay"></iframe>
       </Dialog>
-    </Fieldset>
+    </Fieldset> -->
 
-    <div class="grid grid-cols-2 gap-4">
-      <Button variant="outline" @click="emit('back')">Back</Button>
+    <div class="grid grid-cols-2 gap-4 mt-2">
+      <Button variant="outline" @click="emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">Back</Button>
 
-      <Button class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="save">
-        Save & Continue
-      </Button>
       <ConfirmModal v-if="isEdit" class="w-full" :applicationId="Number(props.form.application_id)" :role_id="roleId" />
     </div>
   </div>

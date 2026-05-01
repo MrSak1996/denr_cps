@@ -112,7 +112,7 @@ const updateApplicationStatus = async (status) => {
     <!-- Submit Button -->
     <Button
       @click="requireConfirmation"
-      class="w-full bg-green-900 hover:bg-green-500 transition-colors text-white"
+      class="w-full bg-green-900 transition-colors hover:bg-green-500 text-white"
       :disabled="isLoading"
     ><LoaderCircle
         v-if="isLoading"
