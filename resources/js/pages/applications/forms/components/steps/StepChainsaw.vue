@@ -272,7 +272,7 @@ const triggerUpdateFile = (file) => {
             <div class="mt-6">
 
                 <!-- EDIT -->
-                <div v-if="isEdit">
+                <div v-if="isEdit && showFiles.length > 0">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FileCard v-for="(file, i) in showFiles" :key="i" :file="file" @openPreview="openFileModal"
                             @updateFile="triggerUpdateFile" />

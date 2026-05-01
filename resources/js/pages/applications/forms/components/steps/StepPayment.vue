@@ -250,7 +250,7 @@ const handleFileUpdate = async (event) => {
           </FloatLabel>
 
           <!-- File Upload -->
-          <div v-if="isEdit" class="md:col-span-2">
+          <div v-if="isEdit && showFiles.length > 0" class="md:col-span-2">
             <div class="container">
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal"
