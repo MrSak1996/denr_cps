@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { reactive, watch, computed,ref} from 'vue'
+import { reactive, watch, computed, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useToast } from 'primevue/usetoast';
 import { Info } from 'lucide-vue-next'
@@ -57,19 +57,19 @@ const handleORFileUpload = (event: Event) => {
   payment.or_copy = file
 }
 const files = computed(() => {
-    return (props.files || [])
-        .map((file: any) => ({
-            id: file.id,
-            application_type: file.application_type,
-            application_id: file.application_id,
-            attachment_id: file.attachment_id,
-            name: file.file_name,
-            url: file.file_url,
-        }))
-        .filter((file: any) =>
-            typeof file.name === 'string' &&
-            file.name.startsWith('valid_id_')
-        );
+  return (props.files || [])
+    .map((file: any) => ({
+      id: file.id,
+      application_type: file.application_type,
+      application_id: file.application_id,
+      attachment_id: file.attachment_id,
+      name: file.file_name,
+      url: file.file_url,
+    }))
+    .filter((file: any) =>
+      typeof file.name === 'string' &&
+      file.name.startsWith('valid_id_')
+    );
 });
 
 /* ✅ Submit with validation */
@@ -145,81 +145,81 @@ watch(
 )
 
 const showFiles = computed(() => {
-    return (props.files || [])
-        .map((file: any) => ({
-            id: file.id,
-            application_type: file.application_type,
-            application_id: file.application_id,
-            attachment_id: file.attachment_id,
-            name: file.file_name,
-            url: file.file_url,
-        }))
-        .filter((file: any) =>
-            typeof file.name === 'string' &&
-            file.application_id === props.form.id && (
-                file.name.startsWith('official_receipt')
-            )
-        );
+  return (props.files || [])
+    .map((file: any) => ({
+      id: file.id,
+      application_type: file.application_type,
+      application_id: file.application_id,
+      attachment_id: file.attachment_id,
+      name: file.file_name,
+      url: file.file_url,
+    }))
+    .filter((file: any) =>
+      typeof file.name === 'string' &&
+      file.application_id === props.form.id && (
+        file.name.startsWith('official_receipt')
+      )
+    );
 });
 
 const openFileModal = (file: any) => {
-    selectedFile.value = file;
-    showModal.value = true;
+  selectedFile.value = file;
+  showModal.value = true;
 };
 const triggerUpdateFile = (file) => {
-    selectedFileToUpdate.value = file;
-    updateFileInput.value.click();
+  selectedFileToUpdate.value = file;
+  updateFileInput.value.click();
 };
 const getEmbedUrl = (url: string) => {
-    if (!url) return '';
-    return url.replace('/view', '/preview');
+  if (!url) return '';
+  return url.replace('/view', '/preview');
 };
 const handleFileUpdate = async (event) => {
-    const newFile = event.target.files[0];
-    if (!newFile || !selectedFileToUpdate.value) return;
+  const newFile = event.target.files[0];
+  if (!newFile || !selectedFileToUpdate.value) return;
 
-    try {
-        const formData = new FormData();
-        formData.append('application_id', selectedFileToUpdate.value.application_id);
-        formData.append('application_type', selectedFileToUpdate.value.application_type);
-        formData.append('file', newFile);
-        formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
-        formData.append('name', selectedFileToUpdate.value.name);
+  try {
+    const formData = new FormData();
+    formData.append('application_id', selectedFileToUpdate.value.application_id);
+    formData.append('application_type', selectedFileToUpdate.value.application_type);
+    formData.append('file', newFile);
+    formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
+    formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+    const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-        // Update file list
-        const updatedIndex = files.value.findIndex((f) => f.id === selectedFileToUpdate.value.id);
-        if (updatedIndex !== -1) {
-            files.value[updatedIndex] = response.data.updatedFile;
-        }
-
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'File updated successfully', life: 3000 });
-    } catch (error) {
-        console.error(error);
-        toast.add({ severity: 'error', summary: 'Successful', detail: 'Failed to update the file.', life: 3000 });
-    } finally {
-        updateFileInput.value.value = ''; // reset file input
-        selectedFileToUpdate.value = null;
+    // Update file list
+    const updatedIndex = files.value.findIndex((f) => f.id === selectedFileToUpdate.value.id);
+    if (updatedIndex !== -1) {
+      files.value[updatedIndex] = response.data.updatedFile;
     }
+
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'File updated successfully', life: 3000 });
+  } catch (error) {
+    console.error(error);
+    toast.add({ severity: 'error', summary: 'Successful', detail: 'Failed to update the file.', life: 3000 });
+  } finally {
+    updateFileInput.value.value = ''; // reset file input
+    selectedFileToUpdate.value = null;
+  }
 };
 
 </script>
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center gap-2">
-            <Info class="h-5 w-5" />
-            <h1 class="text-xl font-semibold">
-                Application Status:
-            </h1>
+    <div class="flex items-center gap-2" v-if="isEdit">
+      <Info class="h-5 w-5" />
+      <h1 class="text-xl font-semibold">
+        Application Status:
+      </h1>
 
-            <Tag severity="danger">
-                {{ props.form.status_title }}
-            </Tag>
-        </div>
+      <Tag severity="danger">
+        {{ props.form.status_title }}
+      </Tag>
+    </div>
     <Fieldset legend="Payment of Application Fee">
 
       <div :class="{ 'pointer-events-none opacity-60': isProcessing }">
@@ -250,7 +250,7 @@ const handleFileUpdate = async (event) => {
           </FloatLabel>
 
           <!-- File Upload -->
-          <div v-if="isEdit" class="md:col-span-2" >
+          <div v-if="isEdit" class="md:col-span-2">
             <div class="container">
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal"
@@ -292,15 +292,16 @@ const handleFileUpdate = async (event) => {
         class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="submitStep">
         {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
       </Button>
-       <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
-            <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500" allow="autoplay"></iframe>
-        </Dialog>
+      <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+        <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
+          allow="autoplay"></iframe>
+      </Dialog>
     </div>
     <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
-            <div class="flex flex-col items-center gap-4 py-4">
-                <span>Saving, please wait...</span>
-                <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
-            </div>
-        </Dialog>
+      <div class="flex flex-col items-center gap-4 py-4">
+        <span>Saving, please wait...</span>
+        <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
+      </div>
+    </Dialog>
   </div>
 </template>

@@ -278,17 +278,17 @@ onMounted(async () => {
         form.value.application_id = props.application_id;
     }
     await loadExistingApplication();
-    // if (props.mode == 'edit') {
-    //     await loadExistingApplication();
-    // }else{
-    //     showPrivacyDialog.value = false;
-    //     const hasConsent = await checkConsent(form.value.application_id);
+    if (props.mode == 'edit') {
+        await loadExistingApplication();
+    }else{
+        showPrivacyDialog.value = false;
+        const hasConsent = await checkConsent(form.value.application_id);
 
-    //     if (!hasConsent) {
-    //         showPrivacyDialog.value = true;
-    //     }
+        if (!hasConsent) {
+            showPrivacyDialog.value = true;
+        }
 
-    // }
+    }
 });
 </script>
 

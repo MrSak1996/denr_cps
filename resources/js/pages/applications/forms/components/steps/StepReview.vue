@@ -21,16 +21,17 @@ const props = defineProps({
   },
   application: Object,
   application_type: String,
-
+  mode: String,
   supplier: Array,
   files: Array
 })
+const isEdit = computed(() => props.mode === 'edit');
 
 const save = () => {
-    emit('submit', {
-        ...props.form,
-        application_type: props.application_type
-    })
+  emit('submit', {
+    ...props.form,
+    application_type: props.application_type
+  })
 }
 
 const applicationData = computed(() => props.application || {})
@@ -74,16 +75,16 @@ const formatDate = (date: any) => {
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center gap-2">
-            <Info class="h-5 w-5" />
-            <h1 class="text-xl font-semibold">
-                Application Status:
-            </h1>
+    <div class="flex items-center gap-2" v-if="isEdit">
+      <Info class="h-5 w-5" />
+      <h1 class="text-xl font-semibold">
+        Application Status:
+      </h1>
 
-            <Tag severity="danger">
-                {{ props.form.status_title }}
-            </Tag>
-        </div>
+      <Tag severity="danger">
+        {{ props.form.status_title }}
+      </Tag>
+    </div>
 
     <Fieldset legend="Applicant Details" :toggleable="true">
       <!-- Applicant Info (non-file fields) -->
@@ -126,7 +127,7 @@ const formatDate = (date: any) => {
               <span>
                 {{ applicationData.first_name }}
                 {{ applicationData.middle_name }}
-                {{ applicationData.last_name}}
+                {{ applicationData.last_name }}
               </span>
             </div>
           </div>
@@ -271,10 +272,8 @@ const formatDate = (date: any) => {
 
     <div class="grid grid-cols-2 gap-4">
       <Button variant="outline" @click="emit('back')">Back</Button>
-      
-      <Button
-        class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white"        @click="save"
-      >
+
+      <Button class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="save">
         Save & Continue
       </Button>
       <!-- <ConfirmModal class="w-full" :applicationId="Number(props.form.application_id)" :role_id="roleId" /> -->
