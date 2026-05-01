@@ -282,12 +282,12 @@ onMounted(async () => {
         <Fieldset legend="Chainsaw Application">
             <div class="mt-4 grid gap-4 md:grid-cols-3">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" :disabled="isEdit" class="w-full" readonly />
+                    <InputText v-model="props.form.application_no" :disabled="isEdit" class="w-full font-bold" readonly />
                     <label>Application No.</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText v-model="permitNo" class="w-full" :disabled="isEdit" readonly />
+                    <InputText v-model="permitNo" class="w-full font-bold" :disabled="isEdit" readonly />
                     <label>Permit No.</label>
                 </FloatLabel>
             </div>

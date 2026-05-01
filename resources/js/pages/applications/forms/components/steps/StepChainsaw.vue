@@ -250,7 +250,7 @@ const triggerUpdateFile = (file) => {
             <!-- PURPOSE -->
         <div class="mt-6">
             <!-- EDIT -->
-            <div v-if="isEdit">
+            <div v-if="isEdit && suppliers.length >= 1">
                 <div v-for="(supplier, i) in suppliers" :key="i" class="mt-4">
                     <FloatLabel>
                         <Select v-model="supplier.purpose" :options="options" class="w-full" />

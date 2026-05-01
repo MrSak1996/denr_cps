@@ -360,7 +360,7 @@ onMounted(async () => {
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
                         :supplier="suppliers" :files="files" @proceed="proceed" @next="nextStep" @back="goBack"
-                        :mode="props.mode" @supplierSaved="supplierSaved" @submit="submitAndContinue" />
+                        :mode="props.mode" @supplierSaved="supplierSaved" />
                 </div>
 
                 <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"
