@@ -145,7 +145,7 @@ const handleFileUpdate = async (event) => {
     try {
         const formData = new FormData();
         formData.append('application_id', selectedFileToUpdate.value.application_id);
-        formData.append('application_type', selectedFileToUpdate.value.application_type);
+        formData.append('applica    tion_type', selectedFileToUpdate.value.application_type);
         formData.append('file', newFile);
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);

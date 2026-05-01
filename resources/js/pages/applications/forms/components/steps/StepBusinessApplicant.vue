@@ -49,13 +49,20 @@ const props = defineProps({
 const isEdit = computed(() => props.mode === 'edit');
 
 const files = computed(() => {
-    return (props.files || []).map((file: any) => ({
-        id: file.id,
-        application_id: file.application_id,
-        attachment_id: file.attachment_id,
-        name: file.file_name,
-        url: file.file_url,
-    }));
+    return (props.files || [])
+        .map((file: any) => ({
+            id: file.id,
+            application_type: file.application_type,
+            application_id: file.application_id,
+            attachment_id: file.attachment_id,
+            name: file.file_name,
+            url: file.file_url,
+        }))
+        .filter((file: any) =>
+            typeof file.name === 'string' &&
+            file.name.startsWith('request_letter_') ||
+            file.name.startsWith('secretary_certificate_')
+        );
 });
 
 const openFileModal = (file: any) => {
@@ -131,7 +138,7 @@ const permitNo = computed({
 
 const save = () => {
     if (props.isProcessing) return;
-
+    isLoading.value =true;
     emit('next', {
         ...props.form,
         application_type: props.application_type,
@@ -313,7 +320,7 @@ onMounted(async () => {
                     <div class="md:col-span-2 mt-2">
                         <FloatLabel>
                             <!-- <InputText id="surname" v-model="props.form.company_name" v-letters-only-uppercase class="w-full" /> -->
-                            <InputText id="surname" v-model="props.form.company_name" letters-numbers-dash-uppercase
+                            <InputText id="surname" v-model="props.form.company_name"
                                 class="w-full" />
                             <label for="surname">Company / Corporation / Cooperative Name</label>
                         </FloatLabel>
@@ -324,7 +331,7 @@ onMounted(async () => {
                     <div class="md:col-span-1 mt-2">
                         <FloatLabel>
                             <InputText id="first_name" v-model="props.form.authorized_representative"
-                                v-letters-only-uppercase class="w-full" />
+                                 class="w-full" />
                             <label for="first_name">Name of Authorized Representative</label>
                         </FloatLabel>
                         <InputError />
@@ -400,7 +407,7 @@ onMounted(async () => {
                     <label class="mb-2 block text-sm font-medium"> Complete Address </label>
 
                     <Textarea v-model="props.form.company_address" rows="4" class="w-full"
-                        v-letters-numbers-dash-uppercase />
+                  />
                 </div>
             </div>
         </Fieldset>
