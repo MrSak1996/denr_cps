@@ -17,7 +17,7 @@ import { useToast } from 'primevue/usetoast'
 
 import {
     getApplicationReview,
-    saveApplicant,
+    saveCompanyApplication,
     saveChainsaw,
     savePayment,
     saveSupplierInfo,
@@ -172,7 +172,7 @@ const nextStep = async (payload: any) => {
         let res: any
 
         if (currentStep.value === 1) {
-            res = await saveApplicant({
+            res = await saveCompanyApplication({
                 ...payload,
                 mode: props.mode,
                 encoded_by: userId,

@@ -244,46 +244,50 @@ class ApplicationController extends Controller
 
             $applicationNo = $application->application_no;
             $applicationId = $application->id;
+            $isEdit = filter_var($request->mode, FILTER_VALIDATE_BOOLEAN);
 
             // Upload files to Google Drive
-            $filesToUpload = [
-                'request_letter' => [
-                    'folder_name' => 'Request Letter',
-                    'requirement_id' => 7,
-                ],
-                'soc_certificate' => [
-                    'folder_name' => 'Secretary Certificate',
-                    'requirement_id' => 11,
-                ],
-            ];
+            if (!$isEdit) {
 
-            $folderPath = 'CHAINSAW_PERMITTING/Company Applications/' . $applicationNo;
+                $filesToUpload = [
+                    'request_letter' => [
+                        'folder_name' => 'Request Letter',
+                        'requirement_id' => 7,
+                    ],
+                    'soc_certificate' => [
+                        'folder_name' => 'Secretary Certificate',
+                        'requirement_id' => 11,
+                    ],
+                ];
 
-            $results = [];
+                $folderPath = 'CHAINSAW_PERMITTING/Company Applications/' . $applicationNo;
 
-            foreach ($filesToUpload as $inputName => $config) {
+                $results = [];
 
-                if ($request->hasFile($inputName)) {
+                foreach ($filesToUpload as $inputName => $config) {
 
-                    // ✅ 1. Create checklist entry FIRST
-                    $checklist = AppChecklistEntry::create([
-                        'parent_id' => $applicationId,
-                        'chklist_id' => $config['requirement_id'],
-                        'uploaded_at' => now(),
-                    ]);
+                    if ($request->hasFile($inputName)) {
 
-                    // ✅ 2. Upload file AND pass checklist ID
-                    $uploadResult = $driveService->storeSingleAttachment(
-                        $applicationNo,
-                        $request->input('encoded_by'),
-                        $request->file($inputName),
-                        $applicationId,
-                        $folderPath,
-                        $config['folder_name'],
-                        $checklist->id // 🔥 THIS LINKS EVERYTHING
-                    );
+                        // ✅ 1. Create checklist entry FIRST
+                        $checklist = AppChecklistEntry::create([
+                            'parent_id' => $applicationId,
+                            'chklist_id' => $config['requirement_id'],
+                            'uploaded_at' => now(),
+                        ]);
 
-                    $results[$inputName] = $uploadResult;
+                        // ✅ 2. Upload file AND pass checklist ID
+                        $uploadResult = $driveService->storeSingleAttachment(
+                            $applicationNo,
+                            $request->input('encoded_by'),
+                            $request->file($inputName),
+                            $applicationId,
+                            $folderPath,
+                            $config['folder_name'],
+                            $checklist->id // 🔥 THIS LINKS EVERYTHING
+                        );
+
+                        $results[$inputName] = $uploadResult;
+                    }
                 }
             }
 
@@ -777,10 +781,10 @@ class ApplicationController extends Controller
     {
         try {
 
-            $data = DB::table('denr_chainsaw.tbl_app_checklist_entry as e')
-                ->leftJoin('denr_chainsaw.tbl_app_permitchecklist as ap', 'ap.id', '=', 'e.chklist_id')
-                ->leftJoin('denr_chainsaw.tbl_application_attachments as aa', 'aa.checklist_entry_id', '=', 'e.id')
-                ->leftJoin('denr_chainsaw.tbl_application_checklist as ac', 'ac.id', '=', 'aa.application_id')
+            $data = DB::table('denr_cps.tbl_app_checklist_entry as e')
+                ->leftJoin('denr_cps.tbl_app_permitchecklist as ap', 'ap.id', '=', 'e.chklist_id')
+                ->leftJoin('denr_cps.tbl_application_attachments as aa', 'aa.checklist_entry_id', '=', 'e.id')
+                ->leftJoin('denr_cps.tbl_application_checklist as ac', 'ac.id', '=', 'aa.application_id')
                 ->select(
                     'ac.application_type',
                     'e.id as checklist_entry_id',

@@ -163,52 +163,86 @@ const handleFileUpload = (event: Event, field: string) => {
         life: 3000,
     });
 };
+const loadMunicipalities = async (province: any) => {
+    if (!province) {
+        city_mun_opts.value = [];
+        barangay_opts.value = [];
+        return;
+    }
 
+    try {
+        const res = await axios.get(`/api/provinces/${province}/cities`);
+
+        city_mun_opts.value = res.data.map((item: any) => ({
+            id: Number(item.mun_code),
+            name: item.mun_name,
+        }));
+    } catch (error) {
+        console.error('Municipality load error:', error);
+    }
+};
+const loadBarangays = async (city: any) => {
+    if (!city) {
+        barangay_opts.value = [];
+        return;
+    }
+
+    try {
+        const res = await axios.post('/api/barangays', {
+            prov_code: Number(props.form.company_c_province),
+            mun_code: city,
+        });
+
+        barangay_opts.value = res.data.map((item: any) => ({
+            id: Number(item.bgy_code), // FIXED
+            name: item.bgy_name,
+        }));
+    } catch (error) {
+        console.error('Barangay load error:', error);
+    }
+};
 onMounted(async () => {
     await getProvinceCode();
 
     watch(
         () => props.form.company_c_province,
-        async (province) => {
-            if (!province) {
-                city_mun_opts.value = [];
+        async (province, oldVal) => {
+            await loadMunicipalities(province);
+
+            // reset only if user changed manually
+            if (oldVal && province !== oldVal) {
                 props.form.c_city_mun = '';
-                return;
+                props.form.c_barangay = '';
+                barangay_opts.value = [];
             }
-
-            const res = await axios.get(`/api/provinces/${province}/cities`);
-
-            city_mun_opts.value = res.data.map((item: any) => ({
-                id: item.mun_code,
-                name: item.mun_name,
-                code: item.geo_code,
-            }));
         },
         { immediate: true },
     );
-
     watch(
         () => props.form.c_city_mun,
-        async (city) => {
-            if (!city) {
-                barangay_opts.value = [];
+        async (city, oldVal) => {
+            await loadBarangays(city);
+
+            if (oldVal && city !== oldVal) {
                 props.form.c_barangay = '';
-                return;
+            }
+        },
+        { immediate: true },
+    );
+    watch(
+        () => props.form,
+        (val) => {
+            if (!val) return;
+
+            if (!val.type_of_transaction) {
+                props.form.type_of_transaction = 'G2B';
             }
 
-            const res = await axios.get('/api/barangays', {
-                params: {
-                    reg_code: props.form.i_region,
-                    prov_code: props.form.company_c_province,
-                    mun_code: city,
-                },
-            });
-
-            barangay_opts.value = res.data.map((item: any) => ({
-                id: item.bgy_code,
-                name: item.bgy_name,
-            }));
+            if (!val.classification) {
+                props.form.classification = 'Highly Technical';
+            }
         },
+        { immediate: true, deep: true },
     );
 });
 </script>
@@ -236,11 +270,11 @@ onMounted(async () => {
                     </FloatLabel>
                     <InputError />
                 </div>
-                <FloatLabel :hidden="true">
+                <FloatLabel>
                     <InputText id="permit_no" v-model="props.form.permit_no" class="w-full font-bold" />
                     <label for="permit_no">Permit No.</label>
                 </FloatLabel>
-                <FloatLabel class="mt-2">
+                <FloatLabel>
                     <DatePicker v-model="props.form.date_applied" class="w-full" />
                     <label>Date Applied</label>
                 </FloatLabel>
@@ -252,7 +286,7 @@ onMounted(async () => {
                         class="w-full" />
                     <label for="classification">Classification</label>
                 </FloatLabel>
-                <FloatLabel class="mt-2">
+                <FloatLabel>
                     <Select v-model="props.form.type_of_transaction" :options="['G2B']" :disabled="isEdit"
                         class="w-full" />
                     <label>Type of Transaction</label>
