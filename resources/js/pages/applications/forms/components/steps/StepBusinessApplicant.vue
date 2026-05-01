@@ -67,6 +67,10 @@ const triggerUpdateFile = (file) => {
     selectedFileToUpdate.value = file;
     updateFileInput.value.click();
 };
+const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    return url.replace('/view', '/preview');
+};
 const handleFileUpdate = async (event) => {
     const newFile = event.target.files[0];
     if (!newFile || !selectedFileToUpdate.value) return;
@@ -98,7 +102,7 @@ const handleFileUpdate = async (event) => {
     }
 };
 props.form.date_applied = ref(new Date());
-const emit = defineEmits(['next']);
+const emit = defineEmits(['next', 'proceed']);
 
 const { prov_name, getProvinceCode } = useApi();
 
@@ -303,7 +307,7 @@ onMounted(async () => {
                 <!-- Main Fields -->
                 <div class="mb-6 grid gap-6 md:grid-cols-3">
                     <!-- Company Name -->
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 mt-2">
                         <FloatLabel>
                             <!-- <InputText id="surname" v-model="props.form.company_name" v-letters-only-uppercase class="w-full" /> -->
                             <InputText id="surname" v-model="props.form.company_name" letters-numbers-dash-uppercase
@@ -314,7 +318,7 @@ onMounted(async () => {
                     </div>
 
                     <!-- Authorized Representative -->
-                    <div class="md:col-span-1">
+                    <div class="md:col-span-1 mt-2">
                         <FloatLabel>
                             <InputText id="first_name" v-model="props.form.authorized_representative"
                                 v-letters-only-uppercase class="w-full" />
@@ -398,10 +402,32 @@ onMounted(async () => {
             </div>
         </Fieldset>
 
+        <div :class="[
+            'w-full pt-6',
+            isEdit ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
+        ]">
+            <Button :disabled="props.isProcessing" type="button"
+                class="w-full bg-green-900 text-white transition-colors hover:bg-green-500" @click="save">
+                {{ props.isProcessing ? 'Saving...' : 'Save & Continue' }}
+            </Button>
 
-        <Button :disabled="props.isProcessing" type="button"
-            class="mt-2 w-full bg-green-900 text-white transition-colors hover:bg-green-500" @click="save">
-            {{ props.isProcessing ? 'Saving...' : 'Save & Continue' }}
-        </Button>
+            <Button v-if="isEdit" @click="$emit('proceed')" class="w-full bg-gray-300 hover:bg-gray-400">
+                Next
+            </Button>
+        </div>
+
+         <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
+            <div class="flex flex-col items-center gap-4 py-4">
+                <span>Saving, please wait...</span>
+                <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
+            </div>
+        </Dialog>
+
+        <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+            <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
+                allow="autoplay"></iframe>
+        </Dialog>
+
+
     </div>
 </template>
