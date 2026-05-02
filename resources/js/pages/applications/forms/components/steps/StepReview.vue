@@ -5,7 +5,7 @@
 ------------------------------------------------------- */
 import axios from 'axios';
 import { ref, computed, onMounted } from 'vue'
-import { usePage,router } from '@inertiajs/vue3';
+import { usePage, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import { Info, Undo2 } from 'lucide-vue-next'
 import AssessmentTable from '@/pages/applications/form_edit/assessment_tbl.vue';
@@ -125,6 +125,7 @@ const openFileModal = (file: any) => {
 
 // open return dialog and submit return request
 const openReturnDialog = (id: number) => {
+
   confirmDialogRef.value?.open({
     header: 'Return Application?',
     message: 'Please indicate the reason and office to return this application.',
@@ -143,8 +144,7 @@ const openReturnDialog = (id: number) => {
           returnTo: data?.returnTo,
 
           // 🔥 ensure remarks exists (fallback from dialog OR rows)
-          remarks: data?.remarks
-            ?? companyRequirements.value.map(r => r.remarks).filter(Boolean).join('\n'),
+          remarks: data?.remarks ?? companyRequirements.value.map(r => r.remarks).filter(Boolean).join('\n'),
 
           assessments: companyRequirements.value.map(row => ({
             permit_checklist_id: row.permit_checklist_id,
@@ -206,7 +206,10 @@ const submitAllAssessments = async (applicationId) => {
         assessment: row.assessment,
         remarks: row.remarks
       })),
-      onsite: onsite.value
+      onsite: {
+        findings: onsite.value.findings,
+        recommendations: onsite.value.recommendations
+      }
     });
 
     // send email only for ARD/TSD
@@ -214,7 +217,7 @@ const submitAllAssessments = async (applicationId) => {
 
     // role-based redirect
     const redirectMap = {
-      1: '/pending_applications',
+      1: '/pending_application',
       2: '/rps-chief',
       3: '/cenro-dashboard',
       4: '/penro-technical-dashboard',
@@ -230,7 +233,7 @@ const submitAllAssessments = async (applicationId) => {
 
     const redirectPath = redirectMap[roleId];
     if (redirectPath) {
-      router.visit('/dashboard'+redirectPath);
+      router.visit('/dashboard' + redirectPath);
     }
 
   } catch (error) {
@@ -291,7 +294,7 @@ const updateAssessment = (checklist_entry_id, assessment) => {
 
 // update remarks
 const updateRemarks = (checklist_entry_id, remarks) => {
-  const row = assessmentRows.value.find(
+  const row = companyRequirements.value.find(
     r => r.checklist_entry_id === checklist_entry_id
   );
 

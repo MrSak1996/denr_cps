@@ -270,6 +270,9 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     detail: c.toastMessage,
                     life: 3000,
                 });
+                setTimeout(() => {
+                    router.visit('/dashboard/rps-chief');
+                }, 1000);
             } catch (error) {
                 toast.add({
                     severity: 'error',
