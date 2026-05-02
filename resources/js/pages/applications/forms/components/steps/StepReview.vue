@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePage } from '@inertiajs/vue3';
 import { Info } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -68,10 +68,18 @@ const openFileModal = (file: any) => {
   showModal.value = true
 }
 
+const companyRequirements = computed(() => {
+  if (props.application_type === 'Individual') {
+    return assessmentRows.value.filter(
+      r => r.applicant_type === 'Individual'
+    );
+  } else {
+    return assessmentRows.value.filter(
+      r => r.applicant_type === 'Company'
+    );
+  }
+});
 
-const companyRequirements = computed(() =>
-  assessmentRows.value.filter(r => r.applicant_type === 'company')
-);
 const updateAssessment = (checklist_entry_id, assessment) => {
   const row = companyRequirements.value.find(
     r => r.checklist_entry_id === checklist_entry_id
@@ -81,6 +89,7 @@ const updateAssessment = (checklist_entry_id, assessment) => {
     row.is_saved = false; // unlock save again if changed
   }
 };
+
 const updateRemarks = (checklist_entry_id, remarks) => {
   const row = companyRequirements.value.find(
     r => r.checklist_entry_id === checklist_entry_id
@@ -92,6 +101,7 @@ const updateRemarks = (checklist_entry_id, remarks) => {
 }; const updateOnsite = ({ field, value }) => {
   onsite.value[field] = value;
 };
+
 const getEmbedUrl = (url: string) => {
   if (!url) return ''
   return url.replace('/view', '/preview')
@@ -214,6 +224,7 @@ const getApplicantFile = async (application_id) => {
     console.error('Error loading applicant data:', err);
   }
 };
+
 const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
   try {
     isLoading.value = true; // ✅ SHOW LOADING OVERLAY
@@ -244,11 +255,16 @@ const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
     isLoading.value = false; // ✅ HIDE LOADING OVERLAY
   }
 };
+
 const handleRemoveResubmission = (checklistId: number, index: number) => {
   const row = companyRequirements.find(r => r.checklist_entry_id === checklistId);
   if (!row || !row.resubmissions[index]) return;
   row.resubmissions.splice(index, 1);
 };
+
+onMounted(async () => {
+await getApplicantFile(props.form.application_id);
+});
 </script>
 
 <template>

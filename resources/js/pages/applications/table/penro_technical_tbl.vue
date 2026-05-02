@@ -297,28 +297,26 @@ const activeTab = ref<'re' | 'ea' | 'rc' | 'cpr' | 'aa'>('re');
 const applicationDetails = ref(null);
 const files = ref([]);
 const userId = page.props.auth.user.id;
-const applicantsTable = async () => {
-    try {
-        const officeId = page.props.auth.user.office_id;
+    const applicantsTable = async () => {
+        try {
+            const officeId = page.props.auth.user.office_id;
 
-        const res = await ProductService.getApplicationsByStatus(
-            STATUS_ENDORSED_PENRO_TECHNICAL,
-            officeId
-        );
+            const res = await ProductService.getApplicationsByStatus(
+                STATUS_ENDORSED_PENRO_TECHNICAL,
+                officeId
+            );
+            
+            endorsed_applications.value = res?.applications ?? [];
+            totalCount.value = res?.count ?? 0;
 
-        console.log(res);
+            for (const item of endorsed_applications.value) {
+                await getDownloadCount(item.id);
+            }
 
-        endorsed_applications.value = res?.data ?? [];
-        totalCount.value = res?.total_count ?? 0;
-
-        for (const item of endorsed_applications.value) {
-            await getDownloadCount(item.id);
+        } catch (error) {
+            console.error('Error fetching applications:', error);
         }
-
-    } catch (error) {
-        console.error('Error fetching applications:', error);
-    }
-};
+    };
 
 const openCommentModal = async (data) => {
     showCommentsModal.value = true;
