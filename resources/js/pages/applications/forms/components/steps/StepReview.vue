@@ -7,7 +7,10 @@ import axios from 'axios';
 import { ref, computed, onMounted } from 'vue'
 import { usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
+import { Info,Undo2 } from 'lucide-vue-next'
 import AssessmentModal from '../../../../applications/modal/assessment_modal.vue';
+import Fieldset from 'primevue/fieldset';
+import Tag from 'primevue/tag';
 
 /* -------------------------------------------------------
 | GLOBAL / PAGE CONTEXT
@@ -723,11 +726,12 @@ onMounted(async () => {
     <div :class="[
       'pt-6 w-full',
       currentStep == 4
-        ? 'grid grid-cols-1 gap-4'
+        ? 'grid grid-cols-2 gap-4'
         : 'flex justify-end'
     ]">
+    {{ companyRequirements }}
       <Button v-if="props.form.status_title !== 'Draft' && currentStep === 4"
-        class="w-full h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
+        class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
         @click="() => openReturnDialog(props.form.id)">
         <Undo2 />
         Return Application

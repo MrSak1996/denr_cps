@@ -125,7 +125,7 @@ onMounted(() => {
         <!-- Submit Button -->
         <div class="flex justify-center">
             <Button @click="requireConfirmation()" style="background-color: rgba(0,77,64,1) !important;"
-                class="w-full ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-green-900 text-white hover:bg-green-800"
+                class="ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-green-900 text-white hover:bg-green-800"
                 :disabled="isLoading">
                 <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
                 <CircleCheckBig />
