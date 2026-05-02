@@ -278,7 +278,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/penro-technical-dashboard');
+                    router.visit('/penro-technical');
                 }, 1000);
             } catch (error) {
                 console.log(error);
@@ -760,8 +760,8 @@ const handleFileUpdate = async (event) => {
 const buttonState = (row: any) => {
     const isEndorsed = row.application_status === STATUS_ENDORSED_PENRO_TECHNICAL || row.application_status == STATUS_RECEIVED_PENRO_TECHNICAL;
     return {
-        receiveDisable: false,
-        endorsedDisabled: isEndorsed,
+        receiveDisable: isEndorsed,
+        endorsedDisabled: false,
         returnDisbaled: false
     }
 }
@@ -843,7 +843,7 @@ const getDownloadCount = async (application_id) => {
 
                                     <!-- ✅ VIEW (ALWAYS ENABLED) -->
                                     <Link
-                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
+                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL,STATUS_RECEIVED_PENRO_TECHNICAL,STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
                                         :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,
