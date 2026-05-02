@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, SquarePen, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -26,7 +26,7 @@ onMounted(() => {
     applicantsTable();
 });
 
-    
+
 const STATUS_DRAFT = 1;
 const STATUS_FOR_REVIEW_EVALUATION = 2;
 
@@ -219,7 +219,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Endorse this application to Chief TSD?',
             message: 'Please confirm that you want to endorse this application.',
             api: 'applications.rpschief.endorse',
-            payload: { id,office_id,user_id},
+            payload: { id, office_id, user_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application endorsed',
@@ -228,7 +228,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Return Application?',
             message: 'Please indicate the reason and office to return this application.',
             api: 'applications.tsd.return',
-            payload: { id,office_id,user_id},
+            payload: { id, office_id, user_id },
             showTextarea: true,
             showDropdown: true,
             toastMessage: 'Application returned',
@@ -240,7 +240,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
             api: 'applications.rpschief.receive',
-            payload: { id,office_id,user_id},
+            payload: { id, office_id, user_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',
@@ -292,7 +292,7 @@ const applicantsTable = async () => {
     try {
         const officeId = page.props.auth.user.office_id;
         const { applications: endorsedApplications, count: endorsedCount } = await ProductService.getApplicationsByStatus(STATUS_ENDORSED_CENRO_RPS_CHIEF, officeId);
-        
+
         endorsed_applications.value = endorsedApplications;
         totalCount.value = endorsedCount;
 
@@ -738,12 +738,12 @@ const handleFileUpdate = async (event) => {
 };
 
 
-const buttonState = (row:any) => {
-    const isEndorsed = row.application_status === STATUS_ENDORSED_CENRO_RPS_CHIEF  || row.application_status == STATUS_ENDORSED_PENRO_TECHNICAL;
+const buttonState = (row: any) => {
+    const isEndorsed = row.application_status === STATUS_ENDORSED_CENRO_RPS_CHIEF || row.application_status == STATUS_ENDORSED_PENRO_TECHNICAL;
     return {
         receiveDisable: false,
         endorsedDisabled: isEndorsed,
-        returnDisbaled:false
+        returnDisbaled: false
     }
 }
 </script>
@@ -776,7 +776,7 @@ const buttonState = (row:any) => {
             <!-- For Review / Evaluation Table -->
             <div v-if="activeTab === 're'" class="space-y-2 text-sm text-gray-700">
                 <div class="h-auto w-full">
-                   <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="endorsed_applications"
+                    <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="endorsed_applications"
                         dataKey="id" :paginator="true" :rows="20" :filters="filters" filterDisplay="menu"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         :rowsPerPageOptions="[5, 10, 25]"
@@ -802,10 +802,14 @@ const buttonState = (row:any) => {
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
-
+                                    <Button type="button" @click="openProgressTracker(slotProps.data)"
+                                        style="background-color: #0f766e; border: 1px solid #0f766e !important"
+                                        class="rounded p-2 text-white hover:bg-teal-900">
+                                        <History :size="15" />
+                                    </Button>
                                     <!-- ✅ VIEW (ALWAYS ENABLED) -->
                                     <Link
-                                        v-if="[STATUS_ENDORSED_CENRO_RPS_CHIEF,STATUS_RECEIVED_CENRO_RPS_CHIEF,STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
+                                        v-if="[STATUS_ENDORSED_CENRO_RPS_CHIEF, STATUS_RECEIVED_CENRO_RPS_CHIEF, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
                                         :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,
@@ -817,7 +821,7 @@ const buttonState = (row:any) => {
                                         <SquarePen :size="16" />
                                     </Link>
 
-        
+
                                 </div>
                             </template>
                         </Column>
@@ -1244,7 +1248,8 @@ const buttonState = (row:any) => {
                             <!-- Date Endorsed -->
                             <td class="border px-4">
                                 <span v-if="item.route_order == 1">
-                                    {{ item.date_endorsed_chiefrps ? new Date(item.date_endorsed_chiefrps).toLocaleString('en-PH', {
+                                    {{ item.date_endorsed_chiefrps ? new
+                                        Date(item.date_endorsed_chiefrps).toLocaleString('en-PH', {
                                             year: 'numeric',
                                             month: 'long',
                                             day: '2-digit',
@@ -1253,7 +1258,7 @@ const buttonState = (row:any) => {
                                             second: '2-digit',
                                             hour12: true,
                                         }) : '-' }}
-                                    
+
                                 </span>
                                 <span v-if="item.route_order == 3">
                                     {{

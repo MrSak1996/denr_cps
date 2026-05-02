@@ -5,7 +5,7 @@
 ------------------------------------------------------- */
 import axios from 'axios';
 import { ref, computed, onMounted } from 'vue'
-import { usePage } from '@inertiajs/vue3';
+import { usePage,router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import { Info, Undo2 } from 'lucide-vue-next'
 import AssessmentTable from '@/pages/applications/form_edit/assessment_tbl.vue';
@@ -132,19 +132,27 @@ const openReturnDialog = (id: number) => {
     showDropdown: false,
 
     // confirm callback
-    onConfirm: async (data?: { remarks?: string }) => {
+    onConfirm: async (data?: { remarks?: string; returnTo?: number }) => {
       try {
         const payload = {
           id,
           user_id: userId,
           role_id: roleId,
+
+          // 🔥 include returnTo (THIS IS REQUIRED BY BACKEND)
+          returnTo: data?.returnTo,
+
+          // 🔥 ensure remarks exists (fallback from dialog OR rows)
+          remarks: data?.remarks
+            ?? companyRequirements.value.map(r => r.remarks).filter(Boolean).join('\n'),
+
           assessments: companyRequirements.value.map(row => ({
             permit_checklist_id: row.permit_checklist_id,
             assessment: row.assessment,
-            remarks: row.remarks,
+            remarks: row.remarks ?? '',
           })),
+
           onsite: onsite.value,
-          extra_remarks: data?.remarks || null,
         };
 
         await axios.post(route('applications.penro.return'), payload);
@@ -160,11 +168,11 @@ const openReturnDialog = (id: number) => {
         toast.add({
           severity: 'error',
           summary: 'Error',
-          detail:'Something went wrong' + error.response?.data?.message,
+          detail: error.response?.data?.message,
           life: 5000,
         });
       }
-    },
+    }
   });
 };
 
@@ -206,6 +214,8 @@ const submitAllAssessments = async (applicationId) => {
 
     // role-based redirect
     const redirectMap = {
+      1: '/pending_applications',
+      2: '/rps-chief',
       3: '/cenro-dashboard',
       4: '/penro-technical-dashboard',
       5: '/penro-rps-chief-dashboard',
@@ -220,7 +230,7 @@ const submitAllAssessments = async (applicationId) => {
 
     const redirectPath = redirectMap[roleId];
     if (redirectPath) {
-      setTimeout(() => router.visit(redirectPath), 5000);
+      router.visit('/dashboard'+redirectPath);
     }
 
   } catch (error) {
@@ -281,7 +291,10 @@ const updateAssessment = (checklist_entry_id, assessment) => {
 
 // update remarks
 const updateRemarks = (checklist_entry_id, remarks) => {
-  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklist_entry_id);
+  const row = assessmentRows.value.find(
+    r => r.checklist_entry_id === checklist_entry_id
+  );
+
   if (row) {
     row.remarks = remarks;
     row.is_saved = false;
@@ -319,71 +332,71 @@ const formatDate = (date: any) => {
 
 // fetch applicant checklist + attachments
 const getApplicantFile = async (application_id) => {
-    try {
-        const checklistRes = await axios.get(
-            `https://cps.denrcalabarzon.com/api/getChecklistEntries/${application_id}`
-        );
+  try {
+    const checklistRes = await axios.get(
+      `https://cps.denrcalabarzon.com/api/getChecklistEntries/${application_id}`
+    );
 
-        const attachmentsRes = await axios.get(
-            `https://cps.denrcalabarzon.com/api/getApplicantFile/${application_id}`
-        );
+    const attachmentsRes = await axios.get(
+      `https://cps.denrcalabarzon.com/api/getApplicantFile/${application_id}`
+    );
 
-        if (checklistRes.data.status && attachmentsRes.data.status) {
-            const checklistEntries = checklistRes.data.data;
-            const attachments = attachmentsRes.data.data;
+    if (checklistRes.data.status && attachmentsRes.data.status) {
+      const checklistEntries = checklistRes.data.data;
+      const attachments = attachmentsRes.data.data;
 
 
 
-            const attachmentsMap = attachments.reduce((acc, file) => {
-                const id = file.checklist_entry_id;
+      const attachmentsMap = attachments.reduce((acc, file) => {
+        const id = file.checklist_entry_id;
 
-                if (!acc[id]) {
-                    acc[id] = {
-                        original: null,
-                        resubmissions: []
-                    };
-                }
-
-                if (file.file_name) {
-                    if (/_v\d+\./i.test(file.file_name)) {
-                        // ✅ resubmitted file
-                        acc[id].resubmissions.push(file);
-                    } else {
-                        // ✅ original file
-                        acc[id].original = file;
-                    }
-                }
-
-                return acc;
-            }, {});
-            assessmentRows.value = checklistEntries.map(entry => {
-                const entryAttachments = attachmentsMap[entry.checklist_entry_id] || [];
-
-                const files = attachmentsMap[entry.checklist_entry_id] || {
-                    original: null,
-                    resubmissions: []
-                };
-
-                return {
-                    ...entry,
-                    // permit_checklist_id: entry.chklist_id ?? null,
-                    application_type: entry.applicant_type, // normalize here
-                    permit_checklist_id: entry.permit_checklist_id ?? null,
-                    original_file: files.original,
-                    attachments: files.original ? [files.original] : [], // for your existing VIEW button
-                    resubmissions: files.resubmissions.sort(
-                        (a, b) => new Date(a.created_at) - new Date(b.created_at)
-                    ),
-                    requirement: entry.requirement || 'N/A',
-                    assessment: entry.assessment ?? null,
-                    is_saved: Boolean(entry.assessment)
-                };
-            });
-
+        if (!acc[id]) {
+          acc[id] = {
+            original: null,
+            resubmissions: []
+          };
         }
-    } catch (err) {
-        console.error('Error loading applicant data:', err);
+
+        if (file.file_name) {
+          if (/_v\d+\./i.test(file.file_name)) {
+            // ✅ resubmitted file
+            acc[id].resubmissions.push(file);
+          } else {
+            // ✅ original file
+            acc[id].original = file;
+          }
+        }
+
+        return acc;
+      }, {});
+      assessmentRows.value = checklistEntries.map(entry => {
+        const entryAttachments = attachmentsMap[entry.checklist_entry_id] || [];
+
+        const files = attachmentsMap[entry.checklist_entry_id] || {
+          original: null,
+          resubmissions: []
+        };
+
+        return {
+          ...entry,
+          // permit_checklist_id: entry.chklist_id ?? null,
+          application_type: entry.applicant_type, // normalize here
+          permit_checklist_id: entry.permit_checklist_id ?? null,
+          original_file: files.original,
+          attachments: files.original ? [files.original] : [], // for your existing VIEW button
+          resubmissions: files.resubmissions.sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          ),
+          requirement: entry.requirement || 'N/A',
+          assessment: entry.assessment ?? null,
+          is_saved: Boolean(entry.assessment)
+        };
+      });
+
     }
+  } catch (err) {
+    console.error('Error loading applicant data:', err);
+  }
 };
 
 
@@ -731,11 +744,9 @@ onMounted(() => {
     </Fieldset>
 
     <AssessmentTable title="Applicant Requirements" :collapsed="isCollapsed.value"
-      :application_status="props.form.status_title" :roleId="roleId" 
-      :rows="companyRequirements" :onsite="onsite"
-     @view-file="openFileModal" @update-assessment="updateAssessment"
-      @update-remarks="updateRemarks" @update-onsite="updateOnsite" 
-      @upload-resubmission="handleResubmissionUpload"
+      :application_status="props.form.status_title" :roleId="roleId" :rows="companyRequirements" :onsite="onsite"
+      @view-file="openFileModal" @update-assessment="updateAssessment" @update-remarks="updateRemarks"
+      @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
       @remove-resubmission="handleRemoveResubmission" />
 
     <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
@@ -762,9 +773,9 @@ onMounted(() => {
         ? 'grid grid-cols-2 gap-4'
         : 'flex justify-end'
     ]">
-      <Button v-if="props.form.status_title !== 'Draft' && currentStep === 4"
+      <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)" :disabled="roleId === 1"
         class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
-        @click="() => openReturnDialog(props.form.id)">
+        @click="openReturnDialog(props.form.id)">
         <Undo2 />
         Return Application
       </Button>
