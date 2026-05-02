@@ -90,22 +90,16 @@ const files = computed(() => {
 const payment = computed(() => applicationData.value?.payment || {})
 
 // filter requirements depending on applicant type
-const individualRequirements = computed(() =>
-  assessmentRows.value.filter(
-    r => r.application_type === 'Individual'
-  )
-)
-
-// const companyRequirements = computed(() =>
-//   assessmentRows.value.filter(
-//     r => r.application_type === 'Company'
-//   )
-// )
+const companyRequirements = computed(() => {
+  return assessmentRows.value.filter(
+    r => r.applicant_type === applicationData.value.application_type
+  );
+});
 
 // check if any failed assessment exists
-const hasFailed = computed(() => {
-    return individualRequirements.value.some(r => r.assessment === 'failed')
-})
+const hasFailed = computed(() =>
+  companyRequirements.value.some(r => r.assessment === 'failed')
+);
 
 /* -------------------------------------------------------
 | BASIC ACTIONS
@@ -146,7 +140,7 @@ const openReturnDialog = (id: number) => {
                     id: id,
                     user_id,
                     role_id,
-                    assessments: individualRequirements.value.map(row => ({
+                    assessments: companyRequirements.value.map(row => ({
                         permit_checklist_id: row.permit_checklist_id,
                         assessment: row.assessment,
                         remarks: row.remarks,
@@ -180,12 +174,51 @@ const openReturnDialog = (id: number) => {
     });
 };
 
+const returnApplication = async () => {
+
+    const incompleteRows = companyRequirements.value
+        .map((row, index) => ({ index: index + 1, assessment: row.assessment }))
+        .filter(r => !r.assessment);
+
+    if (incompleteRows.length) {
+        alert(`Incomplete assessment on row(s): ${incompleteRows.map(r => r.index).join(', ')}`);
+        return;
+    }
+
+
+    await axios.post('/api/returnApplication', {
+        application_id: props.form.id,
+        user_id: userId,
+        role_id: roleId,
+        assessments: companyRequirements.value.map(row => ({
+            permit_checklist_id: row.permit_checklist_id,
+            assessment: row.assessment,
+            remarks: row.remarks,
+        })),
+        onsite: {
+            findings: onsite.value.findings,
+            recommendations: onsite.value.recommendations
+        }
+    });
+
+    toast.add({
+        severity: 'success',
+        summary: 'Application Returned',
+        detail: 'Application has been returned successfully.',
+        life: 5000,
+    });
+
+    setTimeout(() => {
+        router.get(route('rps.chief.dashboard'));
+    }, 2000);
+};
+
 // submit all assessments and handle workflow
 const submitAllAssessments = async (applicationId) => {
 
   // validate required assessments
   if (![1, 4, 11, 12].includes(roleId)) {
-    const incomplete = individualRequirements.value.some(row => !row.assessment);
+    const incomplete = companyRequirements.value.some(row => !row.assessment);
     if (incomplete) {
       alert('Please complete all assessments before submitting.');
       return;
@@ -205,7 +238,7 @@ const submitAllAssessments = async (applicationId) => {
       role_id: roleId,
       workflow_type: workflowType,
       office_id: officeId,
-      assessments: individualRequirements.value.map(row => ({
+      assessments: companyRequirements.value.map(row => ({
         permit_checklist_id: row.permit_checklist_id,
         assessment: row.assessment,
         remarks: row.remarks
@@ -289,7 +322,7 @@ const sendEmail = async () => {
 
 // update assessment value
 const updateAssessment = (checklist_entry_id, assessment) => {
-  const row = individualRequirements.value.find(r => r.checklist_entry_id === checklist_entry_id);
+  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklist_entry_id);
   if (row) {
     row.assessment = assessment;
     row.is_saved = false;
@@ -298,7 +331,7 @@ const updateAssessment = (checklist_entry_id, assessment) => {
 
 // update remarks
 const updateRemarks = (checklist_entry_id, remarks) => {
-  const row = individualRequirements.value.find(
+  const row = companyRequirements.value.find(
     r => r.checklist_entry_id === checklist_entry_id
   );
 
@@ -422,7 +455,7 @@ const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
 
     const response = await axios.post('/api/resubmit-files', formData);
 
-    const row = handleResubmissionUpload.value.find(r => r.checklist_entry_id === checklistId);
+    const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
     if (row) row.resubmissions.push(...response.data.files);
 
   } catch (error) {
@@ -434,7 +467,7 @@ const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
 
 // remove resubmitted file
 const handleRemoveResubmission = (checklistId: number, index: number) => {
-  const row = handleResubmissionUpload.value.find(r => r.checklist_entry_id === checklistId);
+  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
   if (!row) return;
   row.resubmissions.splice(index, 1);
 };
@@ -446,7 +479,7 @@ const handleRemoveResubmission = (checklistId: number, index: number) => {
 // initial load
 onMounted(() => {
   getApplicantFile(props.form.application_id);
-  console.log(handleResubmissionUpload)
+  console.log(companyRequirements)
 });
 
 </script>
@@ -751,7 +784,7 @@ onMounted(() => {
     </Fieldset>
 
     <AssessmentTable title="Applicant Requirements" :collapsed="isCollapsed.value"
-      :application_status="props.form.status_title" :roleId="roleId" :rows="individualRequirements" :onsite="onsite"
+      :application_status="props.form.status_title" :roleId="roleId" :rows="companyRequirements" :onsite="onsite"
       @view-file="openFileModal" @update-assessment="updateAssessment" @update-remarks="updateRemarks"
       @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
       @remove-resubmission="handleRemoveResubmission" />
@@ -782,7 +815,7 @@ onMounted(() => {
     ]">
       <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)" :disabled="roleId === 1"
         class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
-        @click="openReturnDialog(props.form.id)">
+        @click="returnApplication">
         <Undo2 />
         Return Application
       </Button>
