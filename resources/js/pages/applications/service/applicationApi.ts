@@ -85,11 +85,6 @@ export const savePayment = async (payload: any, id: any) => {
         }
     });
 
-    // 🔍 Debug (optional)
-    for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-    }
-
     return await axios.post('/api/chainsaw/insert_payment', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',

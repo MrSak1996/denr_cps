@@ -28,13 +28,15 @@ class PaymentController extends Controller
         $application_no = $application->application_no;
 
         // ✅ Create Payment first (without attachment for now)
-        $payment = PaymentModel::create([
-            'application_id' => $application_id,
-            'official_receipt' => $request->input('official_receipt'),
-            'permit_fee' => $request->input('permit_fee'),
-            'remarks' => $request->input('remarks'),
-            'date_of_payment' => now()
-        ]);
+        $payment = PaymentModel::updateOrCreate(
+            ['application_id' => $application_id],
+                [
+                'official_receipt' => $request->input('official_receipt'),
+                'permit_fee' => $request->input('permit_fee'),
+                'remarks' => $request->input('remarks'),
+                'date_of_payment' => now()
+                ]
+            );
 
         // ✅ File configuration (like company_apply approach)
         $filesToUpload = [

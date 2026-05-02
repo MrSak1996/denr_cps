@@ -55,11 +55,22 @@ const updateFileInput = ref<HTMLInputElement | null>(null)
 
 
 /* -------------------- PURPOSE (FIXED CORE ISSUE) -------------------- */
-const selectedPurpose = computed(() => {
-    if (isEdit.value) {
-        return props.suppliers?.[0]?.purpose || null
+const selectedPurpose = computed({
+    get() {
+        if (isEdit.value) {
+            return props.suppliers?.[0]?.purpose || null
+        }
+        return props.form.purpose
+    },
+    set(value) {
+        if (isEdit.value) {
+            if (props.suppliers?.length) {
+                props.suppliers[0].purpose = value
+            }
+        } else {
+            props.form.purpose = value
+        }
     }
-    return props.form.purpose
 })
 
 /* -------------------- FILE FILTER (FIXED) -------------------- */
@@ -93,19 +104,14 @@ const showFiles = computed(() => {
 const getUploadType = (purpose: string | null) => {
     if (!purpose) return null
 
-    if (['For selling / re-selling', 'Forestry/landscaping service provider'].includes(purpose)) {
-        return 'mayorDTI'
+    const map: Record<string, string> = {
+        'For selling / re-selling': 'mayorDTI',
+        'Forestry/landscaping service provider': 'mayorDTI',
+        'Other legal purpose(s)': 'affidavit',
+        'Other Supporting Documents': 'permit'
     }
 
-    if (purpose === 'Other legal purpose(s)') {
-        return 'affidavit'
-    }
-
-    if (purpose === 'Other Supporting Documents') {
-        return 'permit'
-    }
-
-    return null
+    return map[purpose] || null
 }
 
 /* -------------------- FILE UPLOAD -------------------- */
