@@ -306,13 +306,12 @@ const applicantsTable = async () => {
             officeId
         );
 
-        endorsed_applications.value = res?.applications ?? [];
-        totalCount.value = res?.count ?? 0;
+        console.log(res);
 
-        const data = await ProductService.getProducts(userId);
-        products.value = data ?? [];
+        endorsed_applications.value = res?.data ?? [];
+        totalCount.value = res?.total_count ?? 0;
 
-        for (const item of products.value) {
+        for (const item of endorsed_applications.value) {
             await getDownloadCount(item.id);
         }
 

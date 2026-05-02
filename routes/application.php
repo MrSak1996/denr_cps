@@ -3,6 +3,8 @@
 use App\Http\Controllers\Application\ApplicationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
+
 
 Route::middleware(['auth', 'verified'])
     ->prefix('applications')
@@ -49,6 +51,7 @@ Route::middleware(['auth', 'verified'])
         |--------------------------------------------------------------------------
         */
         Route::get('/edit/{application_id}/{type}', function (
+            Request $request,
             $application_id,
             $type
         ) {
@@ -59,7 +62,7 @@ Route::middleware(['auth', 'verified'])
             return Inertia::render($view, [
                 'application_id' => $application_id,
                 'type' => $type,
-                'step' => 1,
+                'step' => (int) $request->query('step', 1), // 👈 important fix
                 'mode' => 'edit',
             ]);
         })->name('applications.edit');

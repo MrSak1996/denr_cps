@@ -1,0 +1,1 @@
+import{_ as e}from"./denr_logo-DzIDLJP0.js";import{d as o,b as s,e as t}from"./app-DpbZfQpv.js";const r={src:e},m=o({inheritAttrs:!1,__name:"AppLogoIcon",props:{className:{}},setup(_){return(n,p)=>(t(),s("img",r))}});export{m as _};
