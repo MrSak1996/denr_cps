@@ -1475,7 +1475,6 @@ onMounted(() => {
     if (props.mode === 'view') {
         currentStep.value = 4; // Jump to last step
     }
-    console.log(companyRequirements);
     // getProvinceCode();
     fetchRoutingHistory();
     getApplicantFile(page.props.application.id);

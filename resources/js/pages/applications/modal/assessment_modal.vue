@@ -123,7 +123,7 @@ onMounted(() => {
         </ConfirmDialog>
 
         <!-- Submit Button -->
-        <div class="flex justify-center">
+     
             <Button @click="requireConfirmation()" style="background-color: rgba(0,77,64,1) !important;"
                 class="ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-green-900 text-white hover:bg-green-800"
                 :disabled="isLoading">
@@ -132,7 +132,6 @@ onMounted(() => {
 
                 {{ [13, 24, 28].includes(props.status_id) ? 'Approve Application' : 'Submit Application' }}
             </Button>
-        </div>
     </div>
 
     <!-- Toast notifications -->

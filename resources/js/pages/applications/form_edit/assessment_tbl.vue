@@ -135,7 +135,6 @@ const props = defineProps({
     application_status: String,
     collapsed: { type: Boolean, default: true },
     rows: Array,
-    company_form: Object,
     onsite: {
         type: Object,
         default: () => ({ findings: '', recommendations: '' })

@@ -760,8 +760,8 @@ const handleFileUpdate = async (event) => {
 const buttonState = (row: any) => {
     const isEndorsed = row.application_status === STATUS_ENDORSED_PENRO_TECHNICAL || row.application_status == STATUS_RECEIVED_PENRO_TECHNICAL;
     return {
-        receiveDisable: isEndorsed,
-        endorsedDisabled: false,
+        receiveDisable: false,
+        endorsedDisabled: isEndorsed,
         returnDisbaled: false
     }
 }

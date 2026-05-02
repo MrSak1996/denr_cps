@@ -7,10 +7,12 @@ import axios from 'axios';
 import { ref, computed, onMounted } from 'vue'
 import { usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
-import { Info,Undo2 } from 'lucide-vue-next'
-import AssessmentModal from '../../../../applications/modal/assessment_modal.vue';
+import { Info, Undo2 } from 'lucide-vue-next'
+import AssessmentTable from '@/pages/applications/form_edit/assessment_tbl.vue';
+import AssessmentModal from '@/pages/applications/modal/assessment_modal.vue';
 import Fieldset from 'primevue/fieldset';
 import Tag from 'primevue/tag';
+import Dialog from 'primevue/dialog';
 
 /* -------------------------------------------------------
 | GLOBAL / PAGE CONTEXT
@@ -28,9 +30,9 @@ const roleId = page.props.auth?.user?.role_id;
 const emit = defineEmits(['back', 'submit'])
 
 const props = defineProps({
-  form:{
-    type:Object,
-    required:true
+  form: {
+    type: Object,
+    required: true
   },
   currentStep: Number,
   application: Object,
@@ -314,52 +316,73 @@ const formatDate = (date: any) => {
 
 // fetch applicant checklist + attachments
 const getApplicantFile = async (application_id) => {
-  try {
-    const [checklistRes, attachmentsRes] = await Promise.all([
-      axios.get(`/api/getChecklistEntries/${application_id}`),
-      axios.get(`/api/getApplicantFile/${application_id}`)
-    ]);
+    try {
+        const checklistRes = await axios.get(
+            `https://cps.denrcalabarzon.com/api/getChecklistEntries/${application_id}`
+        );
 
-    if (!checklistRes.data.status || !attachmentsRes.data.status) return;
+        const attachmentsRes = await axios.get(
+            `https://cps.denrcalabarzon.com/api/getApplicantFile/${application_id}`
+        );
 
-    const attachmentsMap = attachmentsRes.data.data.reduce((acc, file) => {
-      const id = file.checklist_entry_id;
-      if (!acc[id]) acc[id] = { original: null, resubmissions: [] };
+        if (checklistRes.data.status && attachmentsRes.data.status) {
+            const checklistEntries = checklistRes.data.data;
+            const attachments = attachmentsRes.data.data;
 
-      if (/_v\d+\./i.test(file.file_name)) {
-        acc[id].resubmissions.push(file);
-      } else {
-        acc[id].original = file;
-      }
 
-      return acc;
-    }, {});
 
-    assessmentRows.value = checklistRes.data.data.map(entry => {
-      const files = attachmentsMap[entry.checklist_entry_id] || {
-        original: null,
-        resubmissions: []
-      };
+            const attachmentsMap = attachments.reduce((acc, file) => {
+                const id = file.checklist_entry_id;
 
-      return {
-        ...entry,
-        application_type: entry.applicant_type,
-        permit_checklist_id: entry.permit_checklist_id ?? null,
-        original_file: files.original,
-        attachments: files.original ? [files.original] : [],
-        resubmissions: files.resubmissions.sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        ),
-        requirement: entry.requirement || 'N/A',
-        assessment: entry.assessment ?? null,
-        is_saved: Boolean(entry.assessment)
-      };
-    });
+                if (!acc[id]) {
+                    acc[id] = {
+                        original: null,
+                        resubmissions: []
+                    };
+                }
 
-  } catch (err) {
-    console.error('Error loading applicant data:', err);
-  }
+                if (file.file_name) {
+                    if (/_v\d+\./i.test(file.file_name)) {
+                        // ✅ resubmitted file
+                        acc[id].resubmissions.push(file);
+                    } else {
+                        // ✅ original file
+                        acc[id].original = file;
+                    }
+                }
+
+                return acc;
+            }, {});
+            assessmentRows.value = checklistEntries.map(entry => {
+                const entryAttachments = attachmentsMap[entry.checklist_entry_id] || [];
+
+                const files = attachmentsMap[entry.checklist_entry_id] || {
+                    original: null,
+                    resubmissions: []
+                };
+
+                return {
+                    ...entry,
+                    // permit_checklist_id: entry.chklist_id ?? null,
+                    application_type: entry.applicant_type, // normalize here
+                    permit_checklist_id: entry.permit_checklist_id ?? null,
+                    original_file: files.original,
+                    attachments: files.original ? [files.original] : [], // for your existing VIEW button
+                    resubmissions: files.resubmissions.sort(
+                        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+                    ),
+                    requirement: entry.requirement || 'N/A',
+                    assessment: entry.assessment ?? null,
+                    is_saved: Boolean(entry.assessment)
+                };
+            });
+
+        }
+    } catch (err) {
+        console.error('Error loading applicant data:', err);
+    }
 };
+
 
 // upload resubmitted files
 const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
@@ -406,7 +429,7 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-6">
-    <Toast/>
+    <Toast />
     <ReusableConfirmDialog ref="confirmDialogRef" />
 
     <div class="flex items-center gap-2" v-if="isEdit">
@@ -704,11 +727,17 @@ onMounted(async () => {
     </Fieldset>
 
     <AssessmentTable title="Applicant Requirements" :collapsed="isCollapsed.value"
-      :application_status="props.form.status_title" :roleId="roleId" :rows="companyRequirements" :onsite="onsite"
-      @view-file="openFileModal" @update-assessment="updateAssessment" @update-remarks="updateRemarks"
-      @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
+      :application_status="props.form.status_title" :roleId="roleId" 
+      :rows="companyRequirements" :onsite="onsite"
+     @view-file="openFileModal" @update-assessment="updateAssessment"
+      @update-remarks="updateRemarks" @update-onsite="updateOnsite" 
+      @upload-resubmission="handleResubmissionUpload"
       @remove-resubmission="handleRemoveResubmission" />
 
+    <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+      <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.file_url)" width="100%" height="500"
+        allow="autoplay"></iframe>
+    </Dialog>
 
     <!-- <Fieldset legend="Uploaded Files">
       <div class="container">
@@ -729,7 +758,6 @@ onMounted(async () => {
         ? 'grid grid-cols-2 gap-4'
         : 'flex justify-end'
     ]">
-    {{ companyRequirements }}
       <Button v-if="props.form.status_title !== 'Draft' && currentStep === 4"
         class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
         @click="() => openReturnDialog(props.form.id)">
