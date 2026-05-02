@@ -21,52 +21,40 @@ class ApplicationController extends Controller
 {
     // Define status constants
     const STATUS_DRAFT = 1;
-
     const STATUS_FOR_REVIEW_EVALUATION = 2;
 
-    const STATUS_ENDORSED_CENRO_CHIEF = 3;
+    const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
+    const STATUS_ENDORSED_CENRO_OFFICER = 4;
+    const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
+    const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
+    const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
+    const STATUS_ENDORSED_PENRO_OFFICER = 8;
+    const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
+    const STATUS_ENDORSED_FUS_CHIEF = 10;
+    const STATUS_ENDORSED_LPDD_CHIEF = 11;
+    const STATUS_ENDORSED_ARDTS = 12;
+    const STATUS_ENDORSED_RED = 13;
 
-    const STATUS_ENDORSED_RPS_CHIEF = 4;
-
-    const STATUS_ENDORSED_TSD_CHIEF = 5;
-
-    const STATUS_ENDORSED_PENRO = 6;
-
-    const STATUS_ENDORSED_LPDD_FUS = 7;
-
-    const STATUS_ENDORSED_ARDTS = 8;
-
-    const STATUS_APPROVED_BY_RED = 9;
-
-    const STATUS_RECEIVED_CENRO_CHIEF = 10;
-
-    const STATUS_RECEIVED_CHIEF_RPS = 11;
-
-    const STATUS_RECEIVED_TSD_CHIEF = 12;
-
-    const STATUS_RECEIVED_PENRO_CHIEF = 13;
-
-    const STATUS_RECEIVED_FUS = 14;
-
-    const STATUS_RECEIVED_ARDTS = 15;
-
-    const STATUS_RECEIVED_RED = 16;
-
-    const STATUS_RETURN_TO_CENRO_CHIEF = 17;
-
-    const STATUS_RETURN_TO_RPS_CHIEF = 18;
-
-    const STATUS_RETURN_TO_TSD_CHIEF = 19;
-
-    const STATUS_RETURN_TO_PENRO = 20;
-
-    const STATUS_RETURN_TO_LPDD_FUS = 21;
-
+    const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
+    const STATUS_RECEIVED_CENRO_OFFICER = 15;
+    const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
+    const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
+    const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
+    const STATUS_RECEIVED_PENRO_OFFICER = 19;
+    const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
+    const STATUS_RECEIVED_FUS_CHIEF = 21;
+    const STATUS_RECEIVED_LPDD_CHIEF = 22;
     const STATUS_RETURN_TO_ARDTS = 22;
 
-    const STATUS_RETURN_TO_RED = 23;
+    const STATUS_RECEIVED_ARDTS = 23;
+    const STATUS_RECEIVED_RED = 24;
 
-    const STATUS_RETURN_TO_TECHNICAL_STAFF = 24;
+    const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
+    const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
+    const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
+    
+
+    const STATUS_APPROVED_BY_RED = 28;
 
     // IMPLEMENTING PENRO
     const TECHNICAL_STAFF = 1;
@@ -1311,7 +1299,10 @@ class ApplicationController extends Controller
     public function summary(Request $request)
     {
         $userId = $request->query('user_id');
+        $status = (int) $request->input('status');
         $office_id = (int) $request->input('office_id');
+        $statusFilter = [$status];
+
         $query = DB::table('tbl_application_checklist')
             ->leftJoin('users as u', 'u.id', '=', 'tbl_application_checklist.encoded_by')
             ->select(
@@ -1322,11 +1313,17 @@ class ApplicationController extends Controller
             );
 
         switch ($office_id) {
-            case 2:
-                $officeFilter = [2, 6];
+             case 2:
+                $officeFilter = [2,6];
+                break;
+            case 3:
+                $officeFilter = [7,8];
+                break;
+            case 5:
+                $officeFilter = [9,10,11,12];
                 break;
             case 6:
-                $officeFilter = [2, 6];
+                $officeFilter = [6];
                 break;
             case 13:
                 $officeFilter = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]; // if region show all offices
@@ -1336,9 +1333,190 @@ class ApplicationController extends Controller
                 $officeFilter = [$office_id];
                 break;
         }
-        if ($userId != 49) {
-            $query->whereIn('u.office_id', $officeFilter);
+         switch ($status) {
+            case 1:
+                $statusFilter = [
+                    self::STATUS_DRAFT,
+                    self::STATUS_APPROVED_BY_RED,       
+                    self::STATUS_FOR_REVIEW_EVALUATION,
+                    self::STATUS_ENDORSED_CENRO_RPS_CHIEF,
+                    self::STATUS_ENDORSED_CENRO_OFFICER,
+                    self::STATUS_RETURNED_TO_CENRO_TECHNICAL,
+                    self::STATUS_RECEIVED_CENRO_RPS_CHIEF,
+                    self::STATUS_RECEIVED_CENRO_OFFICER
+                ];
+                break;
+            case 3:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_CENRO_RPS_CHIEF,
+                    self::STATUS_RECEIVED_CENRO_RPS_CHIEF,
+                    self::STATUS_RETURNED_TO_CENRO_TECHNICAL
+                ];
+                break;
+            case 4:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_CENRO_OFFICER,   // 4
+                    self::STATUS_ENDORSED_CENRO_RPS_CHIEF,   // 3
+                    self::STATUS_RECEIVED_CENRO_OFFICER, //15
+                    self::STATUS_ENDORSED_PENRO_TECHNICAL, //5
+                    self::STATUS_RETURNED_TO_CENRO_TECHNICAL,  // 25
+
+                ];
+                break;
+            case 14:
+                $statusFilter = [
+                    self::STATUS_RECEIVED_CENRO_RPS_CHIEF,
+                    self::STATUS_ENDORSED_CENRO_RPS_CHIEF,
+                    self::STATUS_RETURNED_TO_CENRO_TECHNICAL
+                ];
+                break;
+            case 15:
+                $statusFilter = [
+                    self::STATUS_RECEIVED_CENRO_OFFICER,   // 14
+                    self::STATUS_ENDORSED_CENRO_OFFICER,
+                    self::STATUS_ENDORSED_PENRO_TECHNICAL,   // 5
+                    self::STATUS_RETURNED_TO_CENRO_TECHNICAL,  // 18
+                ];
+                break;
+            case 16:
+                $statusFilter = [
+                    self::STATUS_RECEIVED_PENRO_TECHNICAL,
+                    self::STATUS_ENDORSED_PENRO_OFFICER,
+                    self::STATUS_RETURNED_TO_PENRO_TECHNICAL,
+                ];
+                break;
+            case 18:
+                $statusFilter = [
+                    self::STATUS_RECEIVED_PENRO_CHIEF_TSD,
+                    self::STATUS_ENDORSED_PENRO_CHIEF_TSD,
+                    self::STATUS_RETURNED_TO_PENRO_TECHNICAL
+
+                ];
+                break;
+
+            case 5:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_PENRO_CHIEF_RPS,
+                    self::STATUS_ENDORSED_PENRO_TECHNICAL,
+                    self::STATUS_RECEIVED_PENRO_TECHNICAL,
+                    self::STATUS_RETURNED_TO_PENRO_TECHNICAL,
+                    self::STATUS_APPROVED_BY_RED,
+                ];
+                break;
+            case 6:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_PENRO_CHIEF_TSD,
+                    self::STATUS_ENDORSED_PENRO_CHIEF_RPS,
+                    self::STATUS_RECEIVED_PENRO_CHIEF_RPS,
+                    self::STATUS_RETURNED_TO_PENRO_TECHNICAL,
+                ];
+                break;
+            case 7:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_PENRO_CHIEF_TSD,
+                    self::STATUS_RECEIVED_PENRO_CHIEF_TSD,
+                    self::STATUS_RETURNED_TO_PENRO_TECHNICAL,
+                ];
+                break;
+
+            case 8:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_PENRO_OFFICER,
+                    self::STATUS_RECEIVED_PENRO_OFFICER,
+                ];
+                break;
+            case 9:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF,
+                    self::STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF,
+                    self::STATUS_RETURNED_TO_REGIONAL_TECHNICAL
+                ];
+                break;
+              case 10:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_FUS_CHIEF,
+                    self::STATUS_RECEIVED_FUS_CHIEF,
+                    self::STATUS_RETURNED_TO_REGIONAL_TECHNICAL
+                ];
+                break;
+            case 11:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_LPDD_CHIEF,
+                    self::STATUS_RECEIVED_LPDD_CHIEF,
+                ];
+                break;
+            case 12:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_ARDTS,
+                    self::STATUS_RECEIVED_ARDTS,
+                ];
+                break;
+             case 13:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_RED,
+                    self::STATUS_RECEIVED_RED,
+                    self::STATUS_APPROVED_BY_RED
+                ];
+                break;
+            
+                break;
+             case 20:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF,
+                    self::STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF,
+                    self::STATUS_RETURNED_TO_REGIONAL_TECHNICAL
+                ];
+                break;
+
+            case 21:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_FUS_CHIEF,
+                    self::STATUS_RECEIVED_FUS_CHIEF,
+                    self::STATUS_RETURNED_TO_REGIONAL_TECHNICAL
+                ];
+                break;
+            case 22:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_LPDD_CHIEF,
+                    self::STATUS_RECEIVED_LPDD_CHIEF,
+                ];
+                break;
+            case 23:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_ARDTS,
+                    self::STATUS_RECEIVED_ARDTS,
+                ];
+                break;
+            case 24:
+                $statusFilter = [
+                    self::STATUS_ENDORSED_RED,
+                    self::STATUS_RECEIVED_RED,
+                    self::STATUS_APPROVED_BY_RED
+                ];
+                break;
+
+
+            case 25:
+                $statusFilter = [
+                    self::STATUS_RECEIVED_RED,   // 16
+                    self::STATUS_APPROVED_BY_RED,   // 9
+                    self::STATUS_RETURNED_TO_REGIONAL_TECHNICAL,  // 23
+                    self::STATUS_RETURN_TO_ARDTS,
+                    25
+
+                ];
+                break;
+
+            default:
+                # code...
+                break;
         }
+
+        // if ($userId != 49) {
+            $query->where('u.id',$userId)
+                ->whereIn('u.office_id', $officeFilter)
+                ->whereIn('tbl_application_checklist.application_status', $statusFilter);
+        // }
 
 
         $data = $query->get(); // ✅ single row

@@ -13,23 +13,6 @@ class RPSChiefDashboardController extends Controller
 {
     // Define status constants
 
-    const STATUS_ENDORSED_CENRO_CHIEF = 3;
-    const STATUS_ENDORSED_RPS_CHIEF = 4;
-    const STATUS_ENDORSED_TSD_CHIEF = 5;
-    const STATUS_ENDORSED_PENRO = 6;
-    const STATUS_ENDORSED_LPDD_FUS = 7;
-    const STATUS_RECEIVED_CENRO_CHIEF = 10;
-    const STATUS_RECEIVED_TSD_CHIEF = 12;
-    const STATUS_RECEIVED_PENRO_CHIEF = 13;
-    const STATUS_RECEIVED_FUS = 14;
-    const STATUS_RETURN_TO_CENRO_CHIEF = 17;
-    const STATUS_RETURN_TO_RPS_CHIEF = 18;
-    const STATUS_RETURN_TO_TSD_CHIEF = 19;
-    const STATUS_RETURN_TO_PENRO = 20;
-    const STATUS_RETURN_TO_LPDD_FUS = 21;
-    const STATUS_RETURN_TO_ARDTS = 22;
-    const STATUS_RETURN_TO_RED = 23;
-    const STATUS_RETURN_TO_TECHNICAL_STAFF = 24;
 
 
 
@@ -144,7 +127,6 @@ class RPSChiefDashboardController extends Controller
                     self::STATUS_DRAFT,
                     self::STATUS_APPROVED_BY_RED,       
                     self::STATUS_FOR_REVIEW_EVALUATION,
-                    self::STATUS_ENDORSED_CENRO_CHIEF,
                     self::STATUS_ENDORSED_CENRO_RPS_CHIEF,
                     self::STATUS_ENDORSED_CENRO_OFFICER,
                     self::STATUS_RETURNED_TO_CENRO_TECHNICAL,
@@ -306,8 +288,7 @@ class RPSChiefDashboardController extends Controller
                 $statusFilter = [
                     self::STATUS_RECEIVED_RED,   // 16
                     self::STATUS_APPROVED_BY_RED,   // 9
-                    self::STATUS_RETURN_TO_RED,  // 23
-                    self::STATUS_RETURN_TO_ARDTS,
+                    self::STATUS_RETURNED_TO_REGIONAL_TECHNICAL,  // 23
                     25
 
                 ];
@@ -549,7 +530,7 @@ class RPSChiefDashboardController extends Controller
 
             // 2️⃣ Update application status
             $app->update([
-                'application_status' => self::STATUS_ENDORSED_TSD_CHIEF,
+                'application_status' => self::STATUS_ENDORSED_CENRO_RPS_CHIEF,
                 'date_endorsed_rps_chief' => now(),
             ]);
 

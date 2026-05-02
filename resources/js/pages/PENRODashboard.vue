@@ -13,6 +13,56 @@ import review_icon from '../../images/icons/review.png';
 import approved_icon from '../../images/icons/approved.png';
 import reject_icon from '../../images/icons/reject.png';
 const PendingTable = defineAsyncComponent(() => import('./applications/table/penro_tbl.vue'));
+
+
+const STATUS_DRAFT = 1;
+const STATUS_FOR_REVIEW_EVALUATION = 2;
+
+const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
+const STATUS_ENDORSED_CENRO_OFFICER = 4;
+const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
+const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
+const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
+const STATUS_ENDORSED_PENRO_OFFICER = 8;
+const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
+const STATUS_ENDORSED_FUS_CHIEF = 10;
+const STATUS_ENDORSED_LPDD_CHIEF = 11;
+const STATUS_ENDORSED_ARDTS = 12;
+const STATUS_ENDORSED_RED = 13;
+
+const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
+const STATUS_RECEIVED_CENRO_OFFICER = 15;
+const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
+const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
+const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
+const STATUS_RECEIVED_PENRO_OFFICER = 19;
+const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
+const STATUS_RECEIVED_FUS_CHIEF = 21;
+const STATUS_RECEIVED_LPDD_CHIEF = 22;
+const STATUS_RECEIVED_ARDTS = 23;
+const STATUS_RECEIVED_RED = 24;
+
+const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
+const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
+const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
+
+const STATUS_APPROVED_BY_RED = 28;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const { officeTitle } = useOfficeTitle();
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,7 +70,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/penro-dashboard',
     },
 ];
-
 
 const page = usePage();
 const userId = page.props.auth.user.id;
@@ -47,7 +96,7 @@ const fetchDashboardData = async () => {
     try {
 
         const response = await axios.get('https://cps.denrcalabarzon.com/api/summary', {
-            params: { user_id: userId,office_id:officeId }
+            params: { status:STATUS_ENDORSED_PENRO_TECHNICAL,user_id: userId,office_id:officeId }
 
         });
 
