@@ -218,6 +218,8 @@ const receiveApplication = (id: number) => {
 const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
     const office_id = page.props.auth.user.office_id;
     const user_id = page.props.auth.user.id;
+    const role_id = page.props.auth.user.role_id;
+
 
     const config = {
         endorse: {
@@ -244,8 +246,8 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
         receive: {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
-            api: 'applications.penro.technical.receive',
-            payload: { id, office_id, user_id },
+            api: 'applications.penro.receive',
+            payload: { id,office_id,user_id,role_id},
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',

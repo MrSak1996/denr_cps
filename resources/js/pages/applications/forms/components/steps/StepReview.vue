@@ -1,28 +1,35 @@
 <script setup lang="ts">
+
+/* -------------------------------------------------------
+| IMPORTS
+------------------------------------------------------- */
 import axios from 'axios';
 import { ref, computed, onMounted } from 'vue'
 import { usePage } from '@inertiajs/vue3';
-import { Info } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import Fieldset from 'primevue/fieldset'
-import Dialog from 'primevue/dialog'
-import FileCard from '../../file_card.vue'
-import Tag from 'primevue/tag'
-import AssessmentTable from '@/pages/applications/form_edit/assessment_tbl.vue';
-import ConfirmModal from '../../../modal/confirmation_modal.vue';
-const page = usePage();
+import { useToast } from 'primevue/usetoast';
+import AssessmentModal from '../../../../applications/modal/assessment_modal.vue';
 
-const emit = defineEmits(['back', 'submit'])
+/* -------------------------------------------------------
+| GLOBAL / PAGE CONTEXT
+------------------------------------------------------- */
+const page = usePage();
+const toast = useToast();
+
+const userId = page.props.auth?.user?.id;
+const officeId = page.props.auth?.user?.office_id;
 const roleId = page.props.auth?.user?.role_id;
-const onsite = ref({
-  findings: '',
-  recommendations: ''
-});
+
+/* -------------------------------------------------------
+| EMITS & PROPS
+------------------------------------------------------- */
+const emit = defineEmits(['back', 'submit'])
+
 const props = defineProps({
-  form: {
-    type: Object,
-    required: true
+  form:{
+    type:Object,
+    required:true
   },
+  currentStep: Number,
   application: Object,
   application_type: String,
   mode: String,
@@ -30,24 +37,40 @@ const props = defineProps({
   files: Array,
   routingHistory: Array
 })
-const routingHistory = computed(() => props.routingHistory || []);
-const isEdit = computed(() => props.mode === 'edit');
+
+/* -------------------------------------------------------
+| STATE
+------------------------------------------------------- */
+const onsite = ref({ findings: '', recommendations: '' });
+const assessmentRows = ref([]);
+const isLoading = ref(false);
+
+const showModal = ref(false);
+const selectedFile = ref<any>(null);
+
 const isRoutingCollapsed = ref(true)
 const isChainsawInfoCollapsed = ref(true)
 const isCollapsed = ref(true)
-const assessmentRows = ref([])
 
-const save = () => {
-  emit('submit', {
-    ...props.form,
-    application_type: props.application_type
-  })
-}
+const confirmDialogRef = ref<any>(null);
 
+/* -------------------------------------------------------
+| COMPUTED
+------------------------------------------------------- */
+
+// normalize application data
 const applicationData = computed(() => props.application || {})
 
+// supplier list
 const suppliers = computed(() => props.supplier || [])
 
+// routing history
+const routingHistory = computed(() => props.routingHistory || [])
+
+// check edit mode
+const isEdit = computed(() => props.mode === 'edit')
+
+// normalize files
 const files = computed(() => {
   return (props.files || []).map((file: any) => ({
     name: file.file_name,
@@ -55,220 +78,334 @@ const files = computed(() => {
   }))
 })
 
-const payment = computed(() =>
-  applicationData.value?.payment || {}
-)
+// payment info
+const payment = computed(() => applicationData.value?.payment || {})
 
-const showModal = ref(false)
+// filter requirements depending on applicant type
+const companyRequirements = computed(() => {
+  return assessmentRows.value.filter(
+    r => r.applicant_type === applicationData.value.application_type
+  );
+});
 
-const selectedFile = ref<any>(null)
+// check if any failed assessment exists
+const hasFailed = computed(() =>
+  companyRequirements.value.some(r => r.assessment === 'failed')
+);
 
+/* -------------------------------------------------------
+| BASIC ACTIONS
+------------------------------------------------------- */
+
+// emit save event
+const save = () => {
+  emit('submit', {
+    ...props.form,
+    application_type: props.application_type
+  })
+}
+
+// open file preview modal
 const openFileModal = (file: any) => {
   selectedFile.value = file
   showModal.value = true
 }
 
-const companyRequirements = computed(() => {
-  if (props.application_type === 'Individual') {
-    return assessmentRows.value.filter(
-      r => r.applicant_type === 'Individual'
-    );
-  } else {
-    return assessmentRows.value.filter(
-      r => r.applicant_type === 'Company'
-    );
-  }
-});
+/* -------------------------------------------------------
+| APPLICATION FLOW ACTIONS
+------------------------------------------------------- */
 
-const updateAssessment = (checklist_entry_id, assessment) => {
-  const row = companyRequirements.value.find(
-    r => r.checklist_entry_id === checklist_entry_id
-  );
-  if (row) {
-    row.assessment = assessment;
-    row.is_saved = false; // unlock save again if changed
+// open return dialog and submit return request
+const openReturnDialog = (id: number) => {
+  confirmDialogRef.value?.open({
+    header: 'Return Application?',
+    message: 'Please indicate the reason and office to return this application.',
+    showTextarea: false,
+    showDropdown: false,
+
+    // confirm callback
+    onConfirm: async (data?: { remarks?: string }) => {
+      try {
+        const payload = {
+          id,
+          user_id: userId,
+          role_id: roleId,
+          assessments: companyRequirements.value.map(row => ({
+            permit_checklist_id: row.permit_checklist_id,
+            assessment: row.assessment,
+            remarks: row.remarks,
+          })),
+          onsite: onsite.value,
+          extra_remarks: data?.remarks || null,
+        };
+
+        await axios.post(route('applications.rps.return'), payload);
+
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Application returned successfully.',
+          life: 3000,
+        });
+
+      } catch (error: any) {
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: error.response?.data?.message || 'Something went wrong',
+          life: 5000,
+        });
+      }
+    },
+  });
+};
+
+// submit all assessments and handle workflow
+const submitAllAssessments = async (applicationId) => {
+
+  // validate required assessments
+  if (![1, 4, 11, 12].includes(roleId)) {
+    const incomplete = companyRequirements.value.some(row => !row.assessment);
+    if (incomplete) {
+      alert('Please complete all assessments before submitting.');
+      return;
+    }
+  }
+
+  const workflowType = roleId === 4 ? 'implementing_agency' : 'smooth';
+  const isARDTSD = roleId === 11;
+  const isEndorsingToRD = !hasFailed.value;
+
+  try {
+    await axios.post('/api/saveAssessment', {
+      application_id: applicationId,
+      userId,
+      application_status: 4,
+      toTSD: isEndorsingToRD,
+      role_id: roleId,
+      workflow_type: workflowType,
+      office_id: officeId,
+      assessments: companyRequirements.value.map(row => ({
+        permit_checklist_id: row.permit_checklist_id,
+        assessment: row.assessment,
+        remarks: row.remarks
+      })),
+      onsite: onsite.value
+    });
+
+    // send email only for ARD/TSD
+    if (isARDTSD) await sendEmail();
+
+    // role-based redirect
+    const redirectMap = {
+      3: '/cenro-dashboard',
+      4: '/penro-technical-dashboard',
+      5: '/penro-rps-chief-dashboard',
+      6: '/penro-tsd-chief-dashboard',
+      7: '/penro-dashboard',
+      8: '/rts-dashboard',
+      9: '/fus-dashboard',
+      10: '/lpdd-chief-dashboard',
+      11: '/ardts-dashboard',
+      12: '/regional-executive-dashboard',
+    };
+
+    const redirectPath = redirectMap[roleId];
+    if (redirectPath) {
+      setTimeout(() => router.visit(redirectPath), 5000);
+    }
+
+  } catch (error) {
+    console.error(error);
   }
 };
 
+/* -------------------------------------------------------
+| EMAIL
+------------------------------------------------------- */
+
+// send notification email
+const sendEmail = async () => {
+  try {
+    const response = await axios.post('/api/send-email', {
+      email: 'kimsacluti10101996@gmail.com',
+      applicant_name: props.form.applicant_type === 'Individual'
+        ? `${props.form.first_name} ${props.form.last_name}`
+        : props.form.authorized_representative,
+      address: props.form.applicant_type === 'Individual'
+        ? props.form.i_complete_address
+        : props.form.company_address,
+      application_no: props.form.application_no
+    });
+
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: response.data.message,
+      life: 3000,
+    });
+
+    return response.data;
+
+  } catch (error: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error.response?.data?.message,
+      life: 3000,
+    });
+    throw error;
+  }
+};
+
+/* -------------------------------------------------------
+| ASSESSMENT HELPERS
+------------------------------------------------------- */
+
+// update assessment value
+const updateAssessment = (checklist_entry_id, assessment) => {
+  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklist_entry_id);
+  if (row) {
+    row.assessment = assessment;
+    row.is_saved = false;
+  }
+};
+
+// update remarks
 const updateRemarks = (checklist_entry_id, remarks) => {
-  const row = companyRequirements.value.find(
-    r => r.checklist_entry_id === checklist_entry_id
-  );
+  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklist_entry_id);
   if (row) {
     row.remarks = remarks;
     row.is_saved = false;
   }
-}; const updateOnsite = ({ field, value }) => {
+};
+
+// update onsite findings/recommendations
+const updateOnsite = ({ field, value }) => {
   onsite.value[field] = value;
 };
 
+/* -------------------------------------------------------
+| FILE HELPERS
+------------------------------------------------------- */
+
+// convert google drive/view links to preview
 const getEmbedUrl = (url: string) => {
-  if (!url) return ''
-  return url.replace('/view', '/preview')
-}
+  return url ? url.replace('/view', '/preview') : '';
+};
 
+// format date
 const formatDate = (date: any) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: '2-digit',
-  })
-}
-
-const getDateField = (item) => {
-  if (item.route_order == 2) return item.date_received_rps_chief;
-
-  if (item.route_order == 4 && item.action == 'Submitted to CHIEF RPS')
-    return item.date_endorsed_chiefrps;
-
-  if (item.route_order == 4 && item.action == 'Received by the CENRO Officer')
-    return item.date_cenro_chief_received;
-
-  if (item.route_order == 6) return item.date_received_penro_technical;
-  if (item.route_order == 8) return item.date_received_penro_rps_chief;
-  if (item.route_order == 10) return item.date_received_penro_tsd_chief;
-  if (item.route_order == 12) return item.date_received_penro_chief;
-  if (item.route_order == 14) return item.date_received_region_technical;
-  if (item.route_order == 16) return item.date_received_fus_chief;
-  if (item.route_order == 18) return item.date_received_lpddchief;
-  if (item.route_order == 20) return item.date_received_ardts;
-  if (item.route_order == 22) return item.date_received_red;
-
-  return null;
+  return date
+    ? new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: '2-digit',
+    })
+    : '';
 };
 
-const getEndorsedDate = (item) => {
-  if (item.route_order == 1) return item.date_endorsed_chiefrps;
+/* -------------------------------------------------------
+| API CALLS
+------------------------------------------------------- */
 
-  if (item.route_order == 3 && item.action != 'Returned to Technical Staff')
-    return item.date_endorsed_cenro_chief;
-
-  if (item.route_order == 5 && item.action === 'Submitted to PENRO Technical Staff')
-    return item.date_endorsed_penro_technical;
-
-  if (item.route_order == 7) return item.date_endorsed_penro_chief_rps;
-  if (item.route_order == 9) return item.date_endorsed_penro_chief_tsd;
-  if (item.route_order == 11) return item.date_endorsed_penro;
-  if (item.route_order == 13) return item.date_endorsed_region_technical;
-  if (item.route_order == 15) return item.date_endorsed_fus_chief;
-  if (item.route_order == 17) return item.date_endorsed_lpddchief;
-  if (item.route_order == 19) return item.date_endorsed_ardts;
-  if (item.route_order == 21) return item.date_endorse_red;
-
-  return null;
-};
+// fetch applicant checklist + attachments
 const getApplicantFile = async (application_id) => {
   try {
-    const checklistRes = await axios.get(
-      `https://cps.denrcalabarzon.com/api/getChecklistEntries/${application_id}`
-    );
+    const [checklistRes, attachmentsRes] = await Promise.all([
+      axios.get(`/api/getChecklistEntries/${application_id}`),
+      axios.get(`/api/getApplicantFile/${application_id}`)
+    ]);
 
-    const attachmentsRes = await axios.get(
-      `https://cps.denrcalabarzon.com/api/getApplicantFile/${application_id}`
-    );
+    if (!checklistRes.data.status || !attachmentsRes.data.status) return;
 
-    if (checklistRes.data.status && attachmentsRes.data.status) {
-      const checklistEntries = checklistRes.data.data;
-      const attachments = attachmentsRes.data.data;
-      const attachmentsMap = attachments.reduce((acc, file) => {
-        const id = file.checklist_entry_id;
+    const attachmentsMap = attachmentsRes.data.data.reduce((acc, file) => {
+      const id = file.checklist_entry_id;
+      if (!acc[id]) acc[id] = { original: null, resubmissions: [] };
 
-        if (!acc[id]) {
-          acc[id] = {
-            original: null,
-            resubmissions: []
-          };
-        }
+      if (/_v\d+\./i.test(file.file_name)) {
+        acc[id].resubmissions.push(file);
+      } else {
+        acc[id].original = file;
+      }
 
-        if (file.file_name) {
-          if (/_v\d+\./i.test(file.file_name)) {
-            // ✅ resubmitted file
-            acc[id].resubmissions.push(file);
-          } else {
-            // ✅ original file
-            acc[id].original = file;
-          }
-        }
+      return acc;
+    }, {});
 
-        return acc;
-      }, {});
-      assessmentRows.value = checklistEntries.map(entry => {
-        const entryAttachments = attachmentsMap[entry.checklist_entry_id] || [];
+    assessmentRows.value = checklistRes.data.data.map(entry => {
+      const files = attachmentsMap[entry.checklist_entry_id] || {
+        original: null,
+        resubmissions: []
+      };
 
-        const files = attachmentsMap[entry.checklist_entry_id] || {
-          original: null,
-          resubmissions: []
-        };
+      return {
+        ...entry,
+        application_type: entry.applicant_type,
+        permit_checklist_id: entry.permit_checklist_id ?? null,
+        original_file: files.original,
+        attachments: files.original ? [files.original] : [],
+        resubmissions: files.resubmissions.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        ),
+        requirement: entry.requirement || 'N/A',
+        assessment: entry.assessment ?? null,
+        is_saved: Boolean(entry.assessment)
+      };
+    });
 
-        return {
-          ...entry,
-          application_type: entry.applicant_type, // normalize here
-          // permit_checklist_id: entry.chklist_id ?? null,
-
-          permit_checklist_id: entry.permit_checklist_id ?? null,
-          original_file: files.original,
-          attachments: files.original ? [files.original] : [], // for your existing VIEW button
-          resubmissions: files.resubmissions.sort(
-            (a, b) => new Date(a.created_at) - new Date(b.created_at)
-          ),
-          requirement: entry.requirement || 'N/A',
-          assessment: entry.assessment ?? null,
-          is_saved: Boolean(entry.assessment)
-        };
-      });
-
-
-    }
   } catch (err) {
     console.error('Error loading applicant data:', err);
   }
 };
 
+// upload resubmitted files
 const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
   try {
-    isLoading.value = true; // ✅ SHOW LOADING OVERLAY
+    isLoading.value = true;
 
     const formData = new FormData();
     files.forEach(file => formData.append('files[]', file));
+
     formData.append('uploaded_by', userId);
     formData.append('checklist_entry_id', checklistId.toString());
-    formData.append('application_no', company_form.application_no);
-    formData.append('application_id', page.props.application.id);
+    formData.append('application_no', props.form.application_no);
+    formData.append('application_id', props.form.id);
 
-    // Example API endpoint
-    const response = await axios.post('/api/resubmit-files', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await axios.post('/api/resubmit-files', formData);
 
-    // Assume response returns the uploaded files with timestamps
-    const uploadedFiles = response.data.files; // [{file_name, uploaded_at}, ...]
-
-    // Find the row and push new resubmissions
     const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
-    if (row) {
-      row.resubmissions.push(...uploadedFiles);
-    }
+    if (row) row.resubmissions.push(...response.data.files);
+
   } catch (error) {
     console.error(error);
   } finally {
-    isLoading.value = false; // ✅ HIDE LOADING OVERLAY
+    isLoading.value = false;
   }
 };
 
+// remove resubmitted file
 const handleRemoveResubmission = (checklistId: number, index: number) => {
-  const row = companyRequirements.find(r => r.checklist_entry_id === checklistId);
-  if (!row || !row.resubmissions[index]) return;
+  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
+  if (!row) return;
   row.resubmissions.splice(index, 1);
 };
 
+/* -------------------------------------------------------
+| LIFECYCLE
+------------------------------------------------------- */
+
+// initial load
 onMounted(async () => {
-await getApplicantFile(props.form.application_id);
+  await getApplicantFile(props.form.application_id);
 });
+
 </script>
 
 <template>
   <div class="space-y-6">
+    <Toast/>
+    <ReusableConfirmDialog ref="confirmDialogRef" />
+
     <div class="flex items-center gap-2" v-if="isEdit">
       <Info class="h-5 w-5" />
       <h1 class="text-xl font-semibold">
@@ -455,6 +592,7 @@ await getApplicantFile(props.form.application_id);
         </tbody>
       </table>
     </Fieldset>
+
     <Fieldset legend="Chainsaw Information" toggleable v-model:collapsed="isChainsawInfoCollapsed">
       <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-4 text-sm text-gray-800 md:grid-cols-2">
         <div class="md:col-span-2">
@@ -562,11 +700,12 @@ await getApplicantFile(props.form.application_id);
       </div>
     </Fieldset>
 
-    <AssessmentTable v-if="props.form.application_type === 'Company'" title="Company Applicant Requirements"
-      :collapsed="isCollapsed.value" :application_status="props.form.status_title" :roleId="roleId"
-      :rows="companyRequirements" :onsite="onsite" @view-file="openFileModal" @update-assessment="updateAssessment"
-      @update-remarks="updateRemarks" @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
+    <AssessmentTable title="Applicant Requirements" :collapsed="isCollapsed.value"
+      :application_status="props.form.status_title" :roleId="roleId" :rows="companyRequirements" :onsite="onsite"
+      @view-file="openFileModal" @update-assessment="updateAssessment" @update-remarks="updateRemarks"
+      @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
       @remove-resubmission="handleRemoveResubmission" />
+
 
     <!-- <Fieldset legend="Uploaded Files">
       <div class="container">
@@ -581,10 +720,24 @@ await getApplicantFile(props.form.application_id);
       </Dialog>
     </Fieldset> -->
 
-    <div class="grid grid-cols-2 gap-4 mt-2">
-      <Button variant="outline" @click="emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">Back</Button>
+    <div :class="[
+      'pt-6 w-full',
+      currentStep == 4
+        ? 'grid grid-cols-1 gap-4'
+        : 'flex justify-end'
+    ]">
+      <Button v-if="props.form.status_title !== 'Draft' && currentStep === 4"
+        class="w-full h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
+        @click="() => openReturnDialog(props.form.id)">
+        <Undo2 />
+        Return Application
+      </Button>
 
-      <ConfirmModal v-if="isEdit" class="w-full" :applicationId="Number(props.form.application_id)" :role_id="roleId" />
+      <Button v-else-if="props.form.application_status === 1 || [1, 2, 3].includes(currentStep)" variant="outline"
+        @click="emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">Back</Button>
+      <AssessmentModal :status_id="props.form.application_status" class="w-full" :applicationId="Number(props.form.id)"
+        @submit-assessments="submitAllAssessments" />
+
     </div>
   </div>
 </template>

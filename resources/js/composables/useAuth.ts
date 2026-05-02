@@ -8,6 +8,7 @@ export function useAuth() {
     const user = computed(() => page.props.auth.user)
     const userId = computed(() => user.value?.id)
     const roleId = computed(() => user.value?.role_id)
+    const officeId = computed(() => user.value?.office_id)
 
-    return { id,user, userId,roleId }
+    return { id,user, userId,roleId,officeId }
 }
