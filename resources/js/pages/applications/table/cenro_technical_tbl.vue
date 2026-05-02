@@ -598,11 +598,10 @@ const applicantsTable = async () => {
             </template>
             <Column header="Action" :exportable="false" style="min-width: 8rem">
                 <template #body="{ data }">
-                    <Link v-if="[STATUS_DRAFT,STATUS_APPROVED_BY_RED,25].includes(data.application_status)" :href="route('applications.edit', {
+                    <Link :href="route('applications.edit', {
                         application_id: data.id,
                         type: data.application_type,
                         step: data.application_status !== 1 ? 4 : 1
-
                     })
                         "
                         class="mr-2 inline-flex items-center justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">

@@ -105,10 +105,10 @@ class RPSChiefDashboardController extends Controller
                 $officeFilter = [2,6];
                 break;
             case 3:
-                $officeFilter = [7,8];
+                $officeFilter = [3,7,8];
                 break;
             case 5:
-                $officeFilter = [9,10,11,12];
+                $officeFilter = [5,9,10,11,12];
                 break;
             case 6:
                 $officeFilter = [6];
@@ -184,6 +184,7 @@ class RPSChiefDashboardController extends Controller
 
             case 5:
                 $statusFilter = [
+                    self::STATUS_DRAFT,
                     self::STATUS_ENDORSED_PENRO_CHIEF_RPS,
                     self::STATUS_ENDORSED_PENRO_TECHNICAL,
                     self::STATUS_RECEIVED_PENRO_TECHNICAL,

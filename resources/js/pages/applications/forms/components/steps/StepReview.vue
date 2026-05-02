@@ -10,8 +10,11 @@ import { useToast } from 'primevue/usetoast';
 import { Info, Undo2 } from 'lucide-vue-next'
 import AssessmentTable from '@/pages/applications/form_edit/assessment_tbl.vue';
 import AssessmentModal from '@/pages/applications/modal/assessment_modal.vue';
+import ReusableConfirmDialog from '@/pages/applications/modal/endorsed_modal.vue';
+import Button from 'primevue/button';
 import Fieldset from 'primevue/fieldset';
 import Tag from 'primevue/tag';
+import Toast from 'primevue/toast';
 import Dialog from 'primevue/dialog';
 
 /* -------------------------------------------------------
@@ -144,7 +147,7 @@ const openReturnDialog = (id: number) => {
           extra_remarks: data?.remarks || null,
         };
 
-        await axios.post(route('applications.rps.return'), payload);
+        await axios.post(route('applications.penro.return'), payload);
 
         toast.add({
           severity: 'success',
@@ -157,7 +160,7 @@ const openReturnDialog = (id: number) => {
         toast.add({
           severity: 'error',
           summary: 'Error',
-          detail: error.response?.data?.message || 'Something went wrong',
+          detail:'Something went wrong' + error.response?.data?.message,
           life: 5000,
         });
       }
@@ -421,8 +424,9 @@ const handleRemoveResubmission = (checklistId: number, index: number) => {
 ------------------------------------------------------- */
 
 // initial load
-onMounted(async () => {
-  await getApplicantFile(props.form.application_id);
+onMounted(() => {
+  getApplicantFile(props.form.application_id);
+  console.log(companyRequirements)
 });
 
 </script>

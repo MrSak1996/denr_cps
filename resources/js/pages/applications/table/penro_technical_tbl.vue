@@ -278,7 +278,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/penro-technical');
+                    router.visit('/dashboard/penro-technical');
                 }, 1000);
             } catch (error) {
                 console.log(error);

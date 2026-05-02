@@ -633,7 +633,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
             setTimeout(() => {
-                router.visit('/penro-dashboard');
+                router.visit('/dashboard/penro-dashboard');
             }, 1000);
         
             } catch (error) {
