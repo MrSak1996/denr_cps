@@ -161,10 +161,6 @@ onMounted(() => {
                                 </div>
                             </template>
                         </Card>
-
-
-                        
-
                     </div>
                 </Fieldset>
 
