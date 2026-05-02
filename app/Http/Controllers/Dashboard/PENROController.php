@@ -318,8 +318,6 @@ class PENROController extends Controller
     {
         $request->validate([
             'id' => 'required|integer',
-            'remarks' => 'required|string',
-            'returnTo' => 'required|integer',
         ]);
 
         DB::beginTransaction();

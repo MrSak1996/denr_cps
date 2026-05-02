@@ -90,16 +90,22 @@ const files = computed(() => {
 const payment = computed(() => applicationData.value?.payment || {})
 
 // filter requirements depending on applicant type
-const companyRequirements = computed(() => {
-  return assessmentRows.value.filter(
-    r => r.applicant_type === applicationData.value.application_type
-  );
-});
+const individualRequirements = computed(() =>
+  assessmentRows.value.filter(
+    r => r.application_type === 'Individual'
+  )
+)
+
+// const companyRequirements = computed(() =>
+//   assessmentRows.value.filter(
+//     r => r.application_type === 'Company'
+//   )
+// )
 
 // check if any failed assessment exists
-const hasFailed = computed(() =>
-  companyRequirements.value.some(r => r.assessment === 'failed')
-);
+const hasFailed = computed(() => {
+    return individualRequirements.value.some(r => r.assessment === 'failed')
+})
 
 /* -------------------------------------------------------
 | BASIC ACTIONS
@@ -125,55 +131,53 @@ const openFileModal = (file: any) => {
 
 // open return dialog and submit return request
 const openReturnDialog = (id: number) => {
+    const user_id = page.props.auth.user.id;
+    const role_id = page.props.auth.user.role_id;
 
-  confirmDialogRef.value?.open({
-    header: 'Return Application?',
-    message: 'Please indicate the reason and office to return this application.',
-    showTextarea: false,
-    showDropdown: false,
+    confirmDialogRef.value?.open({
+        header: 'Return Application?',
+        message: 'Please indicate the reason and office to return this application.',
+        showTextarea: false,  // user can add remarks
+        showDropdown: false,  // optional: can be made dynamic later
+        onConfirm: async (data?: { remarks?: string }) => {
+            try {
+                // Build payload for your Laravel return controller
+                const payload = {
+                    id: id,
+                    user_id,
+                    role_id,
+                    assessments: individualRequirements.value.map(row => ({
+                        permit_checklist_id: row.permit_checklist_id,
+                        assessment: row.assessment,
+                        remarks: row.remarks,
+                    })),
+                    onsite: {
+                        findings: onsite.value.findings,
+                        recommendations: onsite.value.recommendations,
+                    },
+                    extra_remarks: data?.remarks || null,
+                };
 
-    // confirm callback
-    onConfirm: async (data?: { remarks?: string; returnTo?: number }) => {
-      try {
-        const payload = {
-          id,
-          user_id: userId,
-          role_id: roleId,
+                await axios.post(route('applications.rps.return'), payload);
 
-          // 🔥 include returnTo (THIS IS REQUIRED BY BACKEND)
-          returnTo: data?.returnTo,
+                toast.add({
+                    severity: 'success',
+                    summary: 'Success',
+                    detail: 'Application returned successfully.',
+                    life: 3000,
+                });
 
-          // 🔥 ensure remarks exists (fallback from dialog OR rows)
-          remarks: data?.remarks ?? companyRequirements.value.map(r => r.remarks).filter(Boolean).join('\n'),
 
-          assessments: companyRequirements.value.map(row => ({
-            permit_checklist_id: row.permit_checklist_id,
-            assessment: row.assessment,
-            remarks: row.remarks ?? '',
-          })),
-
-          onsite: onsite.value,
-        };
-
-        await axios.post(route('applications.penro.return'), payload);
-
-        toast.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Application returned successfully.',
-          life: 3000,
-        });
-
-      } catch (error: any) {
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: error.response?.data?.message,
-          life: 5000,
-        });
-      }
-    }
-  });
+            } catch (error: any) {
+                toast.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: error.response?.data?.message || 'Something went wrong',
+                    life: 5000,
+                });
+            }
+        },
+    });
 };
 
 // submit all assessments and handle workflow
@@ -181,7 +185,7 @@ const submitAllAssessments = async (applicationId) => {
 
   // validate required assessments
   if (![1, 4, 11, 12].includes(roleId)) {
-    const incomplete = companyRequirements.value.some(row => !row.assessment);
+    const incomplete = individualRequirements.value.some(row => !row.assessment);
     if (incomplete) {
       alert('Please complete all assessments before submitting.');
       return;
@@ -201,7 +205,7 @@ const submitAllAssessments = async (applicationId) => {
       role_id: roleId,
       workflow_type: workflowType,
       office_id: officeId,
-      assessments: companyRequirements.value.map(row => ({
+      assessments: individualRequirements.value.map(row => ({
         permit_checklist_id: row.permit_checklist_id,
         assessment: row.assessment,
         remarks: row.remarks
@@ -285,7 +289,7 @@ const sendEmail = async () => {
 
 // update assessment value
 const updateAssessment = (checklist_entry_id, assessment) => {
-  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklist_entry_id);
+  const row = individualRequirements.value.find(r => r.checklist_entry_id === checklist_entry_id);
   if (row) {
     row.assessment = assessment;
     row.is_saved = false;
@@ -294,7 +298,7 @@ const updateAssessment = (checklist_entry_id, assessment) => {
 
 // update remarks
 const updateRemarks = (checklist_entry_id, remarks) => {
-  const row = companyRequirements.value.find(
+  const row = individualRequirements.value.find(
     r => r.checklist_entry_id === checklist_entry_id
   );
 
@@ -418,7 +422,7 @@ const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
 
     const response = await axios.post('/api/resubmit-files', formData);
 
-    const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
+    const row = handleResubmissionUpload.value.find(r => r.checklist_entry_id === checklistId);
     if (row) row.resubmissions.push(...response.data.files);
 
   } catch (error) {
@@ -430,7 +434,7 @@ const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
 
 // remove resubmitted file
 const handleRemoveResubmission = (checklistId: number, index: number) => {
-  const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
+  const row = handleResubmissionUpload.value.find(r => r.checklist_entry_id === checklistId);
   if (!row) return;
   row.resubmissions.splice(index, 1);
 };
@@ -442,7 +446,7 @@ const handleRemoveResubmission = (checklistId: number, index: number) => {
 // initial load
 onMounted(() => {
   getApplicantFile(props.form.application_id);
-  console.log(companyRequirements)
+  console.log(handleResubmissionUpload)
 });
 
 </script>
@@ -747,7 +751,7 @@ onMounted(() => {
     </Fieldset>
 
     <AssessmentTable title="Applicant Requirements" :collapsed="isCollapsed.value"
-      :application_status="props.form.status_title" :roleId="roleId" :rows="companyRequirements" :onsite="onsite"
+      :application_status="props.form.status_title" :roleId="roleId" :rows="individualRequirements" :onsite="onsite"
       @view-file="openFileModal" @update-assessment="updateAssessment" @update-remarks="updateRemarks"
       @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
       @remove-resubmission="handleRemoveResubmission" />
