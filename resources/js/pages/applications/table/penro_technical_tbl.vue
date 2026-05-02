@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, PrinterCheck,Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, PrinterCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -24,7 +24,7 @@ import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 onMounted(() => {
     applicantsTable();
-    
+
 });
 
 
@@ -306,11 +306,11 @@ const applicantsTable = async () => {
         totalCount.value = endorsedCount;
 
 
-    const data = await ProductService.getProducts(userId);
-    products.value = data;
-    products.value.forEach((item) => {
-        getDownloadCount(item.id);
-    });
+        const data = await ProductService.getProducts(userId);
+        products.value = data;
+        products.value.forEach((item) => {
+            getDownloadCount(item.id);
+        });
 
     } catch (error) {
         console.error('Error fetching applications:', error);
@@ -834,36 +834,24 @@ const getDownloadCount = async (application_id) => {
                                         <BadgeCheck :size="15" />
                                     </Button>
 
-                                    <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
-                                    <Button type="button" @click="openProgressTracker(slotProps.data)"
-                                        style="background-color: #0f766e; border: 1px solid #0f766e !important"
-                                        class="rounded p-2 text-white hover:bg-teal-900">
-                                        <History :size="15" />
-                                    </Button>
-
                                     <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                    <Button type="button" style="background-color: #0f766e"
-                                        class="rounded p-2 text-white hover:bg-teal-900">
-                                        <Link :href="route('applications.edit', {
-                                            id: slotProps.data.id,
-                                            type: slotProps.data.application_type
-                                        })">
-                                            <Eye :size="15" />
-                                        </Link>
-                                    </Button>
+                                    <Link
+                                        v-if="[STATUS_DRAFT, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
+                                        :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: slotProps.data.application_status !== 1 ? 4 : 1
 
-                                    <!-- ❌ ENDORSE (disabled if endorsed) -->
-                                    <!-- <Button :disabled="buttonState(slotProps.data).endorsedDisabled"
-                                        @click="openDialog('endorse', slotProps.data.id)"
-                                        style="background-color: #0f766e" class="p-2 text-white">
-                                        <SendIcon :size="15" />
-                                    </Button> -->
+                                        })
+                                            "
+                                        class="mr-2 inline-flex items-center justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
+                                        <SquarePen :size="16" />
+                                    </Link>
 
                                     <!-- ❌ RETURN (disabled if endorsed) -->
-                                    
+
                                     <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
-                                        @click="generatePdf(slotProps.data)"
-                                        style="background-color: #0D47A1;">
+                                        @click="generatePdf(slotProps.data)" style="background-color: #0D47A1;">
                                         <PrinterCheck :size="15" />
 
                                     </Button>
@@ -872,37 +860,50 @@ const getDownloadCount = async (application_id) => {
                                 </div>
                             </template>
                         </Column>
+                            <Column field="application_type" header="Application Type" sortable />
 
-                        <Column field="status_title" header="Status" sortable style="min-width: 12rem">
-                            <template #body="{ data }">
-                                <div class="flex flex-col items-center">
-                                    <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
-                                        data.status_title === 'Endorsed to TSD Chief' ? 'info' :
-                                            'success'
-                                        " class="text-center" />
-
-
-                                    <Button
-                                        style="display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em;"
-                                        severity="info" v-if="data.status_title === 'Returned to RPS Chief'"
-                                        class="rounded bg-blue-900 px-1 py-1 mt-1 text-xs text-white"
-                                        @click="openCommentModal(data)" size="small">
-                                        View Comments
-                                    </Button>
-                                </div>
-                            </template>
-                        </Column>
                         <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
                             <template #body="{ data }">
                                 <b>{{ data.application_no }}</b>
                             </template>
                         </Column>
+                        
+                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column>
 
-                        <Column field="application_type" header="Application Type" sortable />
-                        <Column header="Type of Transaction" field="transaction_type" sortable></Column>
-                        <Column header="Classification" field="classification" sortable></Column>
+                            <Column field="status_title" header="Status" sortable style="min-width: 12rem">
+                                <template #body="{ data }">
+                                    <div class="flex flex-col items-center">
+                                        <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
+                                            data.status_title === 'Endorsed to TSD Chief' ? 'info' :
+                                                'success'
+                                            " class="text-center" />
+                                        <Button
+                                            style="display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em;"
+                                            severity="info" v-if="data.status_title === 'Returned to RPS Chief'"
+                                            class="rounded bg-blue-900 px-1 py-1 mt-1 text-xs text-white"
+                                            @click="openCommentModal(data)" size="small">
+                                            View Comments
+                                        </Button>
+                                    </div>
+                                </template>
+                            </Column>
+                             <Column header="Applicant Name" style="min-width: 12rem">
+                <template #body="slotProps">
+                    {{ slotProps.data.authorized_representative || slotProps.data.applicant_name }}
+                </template>
+            </Column>
+                            <Column header="Classification" field="classification" sortable></Column>
 
-                        <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
+
+
+                            <Column header="Type of Transaction" field="transaction_type" sortable></Column>
+
+                            <Column field="date_applied" header="Date of Application" sortable
+                                style="min-width: 4rem" />
 
                     </DataTable>
                 </div>
@@ -1087,7 +1088,8 @@ const getDownloadCount = async (application_id) => {
                         <div class="flex">
                             <span class="w-48 font-semibold">Chainsaw No:</span>
                             <Tag :value="applicationDetails.permit_chainsaw_no" severity="success"
-                                class="text-center" /><br />
+                                class="text-center" />
+                            <br />
                         </div>
                         <div class="flex">
                             <span class="w-48 font-semibold">Permit Validity:</span>
@@ -1410,77 +1412,77 @@ const getDownloadCount = async (application_id) => {
     </div>
 </template>
 
-<style scoped>
-@media screen and (max-width: 960px) {
-    ::v-deep(.customized-timeline) {
-        .p-timeline-event:nth-child(even) {
-            flex-direction: row;
+    <style scoped>
+    @media screen and (max-width: 960px) {
+        ::v-deep(.customized-timeline) {
+            .p-timeline-event:nth-child(even) {
+                flex-direction: row;
 
-            .p-timeline-event-content {
-                text-align: left;
+                .p-timeline-event-content {
+                    text-align: left;
+                }
+            }
+
+            .p-timeline-event-opposite {
+                flex: 0;
             }
         }
-
-        .p-timeline-event-opposite {
-            flex: 0;
-        }
     }
-}
 
-/* HTML:  */
-/* HTML: <div class="ribbon">Your text content</div> */
-.ribbon {
-    font-size: 15px;
-    font-weight: bold;
-    color: #fff;
-}
+    /* HTML:  */
+    /* HTML: <div class="ribbon">Your text content</div> */
+    .ribbon {
+        font-size: 15px;
+        font-weight: bold;
+        color: #fff;
+    }
 
-.ribbon {
-    --r: 0.4em;
-    /* control the ribbon shape (the radius) */
-    --c: #7e0606;
+    .ribbon {
+        --r: 0.4em;
+        /* control the ribbon shape (the radius) */
+        --c: #7e0606;
 
-    position: absolute;
-    top: -60px;
-    right: calc(-3.4 * var(--r));
-    line-height: 1.8;
-    padding: 0 0.5em calc(2 * var(--r));
-    border-radius: 0 var(--r) var(--r) 0;
-    background:
-        radial-gradient(100% 50% at right, var(--c) 98%, #0000 101%) 0 0/0.5lh calc(100% - 2 * var(--r)),
-        radial-gradient(100% 50% at left, #0005 98%, #0000 101%) 100% 100% / var(--r) calc(2 * var(--r)),
-        conic-gradient(from 180deg at calc(100% - var(--r)) calc(100% - 2 * var(--r)), #0000 25%, var(--c) 0) 100% 0 / calc(101% - 0.5lh) 100%;
-    background-repeat: no-repeat;
-}
+        position: absolute;
+        top: -60px;
+        right: calc(-3.4 * var(--r));
+        line-height: 1.8;
+        padding: 0 0.5em calc(2 * var(--r));
+        border-radius: 0 var(--r) var(--r) 0;
+        background:
+            radial-gradient(100% 50% at right, var(--c) 98%, #0000 101%) 0 0/0.5lh calc(100% - 2 * var(--r)),
+            radial-gradient(100% 50% at left, #0005 98%, #0000 101%) 100% 100% / var(--r) calc(2 * var(--r)),
+            conic-gradient(from 180deg at calc(100% - var(--r)) calc(100% - 2 * var(--r)), #0000 25%, var(--c) 0) 100% 0 / calc(101% - 0.5lh) 100%;
+        background-repeat: no-repeat;
+    }
 
-/* HTML: <div class="ribbon">Your text content</div> */
-/* HTML: <div class="ribbon">Your text content</div> */
-.approved_ribbon {
-    font-size: 18px;
-    font-weight: bold;
-    color: #fff;
-}
+    /* HTML: <div class="ribbon">Your text content</div> */
+    /* HTML: <div class="ribbon">Your text content</div> */
+    .approved_ribbon {
+        font-size: 18px;
+        font-weight: bold;
+        color: #fff;
+    }
 
-.approved_ribbon {
-    --r: 0.8em;
-    /* control the ribbon shape */
+    .approved_ribbon {
+        --r: 0.8em;
+        /* control the ribbon shape */
 
-    padding-inline: calc(var(--r) + 0.3em);
-    line-height: 1.8;
-    clip-path: polygon(0 0, 100% 0, calc(100% - var(--r)) 50%, 100% 100%, 0 100%, var(--r) 50%);
-    background: #e65100;
-    /* the main color */
-    width: fit-content;
-}
+        padding-inline: calc(var(--r) + 0.3em);
+        line-height: 1.8;
+        clip-path: polygon(0 0, 100% 0, calc(100% - var(--r)) 50%, 100% 100%, 0 100%, var(--r) 50%);
+        background: #e65100;
+        /* the main color */
+        width: fit-content;
+    }
 
-.comment-wrap {
-    white-space: normal;
-    /* ✅ Allow wrapping */
-    word-break: break-word;
-    /* ✅ Break long words */
-    overflow-wrap: break-word;
-    /* ✅ Support for various browsers */
-    max-width: 200px;
-    /* Optional: Limit the width */
-}
+    .comment-wrap {
+        white-space: normal;
+        /* ✅ Allow wrapping */
+        word-break: break-word;
+        /* ✅ Break long words */
+        overflow-wrap: break-word;
+        /* ✅ Support for various browsers */
+        max-width: 200px;
+        /* Optional: Limit the width */
+    }
 </style>

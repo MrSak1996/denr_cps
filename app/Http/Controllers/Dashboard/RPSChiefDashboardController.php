@@ -121,8 +121,14 @@ class RPSChiefDashboardController extends Controller
             case 2:
                 $officeFilter = [2,6];
                 break;
+            case 3:
+                $officeFilter = [7,8];
+                break;
+            case 5:
+                $officeFilter = [9,10,11,12];
+                break;
             case 6:
-                $officeFilter = [2,6];
+                $officeFilter = [6];
                 break;
             case 13:
                 $officeFilter = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]; // if region show all offices

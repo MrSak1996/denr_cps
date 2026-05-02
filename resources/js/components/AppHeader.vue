@@ -100,10 +100,15 @@ const mainNavItems = computed<NavItem[]>(() => {
 
     const items: NavItem[] = [
         {
-            title: 'Monitoring',
+            title: 'List of Applications',
             href: dashboardHref.value,
             icon: ListCheck,
         },
+        // {
+        //     title: 'Guidelines',
+        //     href: '',
+        //     icon: ListCheck,
+        // },
     ];
 
     // Role 1 and 4

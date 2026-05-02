@@ -144,7 +144,7 @@ const updateStepInUrl = () => {
     const routeName = isEdit.value
         ? 'applications.edit'
         : 'applications.create.citizen'
-
+    console.log(routeName);
     router.visit(
         route(routeName, {
             application_id: form.value.application_id,
@@ -230,7 +230,7 @@ const nextStep = async (payload: any) => {
 
         if (isCreate.value) {
             router.visit(
-                route('applications.create.citizen', {
+                route('applications.create.business', {
                     application_id: form.value.application_id,
                     type: props.type,
                     step: currentStep.value,
