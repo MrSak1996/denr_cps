@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import { useToast } from 'primevue/usetoast'
-
+import Tag from 'primevue/tag'
 import Select from 'primevue/select'
 import Fieldset from 'primevue/fieldset'
 import Dialog from 'primevue/dialog'

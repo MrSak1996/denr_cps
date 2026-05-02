@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, PrinterCheck,SquarePen, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, PrinterCheck, SquarePen, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -279,10 +279,11 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     router.visit('/penro-technical-dashboard');
                 }, 1000);
             } catch (error) {
+                console.log(error);
                 toast.add({
                     severity: 'error',
                     summary: 'Error',
-                    detail: 'Something went wrong',
+                    detail: 'Something went wrong' + error,
                     life: 3000,
                 });
             }
@@ -296,21 +297,24 @@ const activeTab = ref<'re' | 'ea' | 'rc' | 'cpr' | 'aa'>('re');
 const applicationDetails = ref(null);
 const files = ref([]);
 const userId = page.props.auth.user.id;
-
 const applicantsTable = async () => {
     try {
         const officeId = page.props.auth.user.office_id;
-        const { applications: endorsedApplications, count: endorsedCount } = await ProductService.getApplicationsByStatus(STATUS_ENDORSED_PENRO_TECHNICAL, officeId);
 
-        endorsed_applications.value = endorsedApplications;
-        totalCount.value = endorsedCount;
+        const res = await ProductService.getApplicationsByStatus(
+            STATUS_ENDORSED_PENRO_TECHNICAL,
+            officeId
+        );
 
+        endorsed_applications.value = res?.applications ?? [];
+        totalCount.value = res?.count ?? 0;
 
         const data = await ProductService.getProducts(userId);
-        products.value = data;
-        products.value.forEach((item) => {
-            getDownloadCount(item.id);
-        });
+        products.value = data ?? [];
+
+        for (const item of products.value) {
+            await getDownloadCount(item.id);
+        }
 
     } catch (error) {
         console.error('Error fetching applications:', error);
@@ -764,16 +768,20 @@ const buttonState = (row: any) => {
 }
 const getDownloadCount = async (application_id) => {
     try {
-        const response = await axios.get('https://cps.denrcalabarzon.com/api/applicationDownloads', {
-            params: {
-                application_id: application_id,
-                userId: userId
+        const { data } = await axios.get(
+            'https://cps.denrcalabarzon.com/api/applicationDownloads',
+            {
+                params: {
+                    application_id,
+                    userId
+                }
             }
-        });
+        );
 
-        downloadCount.value[application_id] = response.data.count;
+        downloadCount.value[application_id] = data?.count ?? 0;
+
     } catch (error) {
-        console.error(error);
+        console.error('Download count error:', error);
         downloadCount.value[application_id] = 0;
     }
 };
@@ -836,15 +844,15 @@ const getDownloadCount = async (application_id) => {
 
                                     <!-- ✅ VIEW (ALWAYS ENABLED) -->
                                     <Link
-                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL,STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
+                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
                                         :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,
-                                            step: slotProps.data.application_status !== 1 ? 4 : 1
-
+                                            step: 4
                                         })
                                             "
-                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white" style="background-color: #0f766e">
+                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                        style="background-color: #0f766e">
                                         <SquarePen :size="16" />
                                     </Link>
 
@@ -891,7 +899,7 @@ const getDownloadCount = async (application_id) => {
                         <Column header="Applicant Name" style="min-width: 12rem">
                             <template #body="slotProps">
                                 <div v-if="slotProps.data.application_type == 'Individual'">
-                                {{ slotProps.data.applicant_name }}
+                                    {{ slotProps.data.applicant_name }}
 
                                 </div>
                                 <div v-else>
