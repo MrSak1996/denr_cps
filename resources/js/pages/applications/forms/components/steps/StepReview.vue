@@ -186,8 +186,8 @@ const returnApplication = async () => {
     }
 
 
-    await axios.post('/api/returnApplication', {
-        application_id: props.form.id,
+    await axios.post('/api/return', {
+        id: props.form.id,
         user_id: userId,
         role_id: roleId,
         assessments: companyRequirements.value.map(row => ({

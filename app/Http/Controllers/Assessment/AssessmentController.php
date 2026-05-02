@@ -812,7 +812,7 @@ class AssessmentController extends Controller
         |--------------------------------------------------------------------------
         */
             $rps_chief = DB::table('users')
-                ->where('office_id', 6)
+                ->where('office_id', $request->office_id)
                 ->where('role_id', self::TECHNICAL_STAFF)
                 ->orderBy('id', 'asc')
                 ->first();
@@ -826,7 +826,8 @@ class AssessmentController extends Controller
                     'id' => $request->application_id
                 ],
                 [
-                    'application_status' => self::STATUS_RETURN_TO_TECHNICAL_STAFF,
+                    // 'application_status' => self::STATUS_RETURN_TO_TECHNICAL_STAFF
+                    'application_status' => self::STATUS_RETURNED_TO_CENRO_TECHNICAL,
                     'findings'        => $request->onsite['findings'] ?? null,
                     'recommendations' => $request->onsite['recommendations'] ?? null,
                     'updated_at'      => now(),
