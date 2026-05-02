@@ -310,6 +310,14 @@ class RPSChiefDashboardController extends Controller
             ->leftJoin('users as u', 'u.id', '=', 'ac.encoded_by')
             ->leftJoin('tbl_office as o', 'o.id', '=', 'u.office_id')
             ->select(
+                DB::raw("
+					CONCAT(
+						ac.applicant_lastname, ', ',
+						ac.applicant_firstname, ' ',
+						IFNULL(ac.applicant_middlename, '')
+					) AS applicant_name
+				"),
+                'ac.authorized_representative',
                 'ac.id',
                 'ac.return_reason',
                 'u.name as encoded_by',

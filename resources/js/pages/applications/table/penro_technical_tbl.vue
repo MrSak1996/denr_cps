@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, PrinterCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, PrinterCheck,SquarePen, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -844,7 +844,7 @@ const getDownloadCount = async (application_id) => {
 
                                         })
                                             "
-                                        class="mr-2 inline-flex items-center justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
+                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white" style="background-color: #0f766e">
                                         <SquarePen :size="16" />
                                     </Link>
 
@@ -890,11 +890,17 @@ const getDownloadCount = async (application_id) => {
                         </Column>
                         <Column header="Applicant Name" style="min-width: 12rem">
                             <template #body="slotProps">
-                                {{ slotProps.data.authorized_representative || slotProps.data.applicant_name }}
+                                <div v-if="slotProps.data.application_type == 'Individual'">
+                                {{ slotProps.data.applicant_name }}
+
+                                </div>
+                                <div v-else>
+                                    {{ slotProps.data.authorized_representative }}
+                                </div>
                             </template>
                         </Column>
                         <Column header="Classification" field="classification" sortable></Column>
-                        <Column header="Type of Transaction" field="transaction_type" sortable></Column>
+                        <!-- <Column header="Type of Transaction" field="transaction_type" sortable></Column> -->
                         <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
 
                     </DataTable>
