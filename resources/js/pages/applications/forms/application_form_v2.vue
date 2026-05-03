@@ -338,7 +338,6 @@ watch(currentStep, async (step) => {
 
     if (step === 4) {
         await loadReviewData()
-        await fetchRoutingHistory()
     }
 })
 
@@ -354,6 +353,7 @@ onMounted(async () => {
     }
 
     await loadExistingApplication()
+    await fetchRoutingHistory()
 
     if (props.mode !== 'edit') {
         showPrivacyDialog.value = false
