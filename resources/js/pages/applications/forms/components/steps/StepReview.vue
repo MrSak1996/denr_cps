@@ -124,93 +124,45 @@ const openFileModal = (file: any) => {
 ------------------------------------------------------- */
 
 // open return dialog and submit return request
-const openReturnDialog = (id: number) => {
-    const user_id = page.props.auth.user.id;
-    const role_id = page.props.auth.user.role_id;
 
-    confirmDialogRef.value?.open({
-        header: 'Return Application?',
-        message: 'Please indicate the reason and office to return this application.',
-        showTextarea: false,  // user can add remarks
-        showDropdown: false,  // optional: can be made dynamic later
-        onConfirm: async (data?: { remarks?: string }) => {
-            try {
-                // Build payload for your Laravel return controller
-                const payload = {
-                    id: id,
-                    user_id,
-                    role_id,
-                    assessments: companyRequirements.value.map(row => ({
-                        permit_checklist_id: row.permit_checklist_id,
-                        assessment: row.assessment,
-                        remarks: row.remarks,
-                    })),
-                    onsite: {
-                        findings: onsite.value.findings,
-                        recommendations: onsite.value.recommendations,
-                    },
-                    extra_remarks: data?.remarks || null,
-                };
-
-                await axios.post(route('applications.rps.return'), payload);
-
-                toast.add({
-                    severity: 'success',
-                    summary: 'Success',
-                    detail: 'Application returned successfully.',
-                    life: 3000,
-                });
-
-
-            } catch (error: any) {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: error.response?.data?.message || 'Something went wrong',
-                    life: 5000,
-                });
-            }
-        },
-    });
-};
 
 const returnApplication = async () => {
 
-    const incompleteRows = companyRequirements.value
-        .map((row, index) => ({ index: index + 1, assessment: row.assessment }))
-        .filter(r => !r.assessment);
+  const incompleteRows = companyRequirements.value
+    .map((row, index) => ({ index: index + 1, assessment: row.assessment }))
+    .filter(r => !r.assessment);
 
-    if (incompleteRows.length) {
-        alert(`Incomplete assessment on row(s): ${incompleteRows.map(r => r.index).join(', ')}`);
-        return;
+  if (incompleteRows.length) {
+    alert(`Incomplete assessment on row(s): ${incompleteRows.map(r => r.index).join(', ')}`);
+    return;
+  }
+
+
+  await axios.post('/api/return', {
+    id: props.form.id,
+    user_id: userId,
+    role_id: roleId,
+    assessments: companyRequirements.value.map(row => ({
+      permit_checklist_id: row.permit_checklist_id,
+      assessment: row.assessment,
+      remarks: row.remarks,
+    })),
+    onsite: {
+      findings: onsite.value.findings,
+      recommendations: onsite.value.recommendations
     }
+  });
 
+  toast.add({
+    severity: 'success',
+    summary: 'Application Returned',
+    detail: 'Application has been returned successfully.',
+    life: 5000,
+  });
 
-    await axios.post('/api/return', {
-        id: props.form.id,
-        user_id: userId,
-        role_id: roleId,
-        assessments: companyRequirements.value.map(row => ({
-            permit_checklist_id: row.permit_checklist_id,
-            assessment: row.assessment,
-            remarks: row.remarks,
-        })),
-        onsite: {
-            findings: onsite.value.findings,
-            recommendations: onsite.value.recommendations
-        }
-    });
-
-    toast.add({
-        severity: 'success',
-        summary: 'Application Returned',
-        detail: 'Application has been returned successfully.',
-        life: 5000,
-    });
-
-    setTimeout(() => {
-        router.get(route('rps.chief.dashboard'));
-    }, 2000);
+  setTimeout(() => {
+    router.get(route('rps.chief.dashboard'));
+  }, 2000);
 };
 
 // submit all assessments and handle workflow
@@ -254,23 +206,23 @@ const submitAllAssessments = async (applicationId) => {
 
     // role-based redirect
     const redirectMap = {
-      1: '/pending_application',
-      2: '/rps-chief',
-      3: '/cenro-dashboard',
-      4: '/penro-technical-dashboard',
-      5: '/penro-rps-chief-dashboard',
-      6: '/penro-tsd-chief-dashboard',
-      7: '/penro-dashboard',
-      8: '/rts-dashboard',
-      9: '/fus-dashboard',
-      10: '/lpdd-chief-dashboard',
-      11: '/ardts-dashboard',
-      12: '/regional-executive-dashboard',
+      1: '/applications/pending_application',
+      2: '/dashboard/rps-chief',
+      3: '/dashboard/cenro-dashboard',
+      4: '/dashboard/penro-technical-dashboard',
+      5: '/dashboard/penro-rps-chief-dashboard',
+      6: '/dashboard/penro-tsd-chief-dashboard',
+      7: '/dashboard/penro-dashboard',
+      8: '/dashboard/rts-dashboard',
+      9: '/dashboard/fus-dashboard',
+      10: '/dashboard/lpdd-chief-dashboard',
+      11: '/dashboard/ardts-dashboard',
+      12: '/dashboard/regional-executive-dashboard',
     };
 
     const redirectPath = redirectMap[roleId];
     if (redirectPath) {
-      router.visit('/dashboard' + redirectPath);
+      router.visit(redirectPath);
     }
 
   } catch (error) {
@@ -555,14 +507,43 @@ onMounted(() => {
             <span>REGION IV-A (CALABARZON)</span>
           </div>
 
-          <div class="flex">
+          <div class="flex" v-if="applicationData.application_type === 'Company'">
             <span class="w-48 font-semibold">Complete Address:</span>
-            <span>{{ applicationData.applicant_complete_address }}</span>
+            <span>{{ applicationData.company_address }}</span>
+          </div>
+          <div class="flex" v-else>
+            <span class="w-48 font-semibold">Complete Address:</span>
+            <span>{{ applicationData.i_complete_address }}</span>
           </div>
 
         </div>
       </div>
     </Fieldset>
+
+    <Fieldset legend="Registration Information">
+      <table class="w-full border border-gray-300 text-sm">
+        <thead class="bg-blue-900 text-white">
+          <tr>
+            <th class="px-3 py-2 text-left">Field</th>
+            <th class="px-3 py-2 text-left">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-t border-gray-300">
+            <td class="px-3 py-2 font-semibold">Encoded By</td>
+            <td class="px-3 py-2">
+              <Tag severity="success">{{ props.form.registered_by }}</Tag><br />
+              {{ props.form.office_title }} - {{ props.form.role_title }}
+            </td>
+          </tr>
+          <tr class="border-t border-gray-300">
+            <td class="px-3 py-2 font-semibold">Registered Date & Time</td>
+            <td class="px-3 py-2">{{ props.form.created_at }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </Fieldset>
+
     <Fieldset legend="Routing History" toggleable v-model:collapsed="isRoutingCollapsed">
       <table class="min-w-full rounded-lg border border-gray-300 bg-white text-[12px]">
         <thead class="bg-gray-100">
@@ -794,19 +775,6 @@ onMounted(() => {
         allow="autoplay"></iframe>
     </Dialog>
 
-    <!-- <Fieldset legend="Uploaded Files">
-      <div class="container">
-        <div class="file-list">
-          <FileCard v-for="(file, index) in files" :key="index" :file="file" @openPreview="openFileModal" />
-        </div>
-      </div>
-
-      <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
-        <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
-          allow="autoplay"></iframe>
-      </Dialog>
-    </Fieldset> -->
-
     <div :class="[
       'pt-6 w-full',
       currentStep == 4
@@ -820,7 +788,8 @@ onMounted(() => {
         Return Application
       </Button>
 
-      <Button v-else-if="props.form.application_status === 1 || [1, 2, 3].includes(currentStep)" variant="outline"
+      <!-- <Button v-else-if="props.form.application_status === 1 || [1, 2, 3].includes(currentStep)" variant="outline" -->
+      <Button v-else-if="![1, 25, 26, 27].includes(props.form.application_status)" variant="outline"
         @click="emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">Back</Button>
       <AssessmentModal :status_id="props.form.application_status" class="w-full" :applicationId="Number(props.form.id)"
         @submit-assessments="submitAllAssessments" />

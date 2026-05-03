@@ -604,7 +604,7 @@ const applicantsTable = async () => {
                         step: data.application_status !== 1 ? 4 : 1
                     })
                         "
-                        class="mr-2 inline-flex items-center justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
+                        class="mr-2 inline-flex justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
                         <SquarePen :size="16" />
                     </Link>
                     <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"

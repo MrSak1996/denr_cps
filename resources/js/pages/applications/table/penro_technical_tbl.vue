@@ -105,6 +105,10 @@ const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
+
+const roleId = page.props.auth.user.role_id;
+const officeId = page.props.auth.user.office_id;
+
 const submitted = ref(false);
 const statuses = ref([
     { label: 'INSTOCK', value: 'instock' },
@@ -247,7 +251,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
             api: 'applications.penro.receive',
-            payload: { id,office_id,user_id,role_id},
+            payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',
@@ -299,26 +303,26 @@ const activeTab = ref<'re' | 'ea' | 'rc' | 'cpr' | 'aa'>('re');
 const applicationDetails = ref(null);
 const files = ref([]);
 const userId = page.props.auth.user.id;
-    const applicantsTable = async () => {
-        try {
-            const officeId = page.props.auth.user.office_id;
+const applicantsTable = async () => {
+    try {
+        const officeId = page.props.auth.user.office_id;
 
-            const res = await ProductService.getApplicationsByStatus(
-                STATUS_ENDORSED_PENRO_TECHNICAL,
-                officeId
-            );
-            
-            endorsed_applications.value = res?.applications ?? [];
-            totalCount.value = res?.count ?? 0;
+        const res = await ProductService.getApplicationsByStatus(
+            STATUS_ENDORSED_PENRO_TECHNICAL,
+            officeId
+        );
 
-            for (const item of endorsed_applications.value) {
-                await getDownloadCount(item.id);
-            }
+        endorsed_applications.value = res?.applications ?? [];
+        totalCount.value = res?.count ?? 0;
 
-        } catch (error) {
-            console.error('Error fetching applications:', error);
+        for (const item of endorsed_applications.value) {
+            await getDownloadCount(item.id);
         }
-    };
+
+    } catch (error) {
+        console.error('Error fetching applications:', error);
+    }
+};
 
 const openCommentModal = async (data) => {
     showCommentsModal.value = true;
@@ -832,18 +836,33 @@ const getDownloadCount = async (application_id) => {
                         </template>
                         <Column header="Action" :exportable="false" style="min-width: 2rem">
                             <template #body="slotProps">
-                                <div class="mt-2 flex gap-2">
+                                <div class="mt-2 flex gap-2" v-if="officeId == 3">
+                                    <Link :href="route('applications.edit', {
+                                        application_id: slotProps.data.id,
+                                        type: slotProps.data.application_type,
+                                        step: slotProps.data.application_status !== 1 ? 4 : 1
+                                    })
+                                        "
+                                        class="mr-2 inline-flex items-center justify-center rounded-md bg-[#BF360C] px-3 py-2 text-white hover:bg-[#BF360C]">
+                                        <SquarePen :size="16" />
+                                    </Link>
+                                    <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
+                                        :disabled="(downloadCount[slotProps.data.id] ?? 0) >= 3"
+                                        @click="generatePdf(slotProps.data)" style="background-color: #BF360C;">
+                                        <PrinterCheck :size="15" />
 
-                                    <!-- ✅ RECEIVE (disabled if endorsed) -->
+                                    </Button>
+
+                                </div>
+                                <div class="mt-2 flex gap-2" v-else>
                                     <Button :disabled="buttonState(slotProps.data).receiveDisable"
                                         @click="openDialog('receive', slotProps.data.id)"
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
 
-                                    <!-- ✅ VIEW (ALWAYS ENABLED) -->
                                     <Link
-                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL,STATUS_RECEIVED_PENRO_TECHNICAL,STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
+                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_RECEIVED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
                                         :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,
@@ -855,15 +874,11 @@ const getDownloadCount = async (application_id) => {
                                         <SquarePen :size="16" />
                                     </Link>
 
-                                    <!-- ❌ RETURN (disabled if endorsed) -->
-
                                     <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
                                         @click="generatePdf(slotProps.data)" style="background-color: #0D47A1;">
                                         <PrinterCheck :size="15" />
 
                                     </Button>
-
-
                                 </div>
                             </template>
                         </Column>
@@ -880,7 +895,14 @@ const getDownloadCount = async (application_id) => {
                         </Column>
                         <Column field="status_title" header="Status" sortable style="min-width: 12rem">
                             <template #body="{ data }">
-                                <div class="flex flex-col items-center">
+                                <Tag :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' : 'success'"
+                                    class="text-center" v-if="data.application_status == 28">Approved</Tag>
+                                <Tag :value="data.status_title"
+                                    :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' : 'success'"
+                                    class="text-center" v-else />
+                            </template>
+                            <!-- <template #body="{ data }">
+                                <div class="flex flex-col">
                                     <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
                                         data.status_title === 'Endorsed to TSD Chief' ? 'info' :
                                             'success'
@@ -893,7 +915,7 @@ const getDownloadCount = async (application_id) => {
                                         View Comments
                                     </Button>
                                 </div>
-                            </template>
+                            </template> -->
                         </Column>
                         <Column header="Applicant Name" style="min-width: 12rem">
                             <template #body="slotProps">
