@@ -664,7 +664,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/dasboard/rts');
+                    router.visit('/dashboard/rts');
                 }, 1000);
             } catch (error) {
                 console.log(error);

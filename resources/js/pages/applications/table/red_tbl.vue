@@ -726,7 +726,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
         receive: {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
-            api: 'applications.lpdd.receive',
+            api: 'applications.red.receive',
             payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,
@@ -758,7 +758,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                 });
 
                 setTimeout(() => {
-                    router.visit('regional-executive-dashboard');
+                    router.visit('/dashboard/regional-executive');
                 }, 2000);
             } catch (error) {
                 toast.add({

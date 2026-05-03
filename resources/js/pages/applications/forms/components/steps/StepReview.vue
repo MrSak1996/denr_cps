@@ -216,8 +216,8 @@ const submitAllAssessments = async (applicationId) => {
       8: '/dashboard/rts',
       9: '/dashboard/fus',
       10: '/dashboard/lpdd-chief',
-      11: '/dashboard/ardts-dashboard',
-      12: '/dashboard/regional-executive-dashboard',
+      11: '/dashboard/ardts',
+      12: '/dashboard/regional-executive',
     };
 
     const redirectPath = redirectMap[roleId];
