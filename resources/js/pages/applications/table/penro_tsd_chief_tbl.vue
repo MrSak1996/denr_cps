@@ -270,7 +270,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/penro-tsd-chief-dashboard');
+                    router.visit('/penro-tsd-chief');
                 }, 1000);
             } catch (error) {
                 toast.add({
@@ -738,19 +738,19 @@ const handleFileUpdate = async (event) => {
         selectedFileToUpdate.value = null;
     }
 };
-
-
 const buttonState = (row: any) => {
+    const isReceived = row.application_status === STATUS_RECEIVED_PENRO_CHIEF_TSD;
     const isEndorsed =
-        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_TSD;
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS;
 
     return {
-        receiveDisable: false,
+        receiveDisable: isReceived, // ✅ disable if already received
         endorsedDisabled: isEndorsed,
-        viewDisabled: false,   // 👈 VIEW should always be enabled
-        returnDisbaled: false
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
+
 </script>
 
 <template>
@@ -801,42 +801,27 @@ const buttonState = (row: any) => {
                             <template #body="slotProps">
                                 <div class="mt-2 flex gap-2">
 
-                                    <!-- ✅ RECEIVE (disabled if endorsed) -->
                                     <Button :disabled="buttonState(slotProps.data).receiveDisable"
                                         @click="openDialog('receive', slotProps.data.id)"
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
-
+                                    <Link
+                                        :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: 4
+                                        })"
+                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                        style="background-color: #0f766e">
+                                        <SquarePen :size="16" />
+                                    </Link>
                                     <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
                                     <Button type="button" @click="openProgressTracker(slotProps.data)"
                                         style="background-color: #0f766e; border: 1px solid #0f766e !important"
                                         class="rounded p-2 text-white hover:bg-teal-900">
                                         <History :size="15" />
                                     </Button>
-
-                                    <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                    <Button :disabled="buttonState(slotProps.data).viewDisabled" type="button"
-                                        style="background-color: #0f766e"
-                                        class="rounded p-2 text-white hover:bg-teal-900">
-                                        <Link :disabled="buttonState(slotProps.data).viewDisabled" :href="route('applications.edit', {
-                                            id: slotProps.data.id,
-                                            type: slotProps.data.application_type
-                                        })">
-                                            <Eye :size="15" />
-                                        </Link>
-                                    </Button>
-
-                                    <!-- ❌ ENDORSE (disabled if endorsed) -->
-                                    <!-- <Button :disabled="buttonState(slotProps.data).endorsedDisabled"
-                                        @click="openDialog('endorse', slotProps.data.id)"
-                                        style="background-color: #0f766e" class="p-2 text-white">
-                                        <SendIcon :size="15" />
-                                    </Button> -->
-
-                                    <!-- ❌ RETURN (disabled if endorsed) -->
-                                    
-
                                 </div>
                             </template>
                         </Column>
@@ -863,6 +848,22 @@ const buttonState = (row: any) => {
                         <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
                             <template #body="{ data }">
                                 <b>{{ data.application_no }}</b>
+                            </template>
+                        </Column>
+                         <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column>
+                         <Column header="Applicant Name" style="min-width: 12rem">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.application_type == 'Individual'">
+                                    {{ slotProps.data.applicant_name }}
+
+                                </div>
+                                <div v-else>
+                                    {{ slotProps.data.authorized_representative }}
+                                </div>
                             </template>
                         </Column>
 

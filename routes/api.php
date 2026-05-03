@@ -46,7 +46,7 @@ Route::post('/chainsaw-permit/store', [ChainsawController::class,'store']);
 Route::post('chainsaw/insert_payment', [PaymentController::class,'insert_payment']);
 Route::post('/files/update',[ApplicationController::class,'updateApplicantFiles']);
 Route::post('/saveAssessment', [AssessmentController::class, 'saveAssessment']);
-Route::post('/returnApplication',[AssessmentController::class,'returnApplication']);
+Route::post('/return',[AssessmentController::class,'return']);
 
 // Route::post('/{id}/generate-table-pdf', [PDFController::class, 'generateTable']);
 Route::get('/application-routing/{id}', [RoutingController::class, 'show']);

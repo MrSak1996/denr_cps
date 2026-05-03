@@ -32,37 +32,37 @@ onMounted(() => {
 });
 
 const STATUS_DRAFT = 1;
-    const STATUS_FOR_REVIEW_EVALUATION = 2;
+const STATUS_FOR_REVIEW_EVALUATION = 2;
 
-    const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
-    const STATUS_ENDORSED_CENRO_OFFICER = 4;
-    const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
-    const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
-    const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
-    const STATUS_ENDORSED_PENRO_OFFICER = 8;
-    const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
-    const STATUS_ENDORSED_FUS_CHIEF = 10;
-    const STATUS_ENDORSED_LPDD_CHIEF = 11;
-    const STATUS_ENDORSED_ARDTS = 12;
-    const STATUS_ENDORSED_RED = 13;
+const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
+const STATUS_ENDORSED_CENRO_OFFICER = 4;
+const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
+const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
+const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
+const STATUS_ENDORSED_PENRO_OFFICER = 8;
+const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
+const STATUS_ENDORSED_FUS_CHIEF = 10;
+const STATUS_ENDORSED_LPDD_CHIEF = 11;
+const STATUS_ENDORSED_ARDTS = 12;
+const STATUS_ENDORSED_RED = 13;
 
-    const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
-    const STATUS_RECEIVED_CENRO_OFFICER = 15;
-    const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
-    const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
-    const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
-    const STATUS_RECEIVED_PENRO_OFFICER = 19;
-    const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
-    const STATUS_RECEIVED_FUS_CHIEF = 21;
-    const STATUS_RECEIVED_LPDD_CHIEF = 22;
-    const STATUS_RECEIVED_ARDTS = 23;
-    const STATUS_RECEIVED_RED = 24;
+const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
+const STATUS_RECEIVED_CENRO_OFFICER = 15;
+const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
+const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
+const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
+const STATUS_RECEIVED_PENRO_OFFICER = 19;
+const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
+const STATUS_RECEIVED_FUS_CHIEF = 21;
+const STATUS_RECEIVED_LPDD_CHIEF = 22;
+const STATUS_RECEIVED_ARDTS = 23;
+const STATUS_RECEIVED_RED = 24;
 
-    const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
-    const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
-    const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
+const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
+const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
+const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
 
-    const STATUS_APPROVED_BY_RED = 28;
+const STATUS_APPROVED_BY_RED = 28;
 
 
 const auth = computed(() => page.props.auth);
@@ -91,6 +91,8 @@ const showProgressModal = ref(false)
 const showCommentsModal = ref(false);
 const commentsHistory = ref(false);
 const routingHistory = ref([]);
+const progress_tracker_data = ref([]);
+
 const loadingRouting = ref(false);
 const loadingComment = ref(false);
 const showFileModal = ref(false);
@@ -164,19 +166,19 @@ const formatCurrency = (value) => {
 
 const applicantsTable = async () => {
     try {
-         const officeId = page.props.auth.user.office_id;
+        const officeId = page.props.auth.user.office_id;
 
-            const res = await ProductService.getApplicationsByStatus(
-                STATUS_ENDORSED_PENRO_OFFICER,
-                officeId
-            );
-            
-            endorsed_application.value = res?.applications ?? [];
-            totalCount.value = res?.count ?? 0;
+        const res = await ProductService.getApplicationsByStatus(
+            STATUS_ENDORSED_PENRO_OFFICER,
+            officeId
+        );
 
-            for (const item of endorsed_application.value) {
-                await getDownloadCount(item.id);
-            }
+        endorsed_application.value = res?.applications ?? [];
+        totalCount.value = res?.count ?? 0;
+
+        for (const item of endorsed_application.value) {
+            await getDownloadCount(item.id);
+        }
 
 
         // const officeId = page.props.auth.user.office_id;
@@ -573,7 +575,7 @@ const handleFileUpdate = async (event) => {
 };
 
 const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
-        const office_id = page.props.auth.user.office_id;
+    const office_id = page.props.auth.user.office_id;
     const user_id = page.props.auth.user.id;
     const role_id = page.props.auth.user.role_id;
 
@@ -603,7 +605,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
             api: 'applications.penro.receive',
-            payload: { id,office_id,user_id,role_id},
+            payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',
@@ -632,10 +634,10 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     detail: c.toastMessage,
                     life: 3000,
                 });
-            setTimeout(() => {
-                router.visit('/dashboard/penro-dashboard');
-            }, 1000);
-        
+                setTimeout(() => {
+                    router.visit('/dashboard/penro');
+                }, 1000);
+
             } catch (error) {
                 toast.add({
                     severity: 'error',
@@ -671,6 +673,54 @@ const buttonState = (row: any) => {
         returnDisbaled: false
     }
 }
+const getSignatories = async (id) => {
+    isloadingSpinner.value = true;
+    try {
+        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getSignatories/${id}`);
+        progress_tracker_data.value = response.data; // 👈 store data directly
+    } catch (error) {
+        console.error(error);
+    } finally {
+        isloadingSpinner.value = false;
+    }
+};
+const openProgressTracker = async (data) => {
+    getSignatories(data.id);
+    showProgressModal.value = true;
+    loadingRouting.value = true;
+    routingHistory.value = [];
+
+    try {
+        const res = await axios.get(`/api/application-routing/${data.id}`);
+        routingHistory.value = res.data;
+    } catch (error) {
+        console.error(error);
+    } finally {
+        loadingRouting.value = false;
+    }
+    // // Always assign these once only
+
+    if (data.application_status === 0) {
+        // FULL TIMELINE (6 steps)
+        eventsToDisplay.value = [
+            'Return for Compliance',
+            'For Review / Evaluation',
+            'Endorsed to CENRO',
+            'Endorsed to PENRO',
+            'Endorsed to R.O',
+            'Approved',
+        ];
+
+        // currentStep matches 1:1
+        currentStep.value = 0;
+    } else {
+        // SHORT TIMELINE (removed Return for Compliance)
+        eventsToDisplay.value = ['For Review / Evaluation', 'Endorsed to CENRO', 'Endorsed to PENRO', 'Endorsed to R.O', 'Approved'];
+
+        // Adjust index because we removed index 0
+        currentStep.value = data.application_status;
+    }
+};
 
 
 // const buttonState = (row: any) => {
@@ -749,42 +799,27 @@ const buttonState = (row: any) => {
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
-
-                                    <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                    <Link
-                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
-                                        :href="route('applications.edit', {
-                                            application_id: slotProps.data.id,
-                                            type: slotProps.data.application_type,
-                                            step: 4
-                                        })
-                                            "
+                                    <Link :href="route('applications.edit', {
+                                        application_id: slotProps.data.id,
+                                        type: slotProps.data.application_type,
+                                        step: 4
+                                    })"
                                         class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
                                         style="background-color: #0f766e">
                                         <SquarePen :size="16" />
                                     </Link>
-
-                                    <!-- ❌ RETURN (disabled if endorsed) -->
-
-                                    <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
-                                        @click="generatePdf(slotProps.data)" style="background-color: #0D47A1;">
-                                        <PrinterCheck :size="15" />
-
+                                    <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
+                                    <Button type="button" @click="openProgressTracker(slotProps.data)"
+                                        style="background-color: #0f766e; border: 1px solid #0f766e !important"
+                                        class="rounded p-2 text-white hover:bg-teal-900">
+                                        <History :size="15" />
                                     </Button>
 
 
+
+
+
                                 </div>
-                            </template>
-                        </Column>
-                        <Column field="application_type" header="Application Type" sortable />
-                        <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
-                            <template #body="{ data }">
-                                <b>{{ data.application_no }}</b>
-                            </template>
-                        </Column>
-                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <b>{{ data.permit_no }}</b>
                             </template>
                         </Column>
                         <Column field="status_title" header="Status" sortable style="min-width: 12rem">
@@ -794,6 +829,8 @@ const buttonState = (row: any) => {
                                         data.status_title === 'Endorsed to TSD Chief' ? 'info' :
                                             'success'
                                         " class="text-center" />
+
+
                                     <Button
                                         style="display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em;"
                                         severity="info" v-if="data.status_title === 'Returned to RPS Chief'"
@@ -802,6 +839,16 @@ const buttonState = (row: any) => {
                                         View Comments
                                     </Button>
                                 </div>
+                            </template>
+                        </Column>
+                        <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
+                            <template #body="{ data }">
+                                <b>{{ data.application_no }}</b>
+                            </template>
+                        </Column>
+                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
                             </template>
                         </Column>
                         <Column header="Applicant Name" style="min-width: 12rem">
@@ -815,8 +862,11 @@ const buttonState = (row: any) => {
                                 </div>
                             </template>
                         </Column>
+
+                        <Column field="application_type" header="Application Type" sortable />
+                        <Column header="Type of Transaction" field="transaction_type" sortable></Column>
                         <Column header="Classification" field="classification" sortable></Column>
-                        <!-- <Column header="Type of Transaction" field="transaction_type" sortable></Column> -->
+
                         <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
 
                     </DataTable>
@@ -829,236 +879,6 @@ const buttonState = (row: any) => {
 
         <ReusableConfirmDialog ref="confirmDialogRef" />
 
-        <Dialog v-model:visible="showModal" modal header="Application Preview" :style="{ width: '50vw' }">
-            <div v-if="isloadingSpinner" class="flex h-40 items-center justify-center">
-                <span>Loading...</span>
-            </div>
-
-            <div v-else-if="applicationDetails">
-                <div class="flex items-center justify-between space-x-4">
-                    <!-- Left Section: Buttons -->
-                    <div class="flex items-center space-x-2">
-
-                        <Button class="!border-blue-600 !bg-blue-900 !text-white hover:!bg-blue-700">
-                            <Import />Submit Application
-                        </Button>
-                    </div>
-
-                    <!-- Right Section: Status Message -->
-
-                </div>
-
-                <!-- Applicant Details -->
-                <Fieldset v-show="showReturnFieldset" legend="Reason for Returning" :toggleable="true"
-                    :collapsed="false" class="mt-4">
-                    <textarea v-model="returnReason" class="w-full rounded border p-2"
-                        placeholder="Enter reason for returning..."></textarea>
-                    <div class="mt-2">
-                        <Button class="!border-blue-600 !bg-blue-900 !text-white hover:!bg-blue-700"
-                            @click="handleReturnReasonClick">
-                            <SaveAll class="mr-1" />
-                            Submit Reason
-                        </Button>
-                    </div>
-                </Fieldset>
-                <Fieldset v-if="applicationDetails.application_status == 4" legend="Reason for Returning"
-                    :toggleable="true" :collapsed="false" class="mt-4">
-                    <textarea v-model="applicationDetails.return_reason" class="w-full rounded border p-2"
-                        placeholder="Enter reason for returning..."></textarea>
-                    <div class="mt-2">
-                        <Button class="!border-blue-600 !bg-blue-900 !text-white hover:!bg-blue-700"
-                            @click="handleReturnReasonClick">
-                            <SaveAll class="mr-1" />
-                            Submit Reason
-                        </Button>
-                    </div>
-                </Fieldset>
-                <div class="relative">
-                    <div class="ribbon">{{ applicationDetails.status_title }}</div>
-
-                    <Fieldset legend="Review Details" :toggleable="true" v-if="(applicationDetails.return_reason)">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full border border-gray-300 text-sm">
-                                <thead class="bg-gray-100">
-                                    <tr>
-                                        <th class="border border-gray-300 px-4 py-2 text-left font-semibold w-1/3">
-                                            REVIEWED BY:
-                                        </th>
-                                        <th class="border border-gray-300 px-4 py-2 text-left font-semibold w-1/2">
-                                            REMARKS</th>
-                                        <th class="border border-gray-300 px-4 py-2 text-left font-semibold w-1/6">DATE
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            <div class="font-bold">JUAN DELA CRUZ
-                                            </div>
-                                            <div class="text-gray-700 text-sm">RPS Chief</div>
-                                        </td>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            {{ applicationDetails.return_reason }}
-                                        </td>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            09/23/2025
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            <div class="font-bold">NAOMI Z. PERILLA</div>
-                                            <div class="text-gray-700 text-sm">Ass’t. Div. Chief, Licenses, Patents and
-                                                Deeds
-                                                Division</div>
-                                        </td>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            ~
-                                        </td>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            ~
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            <div class="font-bold">~
-                                            </div>
-                                            <div class="text-gray-700 text-sm"> Chief or Section Head</div>
-                                        </td>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            ~
-                                        </td>
-                                        <td class="border border-gray-300 px-4 py-3 align-top">
-                                            ~
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </Fieldset>
-
-
-
-                    <Fieldset legend="Applicant Details" :toggleable="true">
-
-                        <div class="mb-4 flex items-center justify-between">
-                            <h3 class="text-lg font-semibold">Applicant Details</h3>
-                        </div>
-
-                        <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-4 text-sm text-gray-800 md:grid-cols-2">
-                            <!-- Application Number -->
-                            <div class="flex items-center">
-                                <span class="w-32 font-semibold">Application No:</span>
-                                <span class="w-[250] font-semibold">{{ applicationDetails.application_no }}</span>
-                            </div>
-
-                            <!-- Date Applied -->
-                            <div class="flex items-center">
-                                <span class="w-48 font-semibold">Date Applied:</span>
-                                <span v-if="!editState.applicant">{{ applicationDetails.date_applied }}</span>
-                                <DatePicker v-else v-model="editableApplicant.date_applied" class="w-full" />
-                            </div>
-
-                            <!-- Type of Transaction -->
-                            <div class="flex items-center">
-                                <span class="w-48 font-semibold">Type of Transaction:</span>
-                                <span v-if="!editState.applicant">{{ applicationDetails.application_type }}</span>
-                                <InputText v-else v-model="editableApplicant.application_type" class="w-full" />
-                            </div>
-
-                            <!-- Company Name -->
-                            <div class="flex items-center">
-                                <span class="w-48 font-semibold">Company Name:</span>
-                                <span v-if="!editState.applicant">{{ applicationDetails.company_name }}</span>
-                                <InputText v-else v-model="editableApplicant.company_name" class="w-full" />
-                            </div>
-
-                            <!-- Authorized Representative -->
-                            <div class="flex items-center">
-                                <span class="w-48 font-semibold">Authorized Representative:</span>
-                                <span v-if="!editState.applicant">{{ applicationDetails.authorized_representative
-                                    }}</span>
-                                <InputText v-else v-model="editableApplicant.authorized_representative"
-                                    class="w-full" />
-                            </div>
-
-                            <!-- Region (Read-only) -->
-                            <div class="flex items-center">
-                                <span class="w-48 font-semibold">Region:</span>
-                                <span class="w-full text-gray-700"> REGION IV-A (CALABARZON) </span>
-                            </div>
-
-                            <!-- Complete Address -->
-                            <div class="flex items-center">
-                                <span class="w-48 font-semibold">Complete Address:</span>
-                                <span v-if="!editState.applicant">{{ applicationDetails.company_address }}</span>
-                                <Textarea v-else v-model="editableApplicant.company_address" class="w-full" />
-                            </div>
-                        </div>
-                    </Fieldset>
-                </div>
-
-                <!-- Chainsaw Information -->
-                <Fieldset legend="Chainsaw Information" :toggleable="true">
-                    <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-lg font-semibold">Chainsaw Information</h3>
-                    </div>
-
-                    <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-4 text-sm text-gray-800 md:grid-cols-2">
-                        <div class="flex">
-                            <span class="w-48 font-semibold">Chainsaw No:</span>
-                            <span class="w-48"> {{ applicationDetails.permit_chainsaw_no }}</span>
-                        </div>
-
-                        <div class="flex">
-                            <span class="w-32 font-semibold">Permit Validity:</span>
-
-                            <span class="w-64">{{ applicationDetails.permit_validity }}</span>
-                        </div>
-
-                        <div class="flex">
-                            <span class="w-48 font-semibold">Brand:</span>
-                            <span v-if="!editState.chainsaw">{{ applicationDetails.brand }}</span>
-                            <InputText v-else v-model="editableChainsaw.brand" class="w-full" />
-                        </div>
-
-                        <div class="flex">
-                            <span class="w-48 font-semibold">Model:</span>
-                            <span v-if="!editState.chainsaw">{{ applicationDetails.model }}</span>
-                            <InputText v-else v-model="editableChainsaw.model" class="w-full" />
-                        </div>
-
-                        <div class="flex">
-                            <span class="w-48 font-semibold">Quantity:</span>
-                            <span v-if="!editState.chainsaw">{{ applicationDetails.quantity }}</span>
-                            <InputText v-else v-model="editableChainsaw.quantity" class="w-full" />
-                        </div>
-                    </div>
-                </Fieldset>
-            
-                
-
-                <!-- Uploaded Files Section -->
-                <Fieldset legend="Uploaded Files" :toggleable="true">
-                    <div class="container">
-                        <div class="file-list grid grid-cols-1 gap-2 md:grid-cols-2">
-                            <FileCard v-for="(file, index) in files" :key="index" :file="file" @openPreview="openFile"
-                                @updateFile="triggerUpdateFile" />
-                        </div>
-                    </div>
-                </Fieldset>
-
-                <!-- Hidden Input for File Update -->
-                <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
-
-                <!-- File Preview Modal -->
-                <Dialog v-model:visible="showFileModal" modal header="File Preview" :style="{ width: '70vw' }">
-                    <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
-                        allow="autoplay"></iframe>
-                </Dialog>
-            </div>
-        </Dialog>
 
         <Dialog v-model:visible="showProgressModal" modal fusheader="Routing History" :style="{ width: '70vw' }">
             <div class="overflow-x-auto">

@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, SquarePen,Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -740,14 +740,15 @@ const handleFileUpdate = async (event) => {
 
 
 const buttonState = (row: any) => {
+    const isReceived = row.application_status === STATUS_RECEIVED_PENRO_CHIEF_RPS;
     const isEndorsed =
         row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS;
 
     return {
-        receiveDisable: false,
+        receiveDisable: isReceived, // ✅ disable if already received
         endorsedDisabled: isEndorsed,
-        viewDisabled: false,   // 👈 VIEW should always be enabled
-        returnDisbaled: false
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
 </script>
@@ -824,18 +825,20 @@ const buttonState = (row: any) => {
                                     </Button>
 
                                     <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                    <Button :disabled="buttonState(slotProps.data).viewDisabled" type="button"
+                                    <!-- <Button :disabled="buttonState(slotProps.data).viewDisabled" type="button"
                                         style="background-color: #0f766e"
                                         class="rounded p-2 text-white hover:bg-teal-900">
                                         <Link :disabled="buttonState(slotProps.data).viewDisabled"
                                          :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             id: slotProps.data.id,
-                                            type: slotProps.data.application_type
+                                            type: slotProps.data.application_type,
+                                            step: 4
+
                                         })">
                                             <Eye :size="15" />
                                         </Link>
-                                    </Button>
+                                    </Button> -->
 
 
 

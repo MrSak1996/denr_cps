@@ -760,15 +760,16 @@ const handleFileUpdate = async (event) => {
     }
 };
 
-
 const buttonState = (row: any) => {
-    const isEndorsed = row.application_status === STATUS_ENDORSED_PENRO_TECHNICAL || row.application_status == STATUS_RECEIVED_PENRO_TECHNICAL;
+    const isReceived = row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL;
     return {
-        receiveDisable: false,
-        endorsedDisabled: isEndorsed,
-        returnDisbaled: false
+        receiveDisable: isReceived, // ✅ disable if already received
+        endorsedDisabled: false,
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
+
 const getDownloadCount = async (application_id) => {
     try {
         const { data } = await axios.get(
@@ -928,7 +929,7 @@ const getDownloadCount = async (application_id) => {
                                 </div>
                             </template>
                         </Column>
-                        
+
                         <Column header="Classification" field="classification" sortable></Column>
                         <!-- <Column header="Type of Transaction" field="transaction_type" sortable></Column> -->
                         <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
