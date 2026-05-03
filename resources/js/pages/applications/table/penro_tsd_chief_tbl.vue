@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, SquarePen,Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
@@ -238,7 +238,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
         receive: {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
-            api: 'applications.penro.tsd.chief.receive',
+            api: 'applications.penro.receive',
             payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,

@@ -2,7 +2,7 @@
 import { router, usePage, Link } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { SaveAll, Eye, BadgeCheck, SendIcon, History, Import, Undo2 } from 'lucide-vue-next';
+import { SaveAll, SquarePen,Eye, BadgeCheck, SendIcon, History, Import, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
