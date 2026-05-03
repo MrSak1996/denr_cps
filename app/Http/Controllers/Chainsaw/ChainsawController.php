@@ -152,25 +152,46 @@ class ChainsawController extends Controller
                 ]
             );
 
+            if ($request->application_type == 'Individual') {
+                $filesToUpload = [
+                    'mayorDTI' => [
+                        'folder_name' => 'Mayors Permit',
+                        'requirement_id' => 17,
+                    ],
+                    'affidavit' => [
+                        'folder_name' => 'Notarized Affidavit',
+                        'requirement_id' => 19,
+                    ],
+                    'otherDocs' => [
+                        'folder_name' => 'Other supporting documents',
+                        'requirement_id' => 20,
+                    ],
+                    'permit' => [
+                        'folder_name' => 'Permit to Sell',
+                        'requirement_id' => 4,
+                    ],
+                ];
+            } else {
+                $filesToUpload = [
+                    'mayorDTI' => [
+                        'folder_name' => 'Mayors Permit',
+                        'requirement_id' => 9,
+                    ],
+                    'affidavit' => [
+                        'folder_name' => 'Notarized Affidavit',
+                        'requirement_id' => 14,
+                    ],
+                    'otherDocs' => [
+                        'folder_name' => 'Other supporting documents',
+                        'requirement_id' => 12,
+                    ],
+                    'permit' => [
+                        'folder_name' => 'Permit to Sell',
+                        'requirement_id' => 10,
+                    ],
+                ];
+            }
 
-            $filesToUpload = [
-                'mayorDTI' => [
-                    'folder_name' => 'Mayors Permit',
-                    'requirement_id' => 9,
-                ],
-                'affidavit' => [
-                    'folder_name' => 'Notarized Affidavit',
-                    'requirement_id' => 11,
-                ],
-                'otherDocs' => [
-                    'folder_name' => 'Other supporting documents',
-                    'requirement_id' => 12,
-                ],
-                'permit' => [
-                    'folder_name' => 'Permit to Sell',
-                    'requirement_id' => 10,
-                ],
-            ];
 
             $folderPath = match ($request->application_type) {
                 'Individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application->application_no}",

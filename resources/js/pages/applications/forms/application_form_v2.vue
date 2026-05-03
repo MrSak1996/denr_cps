@@ -143,8 +143,6 @@ const loadReviewData = async () => {
 
 const fetchRoutingHistory = async () => {
     const id = form.value.application_id
-    if (!id) return
-
     try {
         routingHistory.value = await getRoutingHistory(id)
     } catch (error) {
