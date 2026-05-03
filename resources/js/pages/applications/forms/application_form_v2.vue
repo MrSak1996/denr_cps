@@ -71,7 +71,7 @@ const form = ref({
 const application = ref<any>({})
 const suppliers = ref<any[]>([])
 const files = ref<any[]>([])
-const routingHistory = ref([]);
+const routingHistory = ref<any[]>([])
 
 const isProcessing = ref(false)
 const defaultSupplierDialog = ref(false)

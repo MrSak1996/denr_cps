@@ -240,8 +240,8 @@ const sendEmail = async () => {
     const response = await axios.post('/api/send-email', {
       email: 'kimsacluti10101996@gmail.com',
       applicant_name: props.form.applicant_type === 'Individual'
-        ? `${props.form.first_name} ${props.form.last_name}`
-        : props.form.authorized_representative,
+      ? `${props.form.first_name || ''} ${props.form.last_name || ''}`.trim()
+      : props.form.authorized_representative || 'N/A',
       address: props.form.applicant_type === 'Individual'
         ? props.form.i_complete_address
         : props.form.company_address,
@@ -423,7 +423,47 @@ const handleRemoveResubmission = (checklistId: number, index: number) => {
   if (!row) return;
   row.resubmissions.splice(index, 1);
 };
+const getDateField = (item) => {
+    if (item.route_order == 2) return item.date_received_rps_chief;
 
+    if (item.route_order == 4 && item.action == 'Submitted to CHIEF RPS')
+        return item.date_endorsed_chiefrps;
+
+    if (item.route_order == 4 && item.action == 'Received by the CENRO Officer')
+        return item.date_cenro_chief_received;
+
+    if (item.route_order == 6) return item.date_received_penro_technical;
+    if (item.route_order == 8) return item.date_received_penro_rps_chief;
+    if (item.route_order == 10) return item.date_received_penro_tsd_chief;
+    if (item.route_order == 12) return item.date_received_penro_chief;
+    if (item.route_order == 14) return item.date_received_region_technical;
+    if (item.route_order == 16) return item.date_received_fus_chief;
+    if (item.route_order == 18) return item.date_received_lpddchief;
+    if (item.route_order == 20) return item.date_received_ardts;
+    if (item.route_order == 22) return item.date_received_red;
+
+    return null;
+};
+const getEndorsedDate = (item) => {
+    if (item.route_order == 1) return item.date_endorsed_chiefrps;
+
+    if (item.route_order == 3 && item.action != 'Returned to Technical Staff')
+        return item.date_endorsed_cenro_chief;
+
+    if (item.route_order == 5 && item.action === 'Submitted to PENRO Technical Staff')
+        return item.date_endorsed_penro_technical;
+
+    if (item.route_order == 7) return item.date_endorsed_penro_chief_rps;
+    if (item.route_order == 9) return item.date_endorsed_penro_chief_tsd;
+    if (item.route_order == 11) return item.date_endorsed_penro;
+    if (item.route_order == 13) return item.date_endorsed_region_technical;
+    if (item.route_order == 15) return item.date_endorsed_fus_chief;
+    if (item.route_order == 17) return item.date_endorsed_lpddchief;
+    if (item.route_order == 19) return item.date_endorsed_ardts;
+    if (item.route_order == 21) return item.date_endorse_red;
+
+    return null;
+};
 /* -------------------------------------------------------
 | LIFECYCLE
 ------------------------------------------------------- */

@@ -17,6 +17,7 @@ import { useToast } from 'primevue/usetoast'
 
 import {
     getApplicationReview,
+    getRoutingHistory,
     saveCompanyApplication,
     saveChainsaw,
     savePayment,
@@ -70,6 +71,8 @@ const form = ref({
 const application = ref<any>({})
 const suppliers = ref<any[]>([])
 const files = ref<any[]>([])
+const routingHistory = ref<any[]>([])
+
 const isProcessing = ref(false)
 const defaultSupplierDialog = ref(false)
 
@@ -136,6 +139,21 @@ const loadReviewData = async () => {
     application.value = res.application
     suppliers.value = res.suppliers
     files.value = res.files
+}
+const fetchRoutingHistory = async () => {
+    const id = form.value.application_id
+
+    if (!id) {
+        console.warn("Missing application_id")
+        return
+    }
+
+    try {
+        routingHistory.value = await getRoutingHistory(id)
+        console.log("Routing History:", routingHistory.value)
+    } catch (error) {
+        console.error(error)
+    }
 }
 
 /* -------------------- STEP NAVIGATION -------------------- */
@@ -336,6 +354,7 @@ onMounted(async () => {
     }
 
     await loadExistingApplication()
+    await fetchRoutingHistory()
 
     if (props.mode !== 'edit') {
         showPrivacyDialog.value = false
@@ -359,7 +378,7 @@ onMounted(async () => {
                 <div class="space-y-6 p-6">
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :files="files" @proceed="proceed" @next="nextStep" @back="goBack"
+                        :supplier="suppliers" :routingHistory="routingHistory" :files="files" @proceed="proceed" @next="nextStep" @back="goBack"
                         :mode="props.mode" @supplierSaved="supplierSaved" />
                 </div>
 
