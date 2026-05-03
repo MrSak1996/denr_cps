@@ -875,7 +875,7 @@ const getDownloadCount = async (application_id) => {
                                     </Link>
 
                                     <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
-                                        @click="generatePdf(slotProps.data)" style="background-color: #0D47A1;">
+                                        @click="generatePdf(slotProps.data)" style="background-color: #0D47A1;border-color: 1px solid #0D47A1;">
                                         <PrinterCheck :size="15" />
 
                                     </Button>
@@ -928,6 +928,7 @@ const getDownloadCount = async (application_id) => {
                                 </div>
                             </template>
                         </Column>
+                        
                         <Column header="Classification" field="classification" sortable></Column>
                         <!-- <Column header="Type of Transaction" field="transaction_type" sortable></Column> -->
                         <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />

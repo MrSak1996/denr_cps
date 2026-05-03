@@ -211,7 +211,7 @@ const receiveApplication = (id: number) => {
 const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
     const office_id = page.props.auth.user.office_id;
     const user_id = page.props.auth.user.id;
-
+    const role_id = page.props.auth.user.role_id;
     const config = {
         endorse: {
             header: 'Endorse this application to Chief TSD?',
@@ -238,7 +238,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
             api: 'applications.penro.receive',
-            payload: { id, office_id, user_id },
+            payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',
@@ -269,7 +269,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/penro-rps-chief-dashboard');
+                    router.visit('/penro-rps-chief');
                 }, 1000);
             } catch (error) {
                 toast.add({
@@ -806,7 +806,16 @@ const buttonState = (row: any) => {
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
-
+                                    <Link
+                                        :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: 4
+                                        })"
+                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                        style="background-color: #0f766e">
+                                        <SquarePen :size="16" />
+                                    </Link>
                                     <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
                                     <Button type="button" @click="openProgressTracker(slotProps.data)"
                                         style="background-color: #0f766e; border: 1px solid #0f766e !important"
@@ -818,7 +827,9 @@ const buttonState = (row: any) => {
                                     <Button :disabled="buttonState(slotProps.data).viewDisabled" type="button"
                                         style="background-color: #0f766e"
                                         class="rounded p-2 text-white hover:bg-teal-900">
-                                        <Link :disabled="buttonState(slotProps.data).viewDisabled" :href="route('applications.edit', {
+                                        <Link :disabled="buttonState(slotProps.data).viewDisabled"
+                                         :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
                                             id: slotProps.data.id,
                                             type: slotProps.data.application_type
                                         })">
@@ -826,15 +837,7 @@ const buttonState = (row: any) => {
                                         </Link>
                                     </Button>
 
-                                    <!-- ❌ ENDORSE (disabled if endorsed) -->
-                                    <!-- <Button :disabled="buttonState(slotProps.data).endorsedDisabled"
-                                        @click="openDialog('endorse', slotProps.data.id)"
-                                        style="background-color: #0f766e" class="p-2 text-white">
-                                        <SendIcon :size="15" />
-                                    </Button> -->
 
-                                    <!-- ❌ RETURN (disabled if endorsed) -->
-                                    
 
                                 </div>
                             </template>
@@ -862,6 +865,22 @@ const buttonState = (row: any) => {
                         <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
                             <template #body="{ data }">
                                 <b>{{ data.application_no }}</b>
+                            </template>
+                        </Column>
+                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column>
+                        <Column header="Applicant Name" style="min-width: 12rem">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.application_type == 'Individual'">
+                                    {{ slotProps.data.applicant_name }}
+
+                                </div>
+                                <div v-else>
+                                    {{ slotProps.data.authorized_representative }}
+                                </div>
                             </template>
                         </Column>
 
