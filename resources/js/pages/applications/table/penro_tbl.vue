@@ -663,14 +663,15 @@ const openCommentModal = async (data) => {
     }
 };
 const buttonState = (row: any) => {
+    const isReceived = row.application_status === STATUS_RECEIVED_PENRO_OFFICER;
     const isEndorsed =
-        row.application_status === STATUS_ENDORSED_PENRO_OFFICER;
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS;
 
     return {
-        receiveDisable: false,
+        receiveDisable: isReceived, // ✅ disable if already received
         endorsedDisabled: isEndorsed,
-        viewDisabled: false,   // 👈 VIEW should always be enabled
-        returnDisbaled: false
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
 const getSignatories = async (id) => {

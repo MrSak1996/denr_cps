@@ -270,7 +270,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/penro-tsd-chief');
+                    router.visit('/dashboard/penro-tsd-chief');
                 }, 1000);
             } catch (error) {
                 toast.add({

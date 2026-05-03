@@ -2,7 +2,7 @@
 import { router, usePage, Link } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { SaveAll, Eye, BadgeCheck, SendIcon, History, Import, Undo2 } from 'lucide-vue-next';
+import { SaveAll, SquarePen, Eye, BadgeCheck, SendIcon, History, Import, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
@@ -633,7 +633,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
         receive: {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
-            api: 'applications.rts.receive',
+            api: 'applications.fus.receive',
             payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,
@@ -664,7 +664,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/rts-dashboard');
+                    router.visit('/dasboard/rts');
                 }, 1000);
             } catch (error) {
                 console.log(error);
@@ -692,16 +692,18 @@ const openCommentModal = async (data) => {
     }
 };
 const buttonState = (row: any) => {
+    const isReceived = row.application_status === STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF;
     const isEndorsed =
-        row.application_status === STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF;
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS;
 
     return {
-        receiveDisable: false,
+        receiveDisable: isReceived, // ✅ disable if already received
         endorsedDisabled: isEndorsed,
-        viewDisabled: false,   // 👈 VIEW should always be enabled
-        returnDisbaled: false
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
+
 
 
 // const buttonState = (row: any) => {
@@ -780,7 +782,14 @@ const buttonState = (row: any) => {
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
-
+                                    <Link :href="route('applications.edit', {
+                                        application_id: slotProps.data.id,
+                                        type: slotProps.data.application_type,
+                                        step: 4
+                                    })" class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                        style="background-color: #0f766e">
+                                        <SquarePen :size="16" />
+                                    </Link>
                                     <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
                                     <Button type="button" @click="openProgressTracker(slotProps.data)"
                                         style="background-color: #0f766e; border: 1px solid #0f766e !important"
@@ -789,25 +798,22 @@ const buttonState = (row: any) => {
                                     </Button>
 
                                     <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                    <Button type="button" style="background-color: #0f766e"
+                                    <!-- <Button :disabled="buttonState(slotProps.data).viewDisabled" type="button"
+                                        style="background-color: #0f766e"
                                         class="rounded p-2 text-white hover:bg-teal-900">
-                                        <Link :href="route('applications.edit', {
+                                        <Link :disabled="buttonState(slotProps.data).viewDisabled"
+                                         :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
                                             id: slotProps.data.id,
-                                            type: slotProps.data.application_type
+                                            type: slotProps.data.application_type,
+                                            step: 4
+
                                         })">
                                             <Eye :size="15" />
                                         </Link>
-                                    </Button>
-
-                                    <!-- ❌ ENDORSE (disabled if endorsed) -->
-                                    <!-- <Button :disabled="buttonState(slotProps.data).endorsedDisabled"
-                                        @click="openDialog('endorse', slotProps.data.id)"
-                                        style="background-color: #0f766e" class="p-2 text-white">
-                                        <SendIcon :size="15" />
                                     </Button> -->
 
-                                    <!-- ❌ RETURN (disabled if endorsed) -->
-                                    
+
 
                                 </div>
                             </template>
@@ -836,10 +842,29 @@ const buttonState = (row: any) => {
                                 <b>{{ data.application_no }}</b>
                             </template>
                         </Column>
+                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column>
+                        <Column header="Applicant Name" style="min-width: 12rem">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.application_type == 'Individual'">
+                                    {{ slotProps.data.applicant_name }}
+
+                                </div>
+                                <div v-else>
+                                    {{ slotProps.data.authorized_representative }}
+                                </div>
+                            </template>
+                        </Column>
+
                         <Column field="application_type" header="Application Type" sortable />
                         <Column header="Type of Transaction" field="transaction_type" sortable></Column>
                         <Column header="Classification" field="classification" sortable></Column>
+
                         <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
+
                     </DataTable>
                 </div>
             </div>

@@ -2,7 +2,7 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck,SquarePen, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -729,7 +729,8 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             showDropdown: true,
             toastMessage: 'Application returned',
             offices: [
-                { label: 'Technical Staff', value: 1 },
+                { label: 'PENRO Technical Staff', value: 26 },
+                { label: 'CENRO Technical Staff', value: 25 },
                 { label: 'Chief, RPS', value: 8 },
                 { label: 'Chief, TSD', value: 10 },
                 { label: 'Chief, PENRO', value: 3 },
@@ -769,7 +770,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                     setTimeout(() => {
-                    router.visit('/fus-dashboard');
+                    router.visit('/dashboard/fus');
                 }, 1000);
             } catch (error) {
                 toast.add({
@@ -795,15 +796,17 @@ const openCommentModal = async (data) => {
         loadingComment.value = false;
     }
 };
+
 const buttonState = (row: any) => {
+    const isReceived = row.application_status === STATUS_RECEIVED_FUS_CHIEF;
     const isEndorsed =
-        row.application_status === STATUS_ENDORSED_FUS_CHIEF;
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS;
 
     return {
-        receiveDisable: false,
+        receiveDisable: isReceived, // ✅ disable if already received
         endorsedDisabled: isEndorsed,
-        viewDisabled: false,   // 👈 VIEW should always be enabled
-        returnDisbaled: false
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
 // const buttonState = (row: any) => {
@@ -875,32 +878,29 @@ const buttonState = (row: any) => {
                             <Column header="Action" :exportable="false" style="min-width: 2rem">
                                 <template #body="slotProps">
                                     <div class="mt-2 flex gap-2">
-                                        
+                                          <!-- ✅ RECEIVE (disabled if endorsed) -->
+                                    <Button :disabled="buttonState(slotProps.data).receiveDisable"
+                                        @click="openDialog('receive', slotProps.data.id)"
+                                        style="background-color: #0f766e" class="p-2 text-white">
+                                        <BadgeCheck :size="15" />
+                                    </Button>
+                                    <Link
+                                        :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: 4
+                                        })"
+                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                        style="background-color: #0f766e">
+                                        <SquarePen :size="16" />
+                                    </Link>
+                                    <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
+                                    <Button type="button" @click="openProgressTracker(slotProps.data)"
+                                        style="background-color: #0f766e; border: 1px solid #0f766e !important"
+                                        class="rounded p-2 text-white hover:bg-teal-900">
+                                        <History :size="15" />
+                                    </Button>
 
-                                        <!-- ✅ RECEIVE (disabled if endorsed) -->
-                                        <Button :disabled="buttonState(slotProps.data).receiveDisable"
-                                            @click="openDialog('receive', slotProps.data.id)"
-                                            style="background-color: #0f766e" class="p-2 text-white">
-                                            <BadgeCheck :size="15" />
-                                        </Button>
-
-                                        <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
-                                        <Button type="button" @click="openProgressTracker(slotProps.data)"
-                                            style="background-color: #0f766e; border: 1px solid #0f766e !important"
-                                            class="rounded p-2 text-white hover:bg-teal-900">
-                                            <History :size="15" />
-                                        </Button>
-
-                                        <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                        <Button type="button" style="background-color: #0f766e"
-                                            class="rounded p-2 text-white hover:bg-teal-900">
-                                            <Link :href="route('applications.edit', {
-                                                id: slotProps.data.id,
-                                                type: slotProps.data.application_type
-                                            })">
-                                                <Eye :size="15" />
-                                            </Link>
-                                        </Button>
 
                                         <!-- ❌ ENDORSE (disabled if endorsed) -->
                                         <!-- <Button :disabled="buttonState(slotProps.data).endorsedDisabled"
@@ -910,45 +910,63 @@ const buttonState = (row: any) => {
                                         </Button> -->
 
                                         <!-- ❌ RETURN (disabled if endorsed) -->
-                                        <Button :disabled="buttonState(slotProps.data).returnDisbaled"
+                                        <!-- <Button :disabled="buttonState(slotProps.data).returnDisbaled"
                                             @click="openDialog('return', slotProps.data.id)"
                                             style="background-color: #bd081c; border: 1px solid #cd201f !important"
                                             class="p-2 text-white">
                                             <Undo2 :size="15" />
-                                        </Button>
+                                        </Button> -->
 
                                     </div>
                                 </template>
                             </Column>
                             <Column field="status_title" header="Status" sortable style="min-width: 12rem">
-                                <template #body="{ data }">
-                                    <div class="flex flex-col items-center">
-                                        <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
-                                            data.status_title === 'Endorsed to TSD Chief' ? 'info' :
-                                                'success'
-                                            " class="text-center" />
+                            <template #body="{ data }">
+                                <div class="flex flex-col items-center">
+                                    <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
+                                        data.status_title === 'Endorsed to TSD Chief' ? 'info' :
+                                            'success'
+                                        " class="text-center" />
 
 
-                                        <Button
-                                            style="display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em;"
-                                            severity="info" v-if="data.status_title === 'Returned to RPS Chief'"
-                                            class="rounded bg-blue-900 px-1 py-1 mt-1 text-xs text-white"
-                                            @click="openCommentModal(data)" size="small">
-                                            View Comments
-                                        </Button>
-                                    </div>
-                                </template>
-                            </Column>
-                            <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
-                                <template #body="{ data }">
-                                    <b>{{ data.application_no }}</b>
-                                </template>
-                            </Column>
-                            <Column field="application_type" header="Application Type" sortable />
-                            <Column header="Type of Transaction" field="transaction_type" sortable></Column>
-                            <Column header="Classification" field="classification" sortable></Column>
-                            <Column field="date_applied" header="Date of Application" sortable
-                                style="min-width: 4rem" />
+                                    <Button
+                                        style="display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em;"
+                                        severity="info" v-if="data.status_title === 'Returned to RPS Chief'"
+                                        class="rounded bg-blue-900 px-1 py-1 mt-1 text-xs text-white"
+                                        @click="openCommentModal(data)" size="small">
+                                        View Comments
+                                    </Button>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
+                            <template #body="{ data }">
+                                <b>{{ data.application_no }}</b>
+                            </template>
+                        </Column>
+                         <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column>
+                         <Column header="Applicant Name" style="min-width: 12rem">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.application_type == 'Individual'">
+                                    {{ slotProps.data.applicant_name }}
+
+                                </div>
+                                <div v-else>
+                                    {{ slotProps.data.authorized_representative }}
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column field="application_type" header="Application Type" sortable />
+                        <Column header="Type of Transaction" field="transaction_type" sortable></Column>
+                        <Column header="Classification" field="classification" sortable></Column>
+
+                        <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
+
                         </DataTable>
                     </div>
                 </div>
