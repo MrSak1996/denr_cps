@@ -837,7 +837,7 @@ const getDownloadCount = async (application_id) => {
                         </template>
                         <Column header="Action" :exportable="false" style="min-width: 2rem">
                             <template #body="slotProps">
-                                <div class="mt-2 flex gap-2" v-if="officeId == 3">
+                                <div class="mt-2 flex gap-2" v-if="roleId == 4">
                                     <Link :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
                                         type: slotProps.data.application_type,
@@ -863,7 +863,7 @@ const getDownloadCount = async (application_id) => {
                                     </Button>
 
                                     <Link
-                                        v-if="[STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_RECEIVED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
+                                        v-if="[STATUS_DRAFT,STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_RECEIVED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
                                         :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,
