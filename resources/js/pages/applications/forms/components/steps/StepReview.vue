@@ -240,8 +240,8 @@ const sendEmail = async () => {
     const response = await axios.post('/api/send-email', {
       email: 'kimsacluti10101996@gmail.com',
       applicant_name: props.form.applicant_type === 'Individual'
-      ? `${props.form.first_name || ''} ${props.form.last_name || ''}`.trim()
-      : props.form.authorized_representative || 'N/A',
+        ? `${props.form.first_name || ''} ${props.form.last_name || ''}`.trim()
+        : props.form.authorized_representative || 'N/A',
       address: props.form.applicant_type === 'Individual'
         ? props.form.i_complete_address
         : props.form.company_address,
@@ -424,45 +424,45 @@ const handleRemoveResubmission = (checklistId: number, index: number) => {
   row.resubmissions.splice(index, 1);
 };
 const getDateField = (item) => {
-    if (item.route_order == 2) return item.date_received_rps_chief;
+  if (item.route_order == 2) return item.date_received_rps_chief;
 
-    if (item.route_order == 4 && item.action == 'Submitted to CHIEF RPS')
-        return item.date_endorsed_chiefrps;
+  if (item.route_order == 4 && item.action == 'Submitted to CHIEF RPS')
+    return item.date_endorsed_chiefrps;
 
-    if (item.route_order == 4 && item.action == 'Received by the CENRO Officer')
-        return item.date_cenro_chief_received;
+  if (item.route_order == 4 && item.action == 'Received by the CENRO Officer')
+    return item.date_cenro_chief_received;
 
-    if (item.route_order == 6) return item.date_received_penro_technical;
-    if (item.route_order == 8) return item.date_received_penro_rps_chief;
-    if (item.route_order == 10) return item.date_received_penro_tsd_chief;
-    if (item.route_order == 12) return item.date_received_penro_chief;
-    if (item.route_order == 14) return item.date_received_region_technical;
-    if (item.route_order == 16) return item.date_received_fus_chief;
-    if (item.route_order == 18) return item.date_received_lpddchief;
-    if (item.route_order == 20) return item.date_received_ardts;
-    if (item.route_order == 22) return item.date_received_red;
+  if (item.route_order == 6) return item.date_received_penro_technical;
+  if (item.route_order == 8) return item.date_received_penro_rps_chief;
+  if (item.route_order == 10) return item.date_received_penro_tsd_chief;
+  if (item.route_order == 12) return item.date_received_penro_chief;
+  if (item.route_order == 14) return item.date_received_region_technical;
+  if (item.route_order == 16) return item.date_received_fus_chief;
+  if (item.route_order == 18) return item.date_received_lpddchief;
+  if (item.route_order == 20) return item.date_received_ardts;
+  if (item.route_order == 22) return item.date_received_red;
 
-    return null;
+  return null;
 };
 const getEndorsedDate = (item) => {
-    if (item.route_order == 1) return item.date_endorsed_chiefrps;
+  if (item.route_order == 1) return item.date_endorsed_chiefrps;
 
-    if (item.route_order == 3 && item.action != 'Returned to Technical Staff')
-        return item.date_endorsed_cenro_chief;
+  if (item.route_order == 3 && item.action != 'Returned to Technical Staff')
+    return item.date_endorsed_cenro_chief;
 
-    if (item.route_order == 5 && item.action === 'Submitted to PENRO Technical Staff')
-        return item.date_endorsed_penro_technical;
+  if (item.route_order == 5 && item.action === 'Submitted to PENRO Technical Staff')
+    return item.date_endorsed_penro_technical;
 
-    if (item.route_order == 7) return item.date_endorsed_penro_chief_rps;
-    if (item.route_order == 9) return item.date_endorsed_penro_chief_tsd;
-    if (item.route_order == 11) return item.date_endorsed_penro;
-    if (item.route_order == 13) return item.date_endorsed_region_technical;
-    if (item.route_order == 15) return item.date_endorsed_fus_chief;
-    if (item.route_order == 17) return item.date_endorsed_lpddchief;
-    if (item.route_order == 19) return item.date_endorsed_ardts;
-    if (item.route_order == 21) return item.date_endorse_red;
+  if (item.route_order == 7) return item.date_endorsed_penro_chief_rps;
+  if (item.route_order == 9) return item.date_endorsed_penro_chief_tsd;
+  if (item.route_order == 11) return item.date_endorsed_penro;
+  if (item.route_order == 13) return item.date_endorsed_region_technical;
+  if (item.route_order == 15) return item.date_endorsed_fus_chief;
+  if (item.route_order == 17) return item.date_endorsed_lpddchief;
+  if (item.route_order == 19) return item.date_endorsed_ardts;
+  if (item.route_order == 21) return item.date_endorse_red;
 
-    return null;
+  return null;
 };
 /* -------------------------------------------------------
 | LIFECYCLE
@@ -588,7 +588,6 @@ onMounted(() => {
       <table class="min-w-full rounded-lg border border-gray-300 bg-white text-[12px]">
         <thead class="bg-gray-100">
           <tr>
-            <th class="border px-4 py-2 text-left">#</th>
             <th class="border px-4 py-2 text-left">Sender</th>
             <th class="border px-4 py-2 text-left">Route Details</th>
             <th class="border px-4 py-2 text-left">Receiver</th>
@@ -601,10 +600,7 @@ onMounted(() => {
 
         <tbody>
           <tr v-for="(item, index) in routingHistory" :key="index" class="hover:bg-gray-50">
-            <!-- # -->
-            <td class="border px-4">
-              {{ index + 1 }}
-            </td>
+
 
             <!-- Sender -->
             <td class="border px-4" style="width: 10rem">
@@ -660,15 +656,26 @@ onMounted(() => {
                     second: '2-digit',
                     hour12: true,
                   })
-
                 }}
               </span>
             </td>
 
             <!-- Date Received -->
             <td class="border px-4">
-              <span>
-                {{ formatDate(getDateField(item)) }}
+              <span v-if="[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31].includes(item.route_order)">
+                {{
+                  item.created_at
+                    ? new Date(item.created_at).toLocaleString('en-PH', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true,
+                    })
+                    : '-'
+                }}
               </span>
 
             </td>
@@ -676,11 +683,21 @@ onMounted(() => {
             <!-- Date Endorsed -->
             <td class="border px-4">
 
-              <span>
-                {{ formatDate(getEndorsedDate(item)) }}
+              <span v-if="[2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30].includes(item.route_order)">
+                {{
+                  item.updated_at
+                    ? new Date(item.updated_at).toLocaleString('en-PH', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true,
+                    })
+                    : '-'
+                }}
               </span>
-
-
             </td>
 
             <!-- Remarks -->
