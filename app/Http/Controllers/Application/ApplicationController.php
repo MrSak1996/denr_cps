@@ -1296,23 +1296,21 @@ class ApplicationController extends Controller
 
 
     public function summary(Request $request)
-    {
-        $status = (int) $request->input('status');
+{
+    $query = DB::table('tbl_application_checklist')
+        ->leftJoin('users as u', 'u.id', '=', 'tbl_application_checklist.encoded_by')
+        ->select(
+            DB::raw('COUNT(*) as total'),
+            DB::raw('SUM(CASE WHEN application_status IN (1,2) THEN 1 ELSE 0 END) as draft'),
+            DB::raw('SUM(CASE WHEN application_status IN (25,26,27) THEN 1 ELSE 0 END) as deferred'),
+            DB::raw('SUM(CASE WHEN application_status = 28 THEN 1 ELSE 0 END) as approved')
+        )
+        ->where('u.office_id', $request->input('office_id'));
 
-        $query = DB::table('tbl_application_checklist')
-            ->leftJoin('users as u', 'u.id', '=', 'tbl_application_checklist.encoded_by')
-            ->select(
-                DB::raw('SUM(CASE WHEN application_status >= 1 THEN 1 ELSE 0 END) as total'),
-                DB::raw('SUM(CASE WHEN application_status IN (1,2) THEN 1 ELSE 0 END) as draft'),
-                DB::raw('SUM(CASE WHEN application_status IN (25,26,27) THEN 1 ELSE 0 END) as deferred'),
-                DB::raw('SUM(CASE WHEN application_status = 28 THEN 1 ELSE 0 END) as approved')
-            )
-            ->where('tbl_application_checklist.application_status', $status);
+    $data = $query->first();
 
-        $data = $query->get();
-
-        return response()->json($data);
-    }
+    return response()->json($data);
+}
 
     // public function submitApplication(Request $request, $id)
     // {

@@ -197,18 +197,18 @@ const cancel = () => emit('cancel')
                 </FloatLabel>
 
                 <FloatLabel>
-                    <DatePicker
+                    <InputText
                         v-model="supplier.issued_date"
-                        date-format="yy-mm-dd"
+                        type="date"
                         class="w-full"
                     />
                     <label>Issued Date</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <DatePicker
+                    <InputText
                         v-model="supplier.validity_date"
-                        date-format="yy-mm-dd"
+                        type="date"
                         class="w-full"
                     />
                     <label>Valid Until</label>

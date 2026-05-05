@@ -4,7 +4,6 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 import { useApi } from '@/composables/useApi';
 import axios from 'axios';
-import DatePicker from 'primevue/datepicker';
 import Dialog from 'primevue/dialog';
 import Fieldset from 'primevue/fieldset';
 import FloatLabel from 'primevue/floatlabel';
@@ -294,7 +293,7 @@ onMounted(async () => {
 
             <div class="mt-4 grid gap-4 md:grid-cols-3">
                 <FloatLabel class="mt-2">
-                    <DatePicker v-model="props.form.date_applied" class="w-full" />
+                    <InputText type="date" v-model="props.form.date_applied" class="w-full" />
                     <label>Date Applied</label>
                 </FloatLabel>
                 <FloatLabel class="mt-2">

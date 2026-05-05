@@ -83,7 +83,7 @@ class ChainsawController extends Controller
 
                     foreach ($brand['models'] as $model) {
                         $issuedDate = Carbon::parse($supplier['issued_date'])->format('Y-m-d');
-                        $validityDate = Carbon::parse($supplier['validity_date'])->format('Y-m-d');
+                        $validityDate = $request->validity_date;
                         ChainsawPermittoSell::create([
                             'application_id' => $request->input('application_id') ?? null,
                             'supplier_name' => $supplier['supplier_name'] ?? null,
