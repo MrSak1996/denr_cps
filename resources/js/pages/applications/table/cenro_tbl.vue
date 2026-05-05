@@ -33,6 +33,31 @@ const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
 const STATUS_ENDORSED_CENRO_OFFICER = 4;
 const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
 const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
+const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
+const STATUS_ENDORSED_PENRO_OFFICER = 8;
+const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
+const STATUS_ENDORSED_FUS_CHIEF = 10;
+const STATUS_ENDORSED_LPDD_CHIEF = 11;
+const STATUS_ENDORSED_ARDTS = 12;
+const STATUS_ENDORSED_RED = 13;
+
+const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
+const STATUS_RECEIVED_CENRO_OFFICER = 15;
+const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
+const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
+const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
+const STATUS_RECEIVED_PENRO_OFFICER = 19;
+const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
+const STATUS_RECEIVED_FUS_CHIEF = 21;
+const STATUS_RECEIVED_LPDD_CHIEF = 22;
+const STATUS_RECEIVED_ARDTS = 23;
+const STATUS_RECEIVED_RED = 24;
+
+const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
+const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
+const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
+
+const STATUS_APPROVED_BY_RED = 28;
 
 const page = usePage();
 const toast = useToast();
@@ -186,6 +211,7 @@ const receiveApplication = (id: number) => {
 const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
     const office_id = page.props.auth.user.office_id;
     const user_id = page.props.auth.user.id;
+    const role_id = page.props.auth.user.role_id;
 
     const config = {
         endorse: {
@@ -213,7 +239,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
             api: 'applications.cenro.receive',
-            payload: { id, office_id, user_id },
+            payload: { id, office_id, user_id,role_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',
@@ -244,7 +270,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/cenro-dashboard');
+                    router.visit('/cenro');
                 }, 1000);
             } catch (error) {
                 toast.add({
@@ -714,12 +740,14 @@ const handleFileUpdate = async (event) => {
 };
 
 
+
 const buttonState = (row: any) => {
-    const isEndorsed = row.application_status === STATUS_ENDORSED_CENRO_OFFICER;
+    const isReceived = row.application_status === STATUS_RECEIVED_CENRO_OFFICER;
     return {
-        receiveDisable: !isEndorsed,
-        endorsedDisabled: isEndorsed,
-        returnDisbaled: false
+        receiveDisable: isReceived, // ✅ disable if already received
+        endorsedDisabled: false,
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
 </script>
@@ -772,46 +800,30 @@ const buttonState = (row: any) => {
                             <template #body="slotProps">
                                 <div class="mt-2 flex gap-2">
 
-                                    <!-- ✅ RECEIVE (disabled if endorsed) -->
-                                    <Button :disabled="buttonState(slotProps.data).receiveDisable"
+                            <Button :disabled="buttonState(slotProps.data).receiveDisable"
                                         @click="openDialog('receive', slotProps.data.id)"
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
 
-                                    <!-- ✅ ROUTING / HISTORY (ALWAYS ENABLED) -->
-                                    <Button type="button" @click="openProgressTracker(slotProps.data)"
-                                        style="background-color: #0f766e; border: 1px solid #0f766e !important"
-                                        class="rounded p-2 text-white hover:bg-teal-900">
-                                        <History :size="15" />
+                                    <Link
+                                        v-if="[STATUS_DRAFT,STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_RECEIVED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
+                                        :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: 4
+                                        })
+                                            "
+                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                        style="background-color: #0f766e">
+                                        <SquarePen :size="16" />
+                                    </Link>
+
+                                    <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
+                                        @click="generatePdf(slotProps.data)" style="background-color: #0D47A1;border-color: 1px solid #0D47A1;">
+                                        <PrinterCheck :size="15" />
+
                                     </Button>
-
-                                    <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                    <Button type="button" style="background-color: #0f766e"
-                                        class="rounded p-2 text-white hover:bg-teal-900">
-                                        <Link :href="route('applications.edit', {
-                                            id: slotProps.data.id,
-                                            type: slotProps.data.application_type
-                                        })">
-                                            <Eye :size="15" />
-                                        </Link>
-                                    </Button>
-
-                                    <!-- ❌ ENDORSE (disabled if endorsed) -->
-                                    <!-- <Button :disabled="buttonState(slotProps.data).endorsedDisabled"
-                                        @click="openDialog('endorse', slotProps.data.id)"
-                                        style="background-color: #0f766e" class="p-2 text-white">
-                                        <SendIcon :size="15" />
-                                    </Button> -->
-
-                                    <!-- ❌ RETURN (disabled if endorsed) -->
-                                    <Button :disabled="buttonState(slotProps.data).returnDisbaled"
-                                        @click="openDialog('return', slotProps.data.id)"
-                                        style="background-color: #bd081c; border: 1px solid #cd201f !important"
-                                        class="p-2 text-white">
-                                        <Undo2 :size="15" />
-                                    </Button>
-
                                 </div>
                             </template>
                         </Column>

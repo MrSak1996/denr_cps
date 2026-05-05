@@ -19,39 +19,48 @@ class PaymentController extends Controller
     {
         $id = $request->input('application_id', $request->input('id'));
 
-        $application = ChainsawIndividualApplication::find($id);
-        if (!$application) {
-            return response()->json(['error' => 'Application not found.'], 404);
-        }
+        // $application = ChainsawIndividualApplication::find($id);
+        // if (!$application) {
+        //     return response()->json(['error' => 'Application not found.'], 404);
+        // }
 
-        $application_id = $application->id;
-        $application_no = $application->application_no;
+        $application_id = $request->id;
+        $application_no = $request->application_no;
 
         // ✅ Create Payment first (without attachment for now)
         $payment = PaymentModel::updateOrCreate(
             ['application_id' => $application_id],
-                [
+            [
                 'official_receipt' => $request->input('official_receipt'),
                 'permit_fee' => $request->input('permit_fee'),
                 'remarks' => $request->input('remarks'),
-                'date_of_payment' => now()
-                ]
-            );
+                'date_of_payment' => $request->date_of_payment
+            ]
+        );
 
         // ✅ File configuration (like company_apply approach)
-        $filesToUpload = [
-            'or_copy' => [
-                'folder_name' => 'Official Receipt',
-                'requirement_id' => 8
-            ],
-        ];
+        if ($request->application_type == 'Individual') {
+            $filesToUpload = [
+                'or_copy' => [
+                    'folder_name' => 'Official Receipt',
+                    'requirement_id' => 3
+                ],
+            ];
+        } else {
+            $filesToUpload = [
+                'or_copy' => [
+                    'folder_name' => 'Official Receipt',
+                    'requirement_id' => 8
+                ],
+            ];
+        }
 
         $applicantType = strtolower($request->input('application_type'));
 
         $folderPath = match ($applicantType) {
-            'individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application_no}",
-            'company' => "CHAINSAW_PERMITTING/Company Applications/{$application_no}",
-            'government' => "CHAINSAW_PERMITTING/Government Applications/{$application_no}",
+            'Individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application_no}",
+            'Company' => "CHAINSAW_PERMITTING/Company Applications/{$application_no}",
+            'Government' => "CHAINSAW_PERMITTING/Government Applications/{$application_no}",
             default => "CHAINSAW_PERMITTING/Other/{$application_no}",
         };
 

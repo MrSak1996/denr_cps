@@ -715,7 +715,6 @@ class ApplicationController extends Controller
             foreach (
                 [
                     'created_at' => 'F d, Y',
-                    'date_of_payment' => 'F d, Y',
                 ] as $field => $format
             ) {
 

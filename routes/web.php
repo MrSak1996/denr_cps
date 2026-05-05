@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('cenro', fn() => Inertia::render('CENRODashboard'))->name('cenro.dashboard');
         Route::get('penro', fn() => Inertia::render('PENRODashboard'))->name('penro.dashboard');
 
+
         Route::get('penro-technical', fn() => Inertia::render('PENROTechnicalDashboard'))->name('penro.technical.dashboard');
         Route::get('penro-rps-chief', fn() => Inertia::render('PENRORPSChiefDashboard'))->name('penro.rps.chief.dashboard');
         Route::get('penro-tsd-chief', fn() => Inertia::render('PENROTSDChiefDashboard'))->name('penro.tsd.chief.dashboard');
@@ -79,6 +80,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('receive', [RPSChiefDashboardController::class, 'receivedApplication'])->name('applications.rpschief.receive');
         Route::post('endorse', [RPSChiefDashboardController::class, 'endorseApplication'])->name('applications.rpschief.endorse');
         Route::post('return', [ApplicationController::class, 'returnApplication'])->name('applications.return');
+
+        Route::post('receive', [AssessmentController::class, 'receive'])->name('applications.cenro.receive');
+
 
         // PENRO
         Route::post('penro/receive', [AssessmentController::class, 'receive'])->name('applications.penro.receive');

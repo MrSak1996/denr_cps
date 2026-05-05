@@ -102,13 +102,13 @@ class RPSChiefDashboardController extends Controller
         $statusFilter = [$status];
         switch ($office_id) {
             case 2:
-                $officeFilter = [2,6];
+                $officeFilter = [2, 6];
                 break;
             case 3:
-                $officeFilter = [3,7,8];
+                $officeFilter = [3, 7, 8];
                 break;
             case 5:
-                $officeFilter = [5,9,10,11,12];
+                $officeFilter = [5, 9, 10, 11, 12];
                 break;
             case 6:
                 $officeFilter = [6];
@@ -125,7 +125,7 @@ class RPSChiefDashboardController extends Controller
             case 1:
                 $statusFilter = [
                     self::STATUS_DRAFT,
-                    self::STATUS_APPROVED_BY_RED,       
+                    self::STATUS_APPROVED_BY_RED,
                     self::STATUS_FOR_REVIEW_EVALUATION,
                     self::STATUS_ENDORSED_CENRO_RPS_CHIEF,
                     self::STATUS_ENDORSED_CENRO_OFFICER,
@@ -221,7 +221,7 @@ class RPSChiefDashboardController extends Controller
                     self::STATUS_RETURNED_TO_REGIONAL_TECHNICAL
                 ];
                 break;
-              case 10:
+            case 10:
                 $statusFilter = [
                     self::STATUS_ENDORSED_FUS_CHIEF,
                     self::STATUS_RECEIVED_FUS_CHIEF,
@@ -240,16 +240,16 @@ class RPSChiefDashboardController extends Controller
                     self::STATUS_RECEIVED_ARDTS,
                 ];
                 break;
-             case 13:
+            case 13:
                 $statusFilter = [
                     self::STATUS_ENDORSED_RED,
                     self::STATUS_RECEIVED_RED,
                     self::STATUS_APPROVED_BY_RED
                 ];
                 break;
-            
+
                 break;
-             case 20:
+            case 20:
                 $statusFilter = [
                     self::STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF,
                     self::STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF,
@@ -348,9 +348,15 @@ class RPSChiefDashboardController extends Controller
                 'ac.date_applied'
             )
             ->whereIn('ac.application_status', $statusFilter)
-            ->whereIn('u.office_id', $officeFilter)
+            ->when($office_id != 13, function ($query) use ($officeFilter) {
+                return $query->whereIn('u.office_id', $officeFilter);
+            })
             ->orderBy('ac.id', 'desc')
             ->get()
+            // ->whereIn('ac.application_status', $statusFilter)
+            // ->whereIn('u.office_id', $officeFilter)
+            // ->orderBy('ac.id', 'desc')
+            // ->get()
 
             ->map(function ($item) {
                 // ✅ Format date fields
