@@ -302,14 +302,16 @@ const activeTab = ref<'re' | 'ea' | 'rc' | 'cpr' | 'aa'>('re');
 
 const applicationDetails = ref(null);
 const files = ref([]);
-const userId = page.props.auth.user.id;
 const applicantsTable = async () => {
     try {
         const officeId = page.props.auth.user.office_id;
+        const role_id = page.props.auth.user.role_id;
 
         const res = await ProductService.getApplicationsByStatus(
             STATUS_ENDORSED_PENRO_TECHNICAL,
-            officeId
+            officeId,
+            role_id
+
         );
 
         endorsed_applications.value = res?.applications ?? [];
@@ -843,7 +845,7 @@ const getDownloadCount = async (application_id) => {
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
-                                    
+
                                     <Link :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
                                         type: slotProps.data.application_type,

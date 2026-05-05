@@ -184,6 +184,7 @@ class RPSChiefDashboardController extends Controller
 
             case 5:
                 $statusFilter = [
+                    self::STATUS_DRAFT,
                     self::STATUS_ENDORSED_PENRO_CHIEF_RPS,
                     self::STATUS_ENDORSED_PENRO_TECHNICAL,
                     self::STATUS_RECEIVED_PENRO_TECHNICAL,

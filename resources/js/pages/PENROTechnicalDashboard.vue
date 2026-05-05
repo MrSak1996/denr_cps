@@ -131,7 +131,7 @@ onMounted(() => {
             <div class="box">
                 <div class="flex items-center gap-2 text-sm">
                     <List class="h-5 w-5" />
-                    <h1 class="text-xl font-semibold">RPS Chief Dashboard ({{ officeTitle }})</h1>
+                    <h1 class="text-xl font-semibold">({{ officeTitle }}) Technical Staff</h1>
                 </div>
                 <Fieldset legend="Dashboard Summary" class="mb-6">
                     <div class="grid gap-4 md:grid-cols-4">

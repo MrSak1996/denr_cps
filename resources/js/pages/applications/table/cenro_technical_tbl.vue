@@ -544,7 +544,10 @@ const onRowCollapse = (event?: { originalEvent: Event; data: Customer }) => {
 const generatePdf = (data) => {
     window.open(`/permit/print/${data.id}`, '_blank'); //MULTIPLE BRANDS AND MODELS
 };
-
+const getStep = (status) => {
+    if ([25, 26].includes(status)) return 1
+    return status !== 1 ? 4 : 1
+}
 const getDownloadCount = async (application_id) => {
     try {
         const response = await axios.get('https://cps.denrcalabarzon.com/api/applicationDownloads', {
@@ -601,9 +604,8 @@ const applicantsTable = async () => {
                     <Link :href="route('applications.edit', {
                         application_id: data.id,
                         type: data.application_type,
-                        step: data.application_status !== 1 ? 4 : 1
-                    })
-                        "
+                        step: getStep(data.application_status)
+                    })"
                         class="mr-2 inline-flex justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
                         <SquarePen :size="16" />
                     </Link>

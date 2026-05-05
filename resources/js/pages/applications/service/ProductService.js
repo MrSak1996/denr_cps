@@ -16,9 +16,9 @@ export const ProductService = {
 
 
 
- async getApplicationsByStatus(status,id) {
+ async getApplicationsByStatus(status,id,role_id) {
     const response = await axios.get('https://cps.denrcalabarzon.com/api/applicationStatus', {
-      params: { status:status,office_id:id }
+      params: { status:status,office_id:id,role_id:role_id }
     });
       return {
     applications: response.data.data,
