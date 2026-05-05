@@ -208,7 +208,7 @@ const submitAllAssessments = async (applicationId) => {
     const redirectMap = {
       1: '/applications/pending_application',
       2: '/dashboard/rps-chief',
-      3: '/dashboard/cenro-dashboard',
+      3: '/dashboard/cenro',
       4: '/dashboard/penro-technical',
       5: '/dashboard/penro-rps-chief',
       6: '/dashboard/penro-tsd-chief',
