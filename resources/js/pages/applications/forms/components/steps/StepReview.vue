@@ -159,9 +159,32 @@ const returnApplication = async () => {
     detail: 'Application has been returned successfully.',
     life: 5000,
   });
+const redirectMap = {
+            1: 'applications/pending_application',
+            2: '/dashboard/rps-chief',
+            3: '/dashboard/cenro-dashboard',
+            4: '/dashboard/penro-technical',
+            5: '/dashboard/penro-rps-chief',
+            6: '/dashboard/penro-tsd-chief',
+            7: '/dashboard/penro',
+            8: '/dashboard/rts',
+            9: '/dashboard/fus',
+            10: '/dashboard/lpdd-chief',
+            11: '/dashboard/ardts',
+            12: '/dashboard/regional-executive',
 
+
+        };
+
+        const redirectPath = redirectMap[roleId];
+
+        if (redirectPath) {
+            setTimeout(() => {
+                router.visit(redirectPath);
+            }, 5000);
+        }
   setTimeout(() => {
-    router.get(route('rps.chief.dashboard'));
+    router.visit('/dashboard/penro-technical');
   }, 2000);
 };
 

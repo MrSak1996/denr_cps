@@ -838,6 +838,12 @@ const getDownloadCount = async (application_id) => {
                         <Column header="Action" :exportable="false" style="min-width: 2rem">
                             <template #body="slotProps">
                                 <div class="mt-2 flex gap-2" v-if="roleId == 4">
+                                     <Button :disabled="buttonState(slotProps.data).receiveDisable"
+                                        @click="openDialog('receive', slotProps.data.id)"
+                                        style="background-color: #0f766e" class="p-2 text-white">
+                                        <BadgeCheck :size="15" />
+                                    </Button>
+                                    
                                     <Link :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
                                         type: slotProps.data.application_type,

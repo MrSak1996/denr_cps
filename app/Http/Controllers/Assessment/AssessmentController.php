@@ -584,6 +584,10 @@ class AssessmentController extends Controller
                     break;
 
                 // PENRO level → return to PENRO Technical
+                case self::PENRO_TECHNICAL_STAFF:
+                    $targetRole   = self::TECHNICAL_STAFF;
+                    $returnStatus = self::STATUS_RETURNED_TO_CENRO_TECHNICAL;
+                    break;
                 case self::PENRO_CHIEF_RPS:
                 case self::PENRO_CHIEF_TSD:
                 case self::PENRO_OFFICER:
