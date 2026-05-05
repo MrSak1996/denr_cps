@@ -149,24 +149,15 @@ const cancel = () => emit('cancel')
     <div class="space-y-8">
 
         <!-- SUPPLIERS -->
-        <div
-            v-for="(supplier, sIndex) in suppliers"
-            :key="sIndex"
-            class="border rounded-lg p-6 space-y-6 bg-gray-50"
-        >
+        <div v-for="(supplier, sIndex) in suppliers" :key="sIndex" class="border rounded-lg p-6 space-y-6 bg-gray-50">
 
             <div class="flex justify-between items-center">
                 <h3 class="font-semibold text-lg">
                     Supplier {{ sIndex + 1 }}
                 </h3>
 
-                <Button
-                    icon="pi pi-trash"
-                    severity="danger"
-                    text
-                    @click="removeSupplier(sIndex)"
-                    v-if="suppliers.length > 1"
-                />
+                <Button icon="pi pi-trash" severity="danger" text @click="removeSupplier(sIndex)"
+                    v-if="suppliers.length > 1" />
             </div>
 
             <!-- SUPPLIER INFO -->
@@ -183,11 +174,7 @@ const cancel = () => emit('cancel')
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText
-                        v-model="supplier.permit_to_sell_no"
-                        class="w-full"
-                        
-                    />
+                    <InputText v-model="supplier.permit_to_sell_no" class="w-full" />
                     <label>Permit To Sell No</label>
                 </FloatLabel>
 
@@ -197,44 +184,29 @@ const cancel = () => emit('cancel')
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText
-                        v-model="supplier.issued_date"
-                        type="date"
-                        class="w-full"
-                    />
+
+                    <DatePicker v-model="supplier.issued_date" date-format="yy-mm-dd" show-icon class="w-full" />
                     <label>Issued Date</label>
                 </FloatLabel>
 
                 <FloatLabel>
-                    <InputText
-                        v-model="supplier.validity_date"
-                        type="date"
-                        class="w-full"
-                    />
+                    <DatePicker v-model="supplier.validity_date" date-format="yy-mm-dd" show-icon class="w-full" />
                     <label>Valid Until</label>
                 </FloatLabel>
 
             </div>
 
             <!-- BRANDS -->
-            <div
-                v-for="(brand, bIndex) in supplier.brands"
-                :key="bIndex"
-                class="border rounded-md p-5 bg-white space-y-4"
-            >
+            <div v-for="(brand, bIndex) in supplier.brands" :key="bIndex"
+                class="border rounded-md p-5 bg-white space-y-4">
 
                 <div class="flex justify-between items-center">
                     <h4 class="font-semibold">
                         Brand {{ bIndex + 1 }}
                     </h4>
 
-                    <Button
-                        icon="pi pi-trash"
-                        severity="danger"
-                        text
-                        @click="removeBrand(supplier, bIndex)"
-                        v-if="supplier.brands.length > 1"
-                    />
+                    <Button icon="pi pi-trash" severity="danger" text @click="removeBrand(supplier, bIndex)"
+                        v-if="supplier.brands.length > 1" />
                 </div>
 
                 <!-- BRAND NAME -->
@@ -260,61 +232,30 @@ const cancel = () => emit('cancel')
 
                     <Column header="Action" style="width:80px">
                         <template #body="{ index }">
-                            <Button
-                                icon="pi pi-trash"
-                                severity="danger"
-                                text
-                                @click="removeModel(brand, index)"
-                                v-if="brand.models.length > 1"
-                            />
+                            <Button icon="pi pi-trash" severity="danger" text @click="removeModel(brand, index)"
+                                v-if="brand.models.length > 1" />
                         </template>
                     </Column>
 
                 </DataTable>
 
-                <Button
-                    label="Add Model"
-                    icon="pi pi-plus"
-                    text
-                    class="bg-teal-900"
-                    @click="addModel(brand)"
-                />
+                <Button label="Add Model" icon="pi pi-plus" text class="bg-teal-900" @click="addModel(brand)" />
 
             </div>
 
-            <Button
-                label="Add Brand"
-                icon="pi pi-plus"
-                outlined
-                @click="addBrand(supplier)"
-            />
+            <Button label="Add Brand" icon="pi pi-plus" outlined @click="addBrand(supplier)" />
 
         </div>
 
         <!-- ADD SUPPLIER -->
-        <Button
-            label="Add Supplier"
-            icon="pi pi-plus"
-            severity="secondary"
-            outlined
-            @click="addSupplier"
-        />
+        <Button label="Add Supplier" icon="pi pi-plus" severity="secondary" outlined @click="addSupplier" />
 
         <!-- ACTIONS -->
         <div class="flex justify-end gap-3 pt-6 border-t">
 
-            <Button
-                label="Cancel"
-                severity="secondary"
-                outlined
-                @click="cancel"
-            />
+            <Button label="Cancel" severity="secondary" outlined @click="cancel" />
 
-            <Button
-                label="Save"
-                icon="pi pi-save"
-                @click="save"
-            />
+            <Button label="Save" icon="pi pi-save" @click="save" />
 
         </div>
 
