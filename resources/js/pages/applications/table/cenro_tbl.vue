@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck,SquarePen,Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -139,7 +139,10 @@ const timelineComputed = computed(() => {
 const timelineItems = ref(events);
 const eventsToDisplay = ref([]);
 
+const generatePdf = (data) => {
+    window.open(`/permit/print/${data.id}`, "_blank"); //MULTIPLE BRANDS AND MODELS
 
+};
 const openProgressTracker = async (data) => {
     getSignatories(data.id);
     showProgressModal.value = true;
@@ -800,7 +803,7 @@ const buttonState = (row: any) => {
                             <template #body="slotProps">
                                 <div class="mt-2 flex gap-2">
 
-                            <Button :disabled="buttonState(slotProps.data).receiveDisable"
+                                    <Button :disabled="buttonState(slotProps.data).receiveDisable"
                                         @click="openDialog('receive', slotProps.data.id)"
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
