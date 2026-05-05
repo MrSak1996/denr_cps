@@ -195,7 +195,7 @@ const cancel = () => emit('cancel')
                 </FloatLabel>
 
                 <FloatLabel>
-                    <DatePicker v-model="supplier.validity_date" date-format="yy-mm-dd" show-icon class="w-full" />
+                    <DatePicker v-model="supplier.permit_validity" date-format="yy-mm-dd" show-icon class="w-full" />
                     <label>Valid Until</label>
                 </FloatLabel>
 

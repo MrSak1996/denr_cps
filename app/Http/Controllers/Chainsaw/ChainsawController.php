@@ -66,7 +66,7 @@ class ChainsawController extends Controller
 
     const CHIEF_RPS = 8;
 
-    public function store(Request $request)
+  	public function store(Request $request)
     {
 
         $request->validate([
@@ -83,9 +83,10 @@ class ChainsawController extends Controller
 
                     foreach ($brand['models'] as $model) {
                         $issuedDate = Carbon::parse($supplier['issued_date'])->format('Y-m-d');
-                        $validityDate = $request->validity_date;
-                        ChainsawPermittoSell::create([
-                            'application_id' => $request->input('application_id') ?? null,
+                        $validityDate = Carbon::parse($supplier['validity_date'])->format('Y-m-d');
+                        ChainsawPermittoSell::updateOrCreate(
+							['application_id' => $request->input('application_id') ?? null],
+							[
                             'supplier_name' => $supplier['supplier_name'] ?? null,
                             'supplier_address' => $supplier['supplier_address'] ?? null,
                             'permit_to_sell_no' => $supplier['permit_to_sell_no'] ?? null,

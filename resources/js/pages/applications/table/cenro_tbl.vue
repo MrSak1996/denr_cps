@@ -810,7 +810,6 @@ const buttonState = (row: any) => {
                                     </Button>
 
                                     <Link
-                                        v-if="[STATUS_DRAFT,STATUS_ENDORSED_PENRO_TECHNICAL, STATUS_RECEIVED_PENRO_TECHNICAL, STATUS_APPROVED_BY_RED, 25].includes(slotProps.data.application_status)"
                                         :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,

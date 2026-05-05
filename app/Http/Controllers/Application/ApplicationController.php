@@ -702,7 +702,7 @@ class ApplicationController extends Controller
                 'model',
                 'quantity',
                 'purpose',
-                'valid_until as permit_validity',
+                'valid_until as validity_date',
                 'issued_by',
                 'issued_date',
             ])
@@ -1296,21 +1296,21 @@ class ApplicationController extends Controller
 
 
     public function summary(Request $request)
-{
-    $query = DB::table('tbl_application_checklist')
-        ->leftJoin('users as u', 'u.id', '=', 'tbl_application_checklist.encoded_by')
-        ->select(
-            DB::raw('COUNT(*) as total'),
-            DB::raw('SUM(CASE WHEN application_status IN (1,2) THEN 1 ELSE 0 END) as draft'),
-            DB::raw('SUM(CASE WHEN application_status IN (25,26,27) THEN 1 ELSE 0 END) as deferred'),
-            DB::raw('SUM(CASE WHEN application_status = 28 THEN 1 ELSE 0 END) as approved')
-        )
-        ->where('u.office_id', $request->input('office_id'));
+    {
+        $query = DB::table('tbl_application_checklist')
+            ->leftJoin('users as u', 'u.id', '=', 'tbl_application_checklist.encoded_by')
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN application_status IN (1,2) THEN 1 ELSE 0 END) as draft'),
+                DB::raw('SUM(CASE WHEN application_status IN (25,26,27) THEN 1 ELSE 0 END) as deferred'),
+                DB::raw('SUM(CASE WHEN application_status = 28 THEN 1 ELSE 0 END) as approved')
+            )
+            ->where('u.office_id', $request->input('office_id'));
 
-    $data = $query->first();
+        $data = $query->first();
 
-    return response()->json($data);
-}
+        return response()->json($data);
+    }
 
     // public function submitApplication(Request $request, $id)
     // {
