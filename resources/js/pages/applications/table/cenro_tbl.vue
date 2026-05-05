@@ -273,7 +273,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     life: 3000,
                 });
                 setTimeout(() => {
-                    router.visit('/cenro');
+                    router.visit('/dashboard/cenro');
                 }, 1000);
             } catch (error) {
                 toast.add({
