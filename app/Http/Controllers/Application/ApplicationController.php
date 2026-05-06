@@ -21,38 +21,60 @@ class ApplicationController extends Controller
 {
     // Define status constants
     const STATUS_DRAFT = 1;
+
     const STATUS_FOR_REVIEW_EVALUATION = 2;
 
     const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
+
     const STATUS_ENDORSED_CENRO_OFFICER = 4;
+
     const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
+
     const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
+
     const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
+
     const STATUS_ENDORSED_PENRO_OFFICER = 8;
+
     const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
+
     const STATUS_ENDORSED_FUS_CHIEF = 10;
+
     const STATUS_ENDORSED_LPDD_CHIEF = 11;
+
     const STATUS_ENDORSED_ARDTS = 12;
+
     const STATUS_ENDORSED_RED = 13;
 
     const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
+
     const STATUS_RECEIVED_CENRO_OFFICER = 15;
+
     const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
+
     const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
+
     const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
+
     const STATUS_RECEIVED_PENRO_OFFICER = 19;
+
     const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
+
     const STATUS_RECEIVED_FUS_CHIEF = 21;
+
     const STATUS_RECEIVED_LPDD_CHIEF = 22;
+
     const STATUS_RETURN_TO_ARDTS = 22;
 
     const STATUS_RECEIVED_ARDTS = 23;
+
     const STATUS_RECEIVED_RED = 24;
 
     const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
-    const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
-    const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
 
+    const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
+
+    const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
 
     const STATUS_APPROVED_BY_RED = 28;
 
@@ -68,7 +90,6 @@ class ApplicationController extends Controller
     /**
      * Mapping of statuses to their labels
      */
-
     public function index()
     {
         return Inertia::render('applications/index');
@@ -149,7 +170,7 @@ class ApplicationController extends Controller
         $filesToUpload = [
             'valid_id' => [
                 'folder_name' => 'Valid ID',
-                'requirement_id' => 15
+                'requirement_id' => 15,
             ],
         ];
 
@@ -157,16 +178,16 @@ class ApplicationController extends Controller
 
         $isEdit = filter_var($request->mode, FILTER_VALIDATE_BOOLEAN);
 
-        if (!$isEdit) {
+        if (! $isEdit) {
 
             $filesToUpload = [
                 'valid_id' => [
                     'folder_name' => 'Valid ID',
-                    'requirement_id' => 15
+                    'requirement_id' => 15,
                 ],
             ];
 
-            $folderPath = 'CHAINSAW_PERMITTING/Individual Applications/' . $applicationNo;
+            $folderPath = 'CHAINSAW_PERMITTING/Individual Applications/'.$applicationNo;
 
             foreach ($filesToUpload as $inputName => $config) {
 
@@ -192,7 +213,6 @@ class ApplicationController extends Controller
                 }
             }
         }
-
 
         return response()->json([
             'message' => 'Application submitted successfully.',
@@ -235,7 +255,7 @@ class ApplicationController extends Controller
             $isEdit = filter_var($request->mode, FILTER_VALIDATE_BOOLEAN);
 
             // Upload files to Google Drive
-            if (!$isEdit) {
+            if (! $isEdit) {
 
                 $filesToUpload = [
                     'request_letter' => [
@@ -248,7 +268,7 @@ class ApplicationController extends Controller
                     ],
                 ];
 
-                $folderPath = 'CHAINSAW_PERMITTING/Company Applications/' . $applicationNo;
+                $folderPath = 'CHAINSAW_PERMITTING/Company Applications/'.$applicationNo;
 
                 $results = [];
 
@@ -290,6 +310,7 @@ class ApplicationController extends Controller
             ], 500);
         }
     }
+
     public function applicationDownloads(Request $request)
     {
 
@@ -299,7 +320,7 @@ class ApplicationController extends Controller
             ->sum('download_count');
 
         return response()->json([
-            'count' => $count
+            'count' => $count,
         ]);
     }
 
@@ -316,7 +337,7 @@ class ApplicationController extends Controller
 
                 sleep(2);
             } catch (Exception $e) {
-                Log::warning("Retry {$i} failed for {$fileName}: " . $e->getMessage());
+                Log::warning("Retry {$i} failed for {$fileName}: ".$e->getMessage());
                 sleep(2);
             }
         }
@@ -356,9 +377,9 @@ class ApplicationController extends Controller
     {
         $regCode = '04';
         $provCode = $request->input('prov_code');
-        $munCode  = (int)$request->input('mun_code');
+        $munCode = (int) $request->input('mun_code');
 
-        if (!$provCode || !$munCode) {
+        if (! $provCode || ! $munCode) {
             return response()->json([]);
         }
 
@@ -520,7 +541,7 @@ class ApplicationController extends Controller
                 $nextSequence = (int) $matches[1] + 1;
             }
 
-            $applicationNo = "{$baseFormat}-" . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $applicationNo = "{$baseFormat}-".str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
 
             $app = DB::table('tbl_application_checklist')->insertGetId([
                 'application_no' => $applicationNo,
@@ -584,7 +605,7 @@ class ApplicationController extends Controller
             )
 
             ->where('u.id', $userId)
-            //->where('ac.application_status', '>=', 1)
+            // ->where('ac.application_status', '>=', 1)
             ->orderBy('ac.id', 'desc')
             ->get()
             ->map(function ($item) {
@@ -768,10 +789,10 @@ class ApplicationController extends Controller
     {
         try {
 
-            $data = DB::table('denr_cps.tbl_app_checklist_entry as e')
-                ->leftJoin('denr_cps.tbl_app_permitchecklist as ap', 'ap.id', '=', 'e.chklist_id')
-                ->leftJoin('denr_cps.tbl_application_attachments as aa', 'aa.checklist_entry_id', '=', 'e.id')
-                ->leftJoin('denr_cps.tbl_application_checklist as ac', 'ac.id', '=', 'aa.application_id')
+            $data = DB::table('denr_chainsaw.tbl_app_checklist_entry as e')
+                ->leftJoin('denr_chainsaw.tbl_app_permitchecklist as ap', 'ap.id', '=', 'e.chklist_id')
+                ->leftJoin('denr_chainsaw.tbl_application_attachments as aa', 'aa.checklist_entry_id', '=', 'e.id')
+                ->leftJoin('denr_chainsaw.tbl_application_checklist as ac', 'ac.id', '=', 'aa.application_id')
                 ->select(
                     'ac.application_type',
                     'e.id as checklist_entry_id',
@@ -1124,7 +1145,7 @@ class ApplicationController extends Controller
                 'request' => ['folder' => 'Request Letter', 'prefix' => 'request_letter_'],
                 'secretary_certificate' => ['folder' => 'Secretary Certificate', 'prefix' => 'secretary_certificate_'],
                 'othersDocs' => ['folder' => 'Other supporting documents', 'prefix' => 'others_'],
-                
+
             ];
 
             $rawName = strtolower(trim($request->name));
@@ -1190,7 +1211,7 @@ class ApplicationController extends Controller
                 ],
             ], 200);
         } catch (Exception $e) {
-            Log::error('Error updating applicant file: ' . $e->getMessage());
+            Log::error('Error updating applicant file: '.$e->getMessage());
 
             return response()->json([
                 'status' => false,
@@ -1295,7 +1316,6 @@ class ApplicationController extends Controller
             ], 500);
         }
     }
-
 
     public function summary(Request $request)
     {

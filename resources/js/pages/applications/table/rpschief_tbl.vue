@@ -213,6 +213,7 @@ const receiveApplication = (id: number) => {
 const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
     const office_id = page.props.auth.user.office_id;
     const user_id = page.props.auth.user.id;
+    const role_id = page.props.auth.user.role_id;
 
     const config = {
         endorse: {
@@ -240,7 +241,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
             api: 'applications.rpschief.receive',
-            payload: { id, office_id, user_id },
+            payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',
@@ -320,7 +321,7 @@ const openCommentModal = async (data) => {
 const getSignatories = async (id) => {
     isloadingSpinner.value = true;
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getSignatories/${id}`);
+        const response = await axios.get(`http://localhost:8000/api/getSignatories/${id}`);
         progress_tracker_data.value = response.data; // 👈 store data directly
     } catch (error) {
         console.error(error);
@@ -513,7 +514,7 @@ const editableChainsaw = reactive({});
 
 const getApplicantFile = async (id) => {
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicantFile/${id}`);
+        const response = await axios.get(`http://localhost:8000/api/getApplicantFile/${id}`);
         if (response.data.status && Array.isArray(response.data.data)) {
             files.value = response.data.data.map((file) => ({
                 attachment_id: file.id,
@@ -535,7 +536,7 @@ const getApplicantFile = async (id) => {
 const getApplicationDetails = async (id) => {
     isloadingSpinner.value = true;
     try {
-        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicationDetails/${id}`);
+        const response = await axios.get(`http://localhost:8000/api/getApplicationDetails/${id}`);
         applicationDetails.value = response.data.data;
         await getApplicantFile(id);
         return response.data.data;
@@ -560,7 +561,7 @@ const saveApplicantDetails = async () => {
     try {
         isloadingSpinner.value = true;
 
-        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateApplicantDetails/${applicationDetails.value.id}`, editableApplicant);
+        const response = await axios.put(`http://localhost:8000/api/updateApplicantDetails/${applicationDetails.value.id}`, editableApplicant);
 
         if (response.data.status === 'success') {
             toast.add({
@@ -597,7 +598,7 @@ const saveChainsawDetails = async () => {
     try {
         isloadingSpinner.value = true;
 
-        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateChainsawInformation/${applicationDetails.value.id}`, editableChainsaw);
+        const response = await axios.put(`http://localhost:8000/api/updateChainsawInformation/${applicationDetails.value.id}`, editableChainsaw);
 
         if (response.data.status === 'success') {
             toast.add({
@@ -669,7 +670,7 @@ const handleEndorseApplicationStatus = async () => {
         isloadingSpinner.value = true;
 
         // Send PUT request to update the application status to 'endorsed'
-        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateApplicationStatus/${applicationDetails.value.id}`, {
+        const response = await axios.put(`http://localhost:8000/api/updateApplicationStatus/${applicationDetails.value.id}`, {
             status: 2, //ENDORSED Only update the status field
         });
 
@@ -720,7 +721,7 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+        const response = await axios.post('http://localhost:8000/api/files/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
 
@@ -742,11 +743,12 @@ const handleFileUpdate = async (event) => {
 
 
 const buttonState = (row: any) => {
-    const isEndorsed = row.application_status === STATUS_ENDORSED_CENRO_RPS_CHIEF || row.application_status == STATUS_ENDORSED_PENRO_TECHNICAL;
+    const isReceived = row.application_status === STATUS_RECEIVED_CENRO_OFFICER;
     return {
-        receiveDisable: false,
-        endorsedDisabled: isEndorsed,
-        returnDisbaled: false
+        receiveDisable: isReceived, // ✅ disable if already received
+        endorsedDisabled: false,
+        viewDisabled: false,
+        returnDisabled: false
     }
 }
 </script>
@@ -839,21 +841,13 @@ const buttonState = (row: any) => {
                                 <b>{{ data.permit_no }}</b>
                             </template>
                         </Column>
-                        <Column field="status_title" header="Status" sortable style="min-width: 12rem">
+                        <Column field="status_title" header="Status" sortable style="min-width: 10rem">
                             <template #body="{ data }">
-                                <div class="flex flex-col items-center">
-                                    <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
-                                        data.status_title === 'Endorsed to TSD Chief' ? 'info' :
-                                            'success'
-                                        " class="text-center" />
-                                    <Button
-                                        style="display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em;"
-                                        severity="info" v-if="data.status_title === 'Returned to RPS Chief'"
-                                        class="rounded bg-blue-900 px-1 py-1 mt-1 text-xs text-white"
-                                        @click="openCommentModal(data)" size="small">
-                                        View Comments
-                                    </Button>
-                                </div>
+                                <Tag :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' : 'success'"
+                                    class="text-center" v-if="data.application_status == 28">Approved</Tag>
+                                <Tag :value="data.status_title"
+                                    :severity="data.status_title === 'Returned to CENRO Technical Staff' ? 'danger' : 'success'"
+                                    class="text-center" v-else />
                             </template>
                         </Column>
                         <Column header="Applicant Name" style="min-width: 12rem">

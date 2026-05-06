@@ -291,7 +291,7 @@ class GoogleDriveService
             $newFilePath = trim($folderPath, '/') . '/' . $fileName;
 
             // ✅ Step 3. Ensure the folder exists
-            $this->ensureFolderExists($folderPath);
+            // $this->ensureFolderExists($folderPath);
 
             // ✅ Step 4. Upload new file
             Storage::disk('google')->write($newFilePath, file_get_contents($newFile));

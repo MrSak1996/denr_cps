@@ -148,22 +148,48 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        const response = await axios.post(
+            'http://localhost:8000/api/files/update',
+            formData,
+            {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            }
+        );
 
-        // Update file list
-        const updatedIndex = files.value.findIndex((f) => f.id === selectedFileToUpdate.value.id);
-        if (updatedIndex !== -1) {
-            files.value[updatedIndex] = response.data.updatedFile;
+        // ✅ Find correct file using attachment_id (not id)
+        const updatedIndex = files.value.findIndex(
+            (f) => f.attachment_id === selectedFileToUpdate.value.attachment_id
+        );
+
+        // ✅ Update only the changed fields based on backend response
+        if (updatedIndex !== -1 && response.data?.data) {
+            files.value[updatedIndex].name = response.data.data.file_name;
+            files.value[updatedIndex].url = response.data.data.file_url;
         }
 
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'File updated successfully', life: 3000 });
+        toast.add({
+            severity: 'success',
+            summary: 'Successful',
+            detail: 'File updated successfully',
+            life: 3000
+        });
+
     } catch (error) {
         console.error(error);
-        toast.add({ severity: 'error', summary: 'Successful', detail: 'Failed to update the file.', life: 3000 });
+
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error?.response?.data?.message || 'Failed to update the file.',
+            life: 3000
+        });
+
     } finally {
-        updateFileInput.value.value = ''; // reset file input
+        // ✅ Reset file input safely
+        if (updateFileInput.value) {
+            updateFileInput.value.value = '';
+        }
+
         selectedFileToUpdate.value = null;
     }
 };
@@ -280,7 +306,8 @@ onMounted(async () => {
         <Fieldset legend="Chainsaw Application">
             <div class="mt-4 grid gap-4 md:grid-cols-3">
                 <FloatLabel>
-                    <InputText v-model="props.form.application_no" :disabled="isEdit" class="w-full font-bold" readonly />
+                    <InputText v-model="props.form.application_no" :disabled="isEdit" class="w-full font-bold"
+                        readonly />
                     <label>Application No.</label>
                 </FloatLabel>
 
@@ -332,43 +359,28 @@ onMounted(async () => {
                     <label>Sex</label>
                 </FloatLabel>
             </div>
-
             <div class="mb-3" v-if="isEdit">
-                <div class="container">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <FileCard v-for="(file, index) in files" :key="index" :file="file" @openPreview="openFileModal"
-                            @updateFile="triggerUpdateFile" />
-                    </div>
-                </div>
-                <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
-            </div>
-            <div class="mb-3" v-else>
-                <div class="mt-2 grid gap-6 md:grid-cols-1">
-                    <div class="flex flex-col md:col-span-2">
-                        <label for="validId" class="mb-2 text-sm font-medium text-gray-700"> Upload Valid Identification
-                            Card </label>
-
-                        <!-- Show existing uploaded filename -->
-                        <div v-if="props.form.file_url"
-                            class="mb-3 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-800">
-                            Current File:
-                            <strong>{{ props.form.file_name }}</strong>
+                <div v-if="files && files.length > 0">
+                    <div class="container">
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <FileCard v-for="(file, index) in files" :key="index" :file="file"
+                                @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
                         </div>
-
-                        <!-- Upload new file -->
-                        <input type="file" id="validId" accept="image/*"
-                            @change="(e) => handleImageUpload(e, 'valid_id')"
-                            class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
                     </div>
                 </div>
-                <!-- <label class="text-sm font-medium text-green-700">
-                    Current Uploaded ID
-                </label>
 
-                <div class="mt-2">
-                    <img :src="`/${props.form.valid_id_url}`" class="h-40 rounded border object-cover" />
-                </div> -->
+                <!-- ✅ SHOW UPLOAD UI WHEN NO FILES -->
+                <div v-else class="p-4 text-center border rounded bg-gray-50 relative border-2 border-dashed p-4 rounded bg-white" >
+                    <p class="mb-2 text-gray-600">No files uploaded yet.</p>
+
+                    <input type="file" id="validId" accept="image/*" @change="(e) => handleImageUpload(e, 'valid_id')"
+                        class="w-full absolute inset-0 opacity-0 cursor-pointer" />
+                </div>
+
             </div>
+
+
+
         </Fieldset>
 
         <!-- Contact -->
