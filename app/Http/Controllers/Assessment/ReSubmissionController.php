@@ -39,15 +39,34 @@ class ReSubmissionController extends Controller
             $checklist = AppChecklistEntry::findOrFail($checklistEntryId);
             $application = ChainsawIndividualApplication::findOrFail($checklist->parent_id);
 
-            $folderPath = 'CHAINSAW_PERMITTING/Company Applications/' . $applicationNo;
+            $application_type = $request->application_type;
+            $mainFolder = $application_type === 'Individual'
+                ? 'Individual Applications'
+                : 'Company Applications';
+            $folderPath = 'CHAINSAW_PERMITTING/' . $mainFolder . '/' . $applicationNo;
 
             /**
              * ✅ Requirement → Folder mapping using chklist_id
              */
             $requirementMap = [
-                7  => 'Request Letter',
-                11 => 'Secretary Certificate',
+                7  => 'Letter Request/Affidavit',
                 8  => 'Official Receipt',
+                9  => 'Official Receipt',
+                10 => 'Official Receipt',
+                11 => 'Official Receipt',
+                12 => 'Official Receipt',
+                13 => 'Official Receipt',
+                14 => 'Official Receipt',
+                15  => 'Official Receipt',
+                16  => 'Official Receipt',
+
+                3  => 'Official Receipt',
+                4  => 'Official Receipt',
+                15  => 'Official Receipt',
+                17  => 'Official Receipt',
+                18  => 'Official Receipt',
+                19 => 'Secretary Certificate',
+                20 => 'Secretary Certificate',
             ];
 
             $folderType = $requirementMap[$checklist->chklist_id] ?? 'Resubmissions';

@@ -1116,20 +1116,22 @@ class ApplicationController extends Controller
 
             // Step 4. Folder map for file types
             $folderMap = [
-                'permit' => ['folder' => 'Permit to Sell', 'prefix' => 'permit'],
-                'mayors' => ['folder' => 'Mayors Permit', 'prefix' => 'mayors_permit'],
-                'notarized' => ['folder' => 'Notarized Affidavit', 'prefix' => 'notarized_documents'],
-                'official' => ['folder' => 'Official Receipts', 'prefix' => 'official_receipts'],
-                'request' => ['folder' => 'Request Letter', 'prefix' => 'request_letter'],
-                'secretary_certificate' => ['folder' => 'Secretary Certificate', 'prefix' => 'secretary_certificate'],
-                'othersDocs' => ['folder' => 'Other supporting documents', 'prefix' => 'others'],
+                'valid' => ['folder' => 'Valid ID', 'prefix' => 'valid_id_'],
+                'permit' => ['folder' => 'Permit to Sell', 'prefix' => 'permit_'],
+                'mayors' => ['folder' => 'Mayors Permit', 'prefix' => 'mayors_permit_'],
+                'notarized' => ['folder' => 'Notarized Affidavit', 'prefix' => 'notarized_documents_'],
+                'official' => ['folder' => 'Official Receipts', 'prefix' => 'official_receipts_'],
+                'request' => ['folder' => 'Request Letter', 'prefix' => 'request_letter_'],
+                'secretary_certificate' => ['folder' => 'Secretary Certificate', 'prefix' => 'secretary_certificate_'],
+                'othersDocs' => ['folder' => 'Other supporting documents', 'prefix' => 'others_'],
+                
             ];
 
-            $rawName = strtolower(trim(str_replace(' ', '_', $request->name)));
+            $rawName = strtolower(trim($request->name));
             $fileType = null;
 
             foreach ($folderMap as $key => $map) {
-                if (str_contains($rawName, $key)) {
+                if (str_starts_with($rawName, $key)) {
                     $fileType = $key;
                     break;
                 }

@@ -424,6 +424,7 @@ const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
     files.forEach(file => formData.append('files[]', file));
 
     formData.append('uploaded_by', userId);
+    formData.append('application_type', props.form.application_type);
     formData.append('checklist_entry_id', checklistId.toString());
     formData.append('application_no', props.form.application_no);
     formData.append('application_id', props.form.id);
