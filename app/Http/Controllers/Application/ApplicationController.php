@@ -497,7 +497,7 @@ class ApplicationController extends Controller
                 8 => 'CCALACA',
                 4 => 'RIZ',
                 5 => 'QUE',
-                9 => 'CCALAUUAG',
+                9 => 'CCALAUAG',
                 10 => 'CCATANAUAN',
                 11 => 'CCTAYABAS',
                 12 => 'CCREAL',
@@ -1125,11 +1125,11 @@ class ApplicationController extends Controller
                 'othersDocs' => ['folder' => 'Other supporting documents', 'prefix' => 'others'],
             ];
 
-            $rawName = strtolower(trim($request->name));
+            $rawName = strtolower(trim(str_replace(' ', '_', $request->name)));
             $fileType = null;
 
             foreach ($folderMap as $key => $map) {
-                if (str_starts_with($rawName, $key)) {
+                if (str_contains($rawName, $key)) {
                     $fileType = $key;
                     break;
                 }
