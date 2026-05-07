@@ -149,7 +149,7 @@ const handleFileUpdate = async (event) => {
         formData.append('name', selectedFileToUpdate.value.name);
 
         const response = await axios.post(
-            'http://cps.denrcalabarzon.com/api/files/update',
+            'https://cps.denrcalabarzon.com/api/files/update',
             formData,
             {
                 headers: { 'Content-Type': 'multipart/form-data' }

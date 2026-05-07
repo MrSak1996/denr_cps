@@ -321,7 +321,7 @@ const openCommentModal = async (data) => {
 const getSignatories = async (id) => {
     isloadingSpinner.value = true;
     try {
-        const response = await axios.get(`http://cps.denrcalabarzon.com/api/getSignatories/${id}`);
+        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getSignatories/${id}`);
         progress_tracker_data.value = response.data; // 👈 store data directly
     } catch (error) {
         console.error(error);
@@ -514,7 +514,7 @@ const editableChainsaw = reactive({});
 
 const getApplicantFile = async (id) => {
     try {
-        const response = await axios.get(`http://cps.denrcalabarzon.com/api/getApplicantFile/${id}`);
+        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicantFile/${id}`);
         if (response.data.status && Array.isArray(response.data.data)) {
             files.value = response.data.data.map((file) => ({
                 attachment_id: file.id,
@@ -536,7 +536,7 @@ const getApplicantFile = async (id) => {
 const getApplicationDetails = async (id) => {
     isloadingSpinner.value = true;
     try {
-        const response = await axios.get(`http://cps.denrcalabarzon.com/api/getApplicationDetails/${id}`);
+        const response = await axios.get(`https://cps.denrcalabarzon.com/api/getApplicationDetails/${id}`);
         applicationDetails.value = response.data.data;
         await getApplicantFile(id);
         return response.data.data;
@@ -561,7 +561,7 @@ const saveApplicantDetails = async () => {
     try {
         isloadingSpinner.value = true;
 
-        const response = await axios.put(`http://cps.denrcalabarzon.com/api/updateApplicantDetails/${applicationDetails.value.id}`, editableApplicant);
+        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateApplicantDetails/${applicationDetails.value.id}`, editableApplicant);
 
         if (response.data.status === 'success') {
             toast.add({
@@ -598,7 +598,7 @@ const saveChainsawDetails = async () => {
     try {
         isloadingSpinner.value = true;
 
-        const response = await axios.put(`http://cps.denrcalabarzon.com/api/updateChainsawInformation/${applicationDetails.value.id}`, editableChainsaw);
+        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateChainsawInformation/${applicationDetails.value.id}`, editableChainsaw);
 
         if (response.data.status === 'success') {
             toast.add({
@@ -670,7 +670,7 @@ const handleEndorseApplicationStatus = async () => {
         isloadingSpinner.value = true;
 
         // Send PUT request to update the application status to 'endorsed'
-        const response = await axios.put(`http://cps.denrcalabarzon.com/api/updateApplicationStatus/${applicationDetails.value.id}`, {
+        const response = await axios.put(`https://cps.denrcalabarzon.com/api/updateApplicationStatus/${applicationDetails.value.id}`, {
             status: 2, //ENDORSED Only update the status field
         });
 
@@ -721,7 +721,7 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post('http://cps.denrcalabarzon.com/api/files/update', formData, {
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
 
