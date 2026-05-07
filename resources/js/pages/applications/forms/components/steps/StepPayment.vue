@@ -255,9 +255,15 @@ const handleFileUpdate = async (event) => {
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal"
                   @updateFile="triggerUpdateFile" />
-                  <input type="file" ref="updateFileInput" class="absolute inset-0 opacity-0 cursor-pointer" @change="handleFileUpdate" />
-
+               
               </div>
+              <input
+              type="file"
+              ref="updateFileInput"
+              class="hidden"
+              @change="handleFileUpdate"
+            />
+
             </div>
 
           </div>
@@ -288,24 +294,18 @@ const handleFileUpdate = async (event) => {
       <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
         Back
       </Button>
-      <Button
-  v-if="currentStep > 1"
-  type="button"
-  @click="$emit('back')"
-  class="w-full bg-gray-300 hover:bg-gray-400"
->
-  Back
-</Button>
+     
 
       <Button :disabled="isProcessing"
         class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="submitStep">
         {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
       </Button>
-      <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+      
+    </div>
+    <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
         <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
           allow="autoplay"></iframe>
       </Dialog>
-    </div>
     <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
       <div class="flex flex-col items-center gap-4 py-4">
         <span>Saving, please wait...</span>
