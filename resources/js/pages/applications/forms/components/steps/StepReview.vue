@@ -159,30 +159,30 @@ const returnApplication = async () => {
     detail: 'Application has been returned successfully.',
     life: 5000,
   });
-  const redirectMap = {
-    1: 'applications/pending_application',
-    2: '/dashboard/rps-chief',
-    3: '/dashboard/cenro-dashboard',
-    4: '/dashboard/penro-technical',
-    5: '/dashboard/penro-rps-chief',
-    6: '/dashboard/penro-tsd-chief',
-    7: '/dashboard/penro',
-    8: '/dashboard/rts',
-    9: '/dashboard/fus',
-    10: '/dashboard/lpdd-chief',
-    11: '/dashboard/ardts',
-    12: '/dashboard/regional-executive',
+const redirectMap = {
+            1: 'applications/pending_application',
+            2: '/dashboard/rps-chief',
+            3: '/dashboard/cenro-dashboard',
+            4: '/dashboard/penro-technical',
+            5: '/dashboard/penro-rps-chief',
+            6: '/dashboard/penro-tsd-chief',
+            7: '/dashboard/penro',
+            8: '/dashboard/rts',
+            9: '/dashboard/fus',
+            10: '/dashboard/lpdd-chief',
+            11: '/dashboard/ardts',
+            12: '/dashboard/regional-executive',
 
 
-  };
+        };
 
-  const redirectPath = redirectMap[roleId];
+        const redirectPath = redirectMap[roleId];
 
-  if (redirectPath) {
-    setTimeout(() => {
-      router.visit(redirectPath);
-    }, 5000);
-  }
+        if (redirectPath) {
+            setTimeout(() => {
+                router.visit(redirectPath);
+            }, 5000);
+        }
   setTimeout(() => {
     router.visit('/dashboard/penro-technical');
   }, 2000);
@@ -862,12 +862,7 @@ onMounted(() => {
         ? 'grid grid-cols-2 gap-4'
         : 'flex justify-end'
     ]">
-      <!-- <Button v-if="currentStep > 1 && props.form.status_title === 'Returned to CENRO Technical Staff'" @click="$emit('back')"
-        class="w-full bg-gray-300 hover:bg-gray-400">
-        Back
-      </Button> -->
-
-      <Button v-if="roleId === 1 " :disabled="roleId === 1"
+      <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)" :disabled="roleId === 1"
         class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
         @click="returnApplication">
         <Undo2 />
