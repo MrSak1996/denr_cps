@@ -47,7 +47,7 @@ export function useApi() {
 
     const getProvinceCode = async (): Promise<void> => {
         try {
-            const res = await axios.get<Province[]>('http://localhost:8000/api/getProvinces');
+            const res = await axios.get<Province[]>('http://cps.denrcalabarzon.com/api/getProvinces');
             prov_name.value = res.data.map((item) => ({
                 id: Number(item.prov_code),
                 name: item.prov_name,

@@ -37,7 +37,7 @@ const dashboardData = ref([])
 const fetchDashboardData = async () => {
     try {
 
-        const response = await axios.get('http://localhost:8000/api/summary', {
+        const response = await axios.get('http://cps.denrcalabarzon.com/api/summary', {
             params: { user_id: userId,office_id:officeId }
 
         });

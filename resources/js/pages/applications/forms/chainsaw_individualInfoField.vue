@@ -130,7 +130,7 @@ onMounted(async () => {
             try {
 
                 const response = await axios.get(
-                    `http://localhost:8000/api/provinces/${newProvince}/cities`
+                    `http://cps.denrcalabarzon.com/api/provinces/${newProvince}/cities`
                 )
 
                 city_mun_opts.value = response.data.map((item: any) => ({
@@ -171,7 +171,7 @@ onMounted(async () => {
             try {
 
                 const response = await axios.get(
-                    `http://localhost:8000/api/barangays`,
+                    `http://cps.denrcalabarzon.com/api/barangays`,
                     {
                         params: {
                             reg_code: region,

@@ -1,7 +1,7 @@
 // src/services/LocationService.js
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api'; // Replace with your Laravel backend URL
+const API_BASE_URL = 'http://cps.denrcalabarzon.com/api'; // Replace with your Laravel backend URL
 
 export const LocationService = {
   // Fetch list of provinces
