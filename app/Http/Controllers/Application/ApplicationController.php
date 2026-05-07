@@ -1086,7 +1086,7 @@ class ApplicationController extends Controller
                 'application_type' => 'required|string',
                 'application_id' => 'required|exists:tbl_application_checklist,id',
                 'attachment_id' => 'required|integer|exists:tbl_application_attachments,id',
-                'file' => 'required|file|max:2048',
+                'file' => 'required|file|max:10240',
                 'name' => 'required|string',
             ]);
 
