@@ -312,12 +312,13 @@ class RPSChiefDashboardController extends Controller
             ->leftJoin('tbl_office as o', 'o.id', '=', 'u.office_id')
             ->select(
                 DB::raw("
-					CONCAT(
-						ac.applicant_lastname, ', ',
-						ac.applicant_firstname, ' ',
-						IFNULL(ac.applicant_middlename, '')
-					) AS applicant_name
-				"),
+            CONCAT(
+                ac.applicant_lastname, ', ',
+                ac.applicant_firstname, ' ',
+                IFNULL(ac.applicant_middlename, '')
+            ) AS applicant_name
+        "),
+                'o.office_title',
                 'ac.authorized_representative',
                 'ac.id',
                 'ac.return_reason',
@@ -347,10 +348,20 @@ class RPSChiefDashboardController extends Controller
                 'ac.created_at',
                 'ac.date_applied'
             )
-            ->whereIn('ac.application_status', $statusFilter)
+
+            // ✅ Only filter statuses for non-office 13
+            ->when($office_id != 13, function ($query) use ($statusFilter) {
+                return $query->whereIn('ac.application_status', $statusFilter);
+            })
+
             ->when($office_id != 13, function ($query) use ($officeFilter) {
                 return $query->whereIn('u.office_id', $officeFilter);
             })
+
+            ->when($office_id == 13, function ($query) {
+                return $query->whereIn('u.office_id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
+            })
+
             ->orderBy('ac.id', 'desc')
             ->get()
             // ->whereIn('ac.application_status', $statusFilter)

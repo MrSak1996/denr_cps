@@ -601,12 +601,11 @@ const applicantsTable = async () => {
             </template>
             <Column header="Action" :exportable="false" style="min-width: 8rem">
                 <template #body="{ data }">
-                    <Link :href="route('applications.edit', {
+                    <Link v-if="data.id && data.application_type" :href="route('applications.edit', {
                         application_id: data.id,
                         type: data.application_type,
                         step: getStep(data.application_status)
-                    })"
-                        class="mr-2 inline-flex justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
+                    })" class="mr-2 inline-flex justify-center rounded-md bg-green-700 px-3 py-2 text-white hover:bg-green-600">
                         <SquarePen :size="16" />
                     </Link>
                     <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"
@@ -615,7 +614,7 @@ const applicantsTable = async () => {
                         <PrinterCheck :size="15" />
 
                     </Button>
-                
+
                 </template>
             </Column>
             <Column field="application_type" header="Application Type" sortable />
@@ -629,10 +628,13 @@ const applicantsTable = async () => {
                     <b>{{ data.permit_no }}</b>
                 </template>
             </Column>
-             <Column field="status_title" header="Status" sortable style="min-width: 10rem">
+            <Column field="status_title" header="Status" sortable style="min-width: 10rem">
                 <template #body="{ data }">
-                     <Tag :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :'success'" class="text-center" v-if="data.application_status == 28">Approved</Tag>
-                     <Tag :value="data.status_title" :severity="data.status_title === 'Returned to CENRO Technical Staff' ? 'danger' :'success'" class="text-center" v-else/>
+                    <Tag :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' : 'success'"
+                        class="text-center" v-if="data.application_status == 28">Approved</Tag>
+                    <Tag :value="data.status_title"
+                        :severity="data.status_title === 'Returned to CENRO Technical Staff' ? 'danger' : 'success'"
+                        class="text-center" v-else />
                 </template>
             </Column>
             <Column header="Applicant Name" style="min-width: 12rem">

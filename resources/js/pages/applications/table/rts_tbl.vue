@@ -25,6 +25,7 @@ import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import DatePicker from 'primevue/datepicker';
 import Textarea from 'primevue/textarea';
+import Select from 'primevue/select';
 const page = usePage();
 onMounted(() => {
     applicantsTable();
@@ -45,7 +46,6 @@ const STATUS_ENDORSED_FUS_CHIEF = 10;
 const STATUS_ENDORSED_LPDD_CHIEF = 11;
 const STATUS_ENDORSED_ARDTS = 12;
 const STATUS_ENDORSED_RED = 13;
-
 const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
 const STATUS_RECEIVED_CENRO_OFFICER = 15;
 const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
@@ -57,11 +57,9 @@ const STATUS_RECEIVED_FUS_CHIEF = 21;
 const STATUS_RECEIVED_LPDD_CHIEF = 22;
 const STATUS_RECEIVED_ARDTS = 23;
 const STATUS_RECEIVED_RED = 24;
-
 const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
 const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
 const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
-
 const STATUS_APPROVED_BY_RED = 28;
 
 
@@ -103,6 +101,17 @@ const product = ref({});
 const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+     office_id: { value: null, matchMode: FilterMatchMode.EQUALS },
+
+    application_type: {
+        value: null,
+        matchMode: FilterMatchMode.EQUALS
+    },
+
+    application_status: {
+        value: null,
+        matchMode: FilterMatchMode.EQUALS
+    }
 });
 const submitted = ref(false);
 const statuses = ref([
@@ -110,6 +119,63 @@ const statuses = ref([
     { label: 'LOWSTOCK', value: 'lowstock' },
     { label: 'OUTOFSTOCK', value: 'outofstock' },
 ]);
+
+const officeOptions = [
+    { label: 'PENRO CAVITE', value: 1 },
+    { label: 'PENRO LAGUNA', value: 2 },
+    { label: 'PENRO BATANGAS', value: 3 },
+    { label: 'PENRO RIZAL', value: 4 },
+    { label: 'PENRO QUEZON', value: 5 },
+
+    { label: 'CENRO Sta. Cruz', value: 6 },
+    { label: 'CENRO Lipa City', value: 7 },
+    { label: 'CENRO Calaca', value: 8 },
+    { label: 'CENRO Calauag', value: 9 },
+    { label: 'CENRO Catanauan', value: 10 },
+    { label: 'CENRO Tayabas', value: 11 },
+    { label: 'CENRO Real', value: 12 },
+
+    { label: 'Regional Office', value: 13 },
+]
+
+const applicationTypeOptions = [
+    { label: 'Individual', value: 'Individual' },
+    { label: 'Company', value: 'Company' },
+]
+
+const statusOptions = [
+    { label: 'Draft', value: 1 },
+    { label: 'For Review / Evaluation', value: 2 },
+    { label: 'Endorsed to CENRO RPS Chief', value: 3 },
+    { label: 'Endorsed to CENRO Officer', value: 4 },
+    { label: 'Endorsed to PENRO Technical', value: 5 },
+    { label: 'Endorsed to PENRO Chief RPS', value: 6 },
+    { label: 'Endorsed to PENRO Chief TSD', value: 7 },
+    { label: 'Endorsed to PENRO Officer', value: 8 },
+    { label: 'Endorsed to Regional Technical Staff', value: 9 },
+    { label: 'Endorsed to FUS Chief', value: 10 },
+    { label: 'Endorsed to LPDD Chief', value: 11 },
+    { label: 'Endorsed to ARDTS', value: 12 },
+    { label: 'Endorsed to Regional Executive Director', value: 13 },
+
+    { label: 'Received by CENRO RPS Chief', value: 14 },
+    { label: 'Received by CENRO Officer', value: 15 },
+    { label: 'Received by PENRO Technical', value: 16 },
+    { label: 'Received by PENRO Chief RPS', value: 17 },
+    { label: 'Received by PENRO Chief TSD', value: 18 },
+    { label: 'Received by PENRO Officer', value: 19 },
+    { label: 'Received by Regional Technical Staff', value: 20 },
+    { label: 'Received by FUS Chief', value: 21 },
+    { label: 'Received by LPDD Chief', value: 22 },
+    { label: 'Received by ARDTS', value: 23 },
+    { label: 'Received by Regional Executive Director', value: 24 },
+
+    { label: 'Returned to CENRO Technical Staff', value: 25 },
+    { label: 'Returned to PENRO Technical Staff', value: 26 },
+    { label: 'Returned to Regional Technical Staff', value: 27 },
+
+    { label: 'Approved by Regional Executive Director', value: 28 },
+]
 
 // Define steps
 const events = [
@@ -763,13 +829,36 @@ const buttonState = (row: any) => {
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
                         responsiveLayout="scroll" class="w-full text-sm">
                         <template #header>
-                            <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+
+                                <!-- Search -->
                                 <IconField>
                                     <InputIcon>
                                         <i class="pi pi-search" />
                                     </InputIcon>
-                                    <InputText v-model="filters['global'].value" placeholder="Search..." />
+
+                                    <InputText v-model="filters['global'].value" placeholder="Search..." class="w-64" />
                                 </IconField>
+
+                                <!-- Filters -->
+                                <div class="flex flex-wrap gap-2">
+
+                                    <!-- Office Filter -->
+                                    <Select v-model="filters['office_id'].value" :options="officeOptions"
+                                        optionLabel="label" optionValue="value" placeholder="Filter by Office"
+                                        class="w-52" showClear />
+
+                                    <!-- Application Type Filter -->
+                                    <Select v-model="filters['application_type'].value"
+                                        :options="applicationTypeOptions" optionLabel="label" optionValue="value"
+                                        placeholder="Application Type" class="w-52" showClear />
+
+                                    <!-- Status Filter -->
+                                    <Select v-model="filters['application_status'].value" :options="statusOptions"
+                                        optionLabel="label" optionValue="value" placeholder="Filter by Status"
+                                        class="w-52" showClear />
+
+                                </div>
                             </div>
                         </template>
                         <Column header="Action" :exportable="false" style="min-width: 2rem">
@@ -782,7 +871,7 @@ const buttonState = (row: any) => {
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
-                                    <Link :href="route('applications.edit', {
+                                    <Link v-if="slotProps.data.id && slotProps.data.application_type" :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
                                         type: slotProps.data.application_type,
                                         step: 4
@@ -796,25 +885,6 @@ const buttonState = (row: any) => {
                                         class="rounded p-2 text-white hover:bg-teal-900">
                                         <History :size="15" />
                                     </Button>
-
-                                    <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                    <!-- <Button :disabled="buttonState(slotProps.data).viewDisabled" type="button"
-                                        style="background-color: #0f766e"
-                                        class="rounded p-2 text-white hover:bg-teal-900">
-                                        <Link :disabled="buttonState(slotProps.data).viewDisabled"
-                                         :href="route('applications.edit', {
-                                            application_id: slotProps.data.id,
-                                            id: slotProps.data.id,
-                                            type: slotProps.data.application_type,
-                                            step: 4
-
-                                        })">
-                                            <Eye :size="15" />
-                                        </Link>
-                                    </Button> -->
-
-
-
                                 </div>
                             </template>
                         </Column>
@@ -846,6 +916,11 @@ const buttonState = (row: any) => {
                             <template #body="{ data }">
                                 <b>{{ data.permit_no }}</b>
                             </template>
+                        </Column>
+                        <Column header="Office" style="min-width: 10rem">
+                            <template #body="slotProps">
+                                    {{ slotProps.data.office_title }}
+                                </template>
                         </Column>
                         <Column header="Applicant Name" style="min-width: 12rem">
                             <template #body="slotProps">
@@ -1024,7 +1099,7 @@ const buttonState = (row: any) => {
                             <div class="flex items-center">
                                 <span class="w-48 font-semibold">Authorized Representative:</span>
                                 <span v-if="!editState.applicant">{{ applicationDetails.authorized_representative
-                                }}</span>
+                                    }}</span>
                                 <InputText v-else v-model="editableApplicant.authorized_representative"
                                     class="w-full" />
                             </div>
