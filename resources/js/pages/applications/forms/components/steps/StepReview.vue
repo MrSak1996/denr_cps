@@ -862,12 +862,12 @@ onMounted(() => {
         ? 'grid grid-cols-2 gap-4'
         : 'flex justify-end'
     ]">
-      <Button v-if="props.form.status_title === 'Returned to CENRO Technical Staff'" @click="$emit('back')"
+      <Button v-if="currentStep > 1 && props.form.status_title === 'Returned to CENRO Technical Staff'" @click="$emit('back')"
         class="w-full bg-gray-300 hover:bg-gray-400">
         Back
       </Button>
-      
-      <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)" :disabled="roleId === 1"
+
+      <Button v-else-if="roleId === 1 " :disabled="roleId === 1"
         class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
         @click="returnApplication">
         <Undo2 />
