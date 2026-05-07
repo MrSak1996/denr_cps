@@ -208,15 +208,19 @@ const nextStep = async (payload: any) => {
             })
 
         } else if (currentStep.value === 2) {
-            res = await saveChainsaw(
-                {
-                    ...payload,
-                    mode: props.mode,
-                    suppliers: suppliers.value,
-                    application_type: payload.application_type,
-                },
-                form.value.application_id
-            )
+           res = await saveChainsaw({
+                ...payload,
+                mode: props.mode,
+                suppliers: suppliers.value,
+                id: form.value.application_id,
+                application_no: form.value.application_no,
+                application_type: payload.application_type,
+                uploaded_by: userId,
+            })
+            form.value.application_id
+            Object.assign(form.value, res.application)
+
+
 
             toast.add({
                 severity: 'success',
@@ -260,6 +264,8 @@ const nextStep = async (payload: any) => {
             )
         }
     } catch (error: any) {
+    isProcessing.value = false
+
         console.error(error)
         toast.add({
             severity: 'error',

@@ -33,40 +33,59 @@ export const saveCompanyApplication = async (payload: any) => {
     return res.data
 }
 
-export const saveChainsaw = async (payload: any, id: any) => {
+export const saveChainsaw = async (payload: any) => {
     const formData = new FormData();
 
-    formData.append('id', String(id));
+    // always append safe fields first
     formData.append('application_type', payload.application_type ?? '');
-
+    formData.append('id', payload.id ?? '');
+    formData.append('application_no', payload.application_no ?? '');
 
     Object.keys(payload).forEach((key) => {
         const value = payload[key];
 
-        // 🔥 HANDLE FILES PROPERLY
+        // ✅ FILES (CRITICAL FIX)
         if (value instanceof File) {
             formData.append(key, value);
         }
+
+        // optional nested file object
         else if (value?.file instanceof File) {
             formData.append(key, value.file);
         }
-        else if (Array.isArray(value) && value.length && value[0] instanceof File) {
-            formData.append(key, value[0]); // take first file
-        }
+
+        // arrays (skip files inside arrays properly)
         else if (Array.isArray(value)) {
+            value.forEach((item) => {
+                if (item instanceof File) {
+                    formData.append(`${key}[]`, item);
+                } else {
+                    formData.append(key, JSON.stringify(value));
+                }
+            });
+        }
+
+        // ignore raw objects (IMPORTANT FIX)
+        else if (typeof value === 'object' && value !== null) {
             formData.append(key, JSON.stringify(value));
         }
+
+        // normal values
         else if (value !== null && value !== undefined) {
-            formData.append(key, String(value));
+            formData.append(key, value);
         }
     });
 
-    // 🔍 DEBUG: check what's actually sent
+    // DEBUG (IMPORTANT)
     for (let pair of formData.entries()) {
         console.log(pair[0], pair[1]);
     }
 
-    return await axios.post('/api/chainsaw/insertChainsawInfo', formData);
+    const res = await axios.post('/api/chainsaw/insertChainsawInfo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    return res.data;
 };
 
 export const savePayment = async (payload: any, id: any) => {

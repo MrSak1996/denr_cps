@@ -4,16 +4,16 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 import { useApi } from '@/composables/useApi';
 import axios from 'axios';
+import { Info } from 'lucide-vue-next';
 import Dialog from 'primevue/dialog';
 import Fieldset from 'primevue/fieldset';
 import FloatLabel from 'primevue/floatlabel';
 import InputText from 'primevue/inputtext';
+import ProgressBar from 'primevue/progressbar';
 import Select from 'primevue/select';
+import Tag from 'primevue/tag';
 import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
-import { Info } from 'lucide-vue-next'
-import ProgressBar from 'primevue/progressbar';
-import Tag from 'primevue/tag';
 import { emailUppercase, lettersNumbersDashUppercase, lettersOnlyUppercase } from '../../composables/useUppercaseLettersOnly';
 import FileCard from '../../file_card.vue';
 
@@ -62,12 +62,8 @@ const files = computed(() => {
             name: file.file_name,
             url: file.file_url,
         }))
-        .filter((file: any) =>
-            typeof file.name === 'string' &&
-            file.name.startsWith('valid_id_')
-        );
+        .filter((file: any) => typeof file.name === 'string' && file.name.startsWith('valid_id_'));
 });
-
 
 // default date only if empty
 if (!props.form.date_applied) {
@@ -116,7 +112,7 @@ const handleImageUpload = (event: Event, field: string) => {
     toast.add({
         severity: 'success',
         summary: 'Uploaded',
-        detail: 'Image uploaded successfully.',
+        detail: 'This file is valid for upload.',
         life: 3000,
     });
 };
@@ -148,18 +144,12 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post(
-            'https://cps.denrcalabarzon.com/api/files/update',
-            formData,
-            {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            }
-        );
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
 
         // ✅ Find correct file using attachment_id (not id)
-        const updatedIndex = files.value.findIndex(
-            (f) => f.attachment_id === selectedFileToUpdate.value.attachment_id
-        );
+        const updatedIndex = files.value.findIndex((f) => f.attachment_id === selectedFileToUpdate.value.attachment_id);
 
         // ✅ Update only the changed fields based on backend response
         if (updatedIndex !== -1 && response.data?.data) {
@@ -171,9 +161,8 @@ const handleFileUpdate = async (event) => {
             severity: 'success',
             summary: 'Successful',
             detail: 'File updated successfully',
-            life: 3000
+            life: 3000,
         });
-
     } catch (error) {
         console.error(error);
 
@@ -181,9 +170,8 @@ const handleFileUpdate = async (event) => {
             severity: 'error',
             summary: 'Error',
             detail: error?.response?.data?.message || 'Failed to update the file.',
-            life: 3000
+            life: 3000,
         });
-
     } finally {
         // ✅ Reset file input safely
         if (updateFileInput.value) {
@@ -286,6 +274,16 @@ onMounted(async () => {
         },
         { immediate: true, deep: true },
     );
+
+    watch(
+        () => props.isProcessing,
+        (processing) => {
+            // When request finishes (success or error)
+            if (!processing) {
+                isLoading.value = false;
+            }
+        },
+    );
 });
 </script>
 
@@ -294,9 +292,7 @@ onMounted(async () => {
         <!-- Chainsaw Application -->
         <div class="flex items-center gap-2" v-if="isEdit">
             <Info class="h-5 w-5" />
-            <h1 class="text-xl font-semibold">
-                Application Status:
-            </h1>
+            <h1 class="text-xl font-semibold">Application Status:</h1>
 
             <Tag severity="danger">
                 {{ props.form.status_title }}
@@ -359,33 +355,47 @@ onMounted(async () => {
                     <label>Sex</label>
                 </FloatLabel>
             </div>
-            <div class="mb-3" v-if="isEdit">
+            <div class="mb-3">
+                <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
+
                 <div v-if="files && files.length > 0">
-                    <div class="container">
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <FileCard v-for="(file, index) in files" :key="index" :file="file"
-                                @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
+                    <div v-if="files && files.length > 0">
+                        <div class="container">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                <FileCard v-for="(file, index) in files" :key="index" :file="file"
+                                    @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
+                            </div>
                         </div>
+
+                    </div>
+
+                    <!-- ✅ SHOW UPLOAD UI WHEN NO FILES -->
+                    <div v-else
+                        class="mt-4 group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 transition hover:bg-gray-50">
+                        <!-- Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="mb-3 h-10 w-10 text-gray-400 group-hover:text-gray-500" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
+
+                        <!-- Text -->
+                        <p class="font-medium text-gray-700">Upload Valid ID</p>
+                        <p class="mt-1 text-sm text-gray-500">PNG, JPG up to 5MB</p>
+
+                        <!-- Click overlay -->
+                        <input type="file" id="validId" accept="image/*"
+                            @change="(e) => handleImageUpload(e, 'valid_id')"
+                            class="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
                     </div>
                 </div>
-
-                <!-- ✅ SHOW UPLOAD UI WHEN NO FILES -->
-                <div v-else class="p-4 text-center border rounded bg-gray-50 relative border-2 border-dashed p-4 rounded bg-white" >
-                    <p class="mb-2 text-gray-600">No files uploaded yet.</p>
-
-                    <input type="file" id="validId" accept="image/*" @change="(e) => handleImageUpload(e, 'valid_id')"
-                        class="w-full absolute inset-0 opacity-0 cursor-pointer" />
-                </div>
-
             </div>
-
-
-
         </Fieldset>
 
         <!-- Contact -->
         <Fieldset legend="Contact Information">
-            <div class="grid gap-4 md:grid-cols-4 mt-4">
+            <div class="mt-4 grid gap-4 md:grid-cols-4">
                 <FloatLabel>
                     <InputText v-model="props.form.mobile_no" class="w-full" />
                     <label>Mobile No</label>
@@ -439,21 +449,14 @@ onMounted(async () => {
             </div>
         </Fieldset>
 
-
-        <div :class="[
-            'w-full pt-6',
-            isEdit ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
-        ]">
+        <div :class="['w-full pt-6', isEdit ? 'grid grid-cols-2 gap-4' : 'flex justify-end']">
             <Button :disabled="props.isProcessing" type="button"
                 class="w-full bg-green-900 text-white transition-colors hover:bg-green-500" @click="save">
                 {{ props.isProcessing ? 'Saving...' : 'Save & Continue' }}
             </Button>
 
-            <Button v-if="isEdit" @click="$emit('proceed')" class="w-full bg-gray-300 hover:bg-gray-400">
-                Next
-            </Button>
+            <Button v-if="isEdit" @click="$emit('proceed')" class="w-full bg-gray-300 hover:bg-gray-400"> Next </Button>
         </div>
-
 
         <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
             <div class="flex flex-col items-center gap-4 py-4">

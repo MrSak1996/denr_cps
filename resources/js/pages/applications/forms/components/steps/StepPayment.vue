@@ -255,32 +255,33 @@ const handleFileUpdate = async (event) => {
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal"
                   @updateFile="triggerUpdateFile" />
-               
+
               </div>
-              <input
-              type="file"
-              ref="updateFileInput"
-              class="hidden"
-              @change="handleFileUpdate"
-            />
+              <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
 
             </div>
 
           </div>
-          <div v-else class="md:col-span-2">
-            <label class="text-sm font-medium">
-              Upload Official Receipt
-            </label>
+          <div v-else
+            class="mt-4 group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 transition hover:bg-gray-50">
+            <!-- Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="mb-3 h-10 w-10 text-gray-400 group-hover:text-gray-500"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
 
-            <div class="relative mt-2 border rounded-md p-4 bg-gray-50 hover:bg-gray-100 transition">
-              <span class="text-sm text-gray-600">
-                {{ payment.or_copy ? payment.or_copy.name : 'Click to upload (.jpg, .jpeg, .pdf)' }}
-              </span>
+            <!-- Text -->
+            <p class="font-medium text-gray-700">Upload Official Receipt</p>
+            <p class="mt-1 text-sm text-gray-500">PDF File up to 5MB</p>
 
-              <input type="file" accept=".jpg,.jpeg,.pdf"
-                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" @change="handleORFileUpload" />
-            </div>
+            <!-- Click overlay -->
+            <input type="file" id="permitToSell" accept="application/pdf" @change="handleORFileUpload"
+              class="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
           </div>
+
+
+
 
         </div>
       </div>
@@ -294,18 +295,18 @@ const handleFileUpdate = async (event) => {
       <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
         Back
       </Button>
-     
+
 
       <Button :disabled="isProcessing"
         class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="submitStep">
         {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
       </Button>
-      
+
     </div>
     <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
-        <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
-          allow="autoplay"></iframe>
-      </Dialog>
+      <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
+        allow="autoplay"></iframe>
+    </Dialog>
     <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
       <div class="flex flex-col items-center gap-4 py-4">
         <span>Saving, please wait...</span>

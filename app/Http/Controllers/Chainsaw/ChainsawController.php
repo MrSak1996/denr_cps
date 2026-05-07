@@ -195,9 +195,9 @@ class ChainsawController extends Controller
 
 
             $folderPath = match ($request->application_type) {
-                'Individual' => "CHAINSAW_PERMITTING/Individual Applications/{$application->application_no}",
-                'Company' => "CHAINSAW_PERMITTING/Company Applications/{$application->application_no}",
-                default => "CHAINSAW_PERMITTING/Other/{$application->application_no}",
+                'Individual' => "CHAINSAW_PERMITTING/Individual Applications/{$request->application_no}",
+                'Company' => "CHAINSAW_PERMITTING/Company Applications/{$request->application_no}",
+                default => "CHAINSAW_PERMITTING/Other/{$request->application_no}",
             };
 
             $uploadResults = [];
@@ -207,14 +207,14 @@ class ChainsawController extends Controller
 
                     // ✅ 1. Create checklist entry FIRST
                     $checklist = AppChecklistEntry::create([
-                        'parent_id' => $application->id,
+                        'parent_id' => $request->id,
                         'chklist_id' => $config['requirement_id'],
                         'uploaded_at' => now(),
                     ]);
 
                     // ✅ 2. Upload ONE file and pass checklist_entry_id
                     $result = $driveService->storeSingleAttachment(
-                        $application->application_no,
+                        $request->application_no,
                         $request->input('uploaded_by'),
                         $request->file($inputName),
                         $application->id,

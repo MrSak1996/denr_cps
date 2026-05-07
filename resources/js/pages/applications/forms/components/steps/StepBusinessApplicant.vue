@@ -17,7 +17,6 @@ import ProgressBar from 'primevue/progressbar';
 import Tag from 'primevue/tag';
 import { emailUppercase, lettersNumbersDashUppercase, lettersOnlyUppercase } from '../../composables/useUppercaseLettersOnly';
 import FileCard from '../../file_card.vue';
-
 // ------------------------------
 // Directives
 // ------------------------------
@@ -85,6 +84,7 @@ const handleFileUpdate = async (event) => {
     try {
         const formData = new FormData();
         formData.append('application_id', selectedFileToUpdate.value.application_id);
+        formData.append('application_type', selectedFileToUpdate.value.application_type);
         formData.append('file', newFile);
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);
@@ -108,7 +108,6 @@ const handleFileUpdate = async (event) => {
         selectedFileToUpdate.value = null;
     }
 };
-props.form.date_applied = ref(new Date());
 const emit = defineEmits(['next', 'proceed']);
 
 const { prov_name, getProvinceCode } = useApi();
@@ -135,13 +134,27 @@ const permitNo = computed({
         formData.value.permit_no = value.startsWith(PREFIX) ? value : PREFIX + value;
     },
 });
+const formatDate = (date: Date | null) => {
+    if (!date) return null
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    return `${year}-${month}-${day}`
+}
 
 const save = () => {
     if (props.isProcessing) return;
-    isLoading.value =true;
+
+    isLoading.value = true;
+
     emit('next', {
         ...props.form,
         application_type: props.application_type,
+
+        // format the DatePicker value
+        date_applied: formatDate(props.form.date_applied),
     });
 };
 
@@ -258,6 +271,15 @@ onMounted(async () => {
         },
         { immediate: true, deep: true },
     );
+    watch(
+        () => props.isProcessing,
+        (processing) => {
+            // When request finishes (success or error)
+            if (!processing) {
+                isLoading.value = false;
+            }
+        }
+    );
 });
 </script>
 
@@ -282,14 +304,16 @@ onMounted(async () => {
                             :disabled="true" />
                         <label for="application_no">Application No.</label>
                     </FloatLabel>
-                    <InputError />
+                    
                 </div>
                 <FloatLabel>
-                    <InputText id="permit_no" v-model="props.form.permit_no" class="w-full font-bold" :disabled="true" />
+                    <InputText id="permit_no" v-model="props.form.permit_no" class="w-full font-bold"
+                        :disabled="true" />
                     <label for="permit_no">Permit No.</label>
                 </FloatLabel>
                 <FloatLabel>
-                    <DatePicker v-model="props.form.date_applied" class="w-full" />
+                    <DatePicker v-model="props.form.date_applied" date-format="yy-mm-dd" show-icon class="w-full" />
+
                     <label>Date Applied</label>
                 </FloatLabel>
 
@@ -309,7 +333,7 @@ onMounted(async () => {
                     <InputText id="company_mobile_no" v-model="props.form.company_mobile_no" class="w-full" />
                     <label for="company_mobile_no">Mobile Number</label>
                 </FloatLabel>
-                <InputError />
+                
             </div>
 
             <div class="relative">
@@ -320,21 +344,19 @@ onMounted(async () => {
                     <div class="md:col-span-2 mt-2">
                         <FloatLabel>
                             <!-- <InputText id="surname" v-model="props.form.company_name" v-letters-only-uppercase class="w-full" /> -->
-                            <InputText id="surname" v-model="props.form.company_name"
-                                class="w-full" />
+                            <InputText id="surname" v-model="props.form.company_name" class="w-full" />
                             <label for="surname">Company / Corporation / Cooperative Name</label>
                         </FloatLabel>
-                        <InputError />
+                        
                     </div>
 
                     <!-- Authorized Representative -->
                     <div class="md:col-span-1 mt-2">
                         <FloatLabel>
-                            <InputText id="first_name" v-model="props.form.authorized_representative"
-                                 class="w-full" />
+                            <InputText id="first_name" v-model="props.form.authorized_representative" class="w-full" />
                             <label for="first_name">Name of Authorized Representative</label>
                         </FloatLabel>
-                        <InputError />
+                        
                     </div>
                 </div>
 
@@ -406,8 +428,7 @@ onMounted(async () => {
                 <div class="md:col-span-4">
                     <label class="mb-2 block text-sm font-medium"> Complete Address </label>
 
-                    <Textarea v-model="props.form.company_address" rows="4" class="w-full"
-                  />
+                    <Textarea v-model="props.form.company_address" rows="4" class="w-full" />
                 </div>
             </div>
         </Fieldset>
@@ -426,7 +447,7 @@ onMounted(async () => {
             </Button>
         </div>
 
-         <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
+        <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
             <div class="flex flex-col items-center gap-4 py-4">
                 <span>Saving, please wait...</span>
                 <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />

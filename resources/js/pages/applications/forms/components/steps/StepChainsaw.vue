@@ -64,7 +64,7 @@ const purposeRequirements: Record<string, { label: string; field: string }[]> = 
         { label: 'Notarized Affidavit', field: 'affidavit' }
     ],
     'Other Supporting Documents': [
-        { label: 'Supporting Document', field: 'permit' }
+        { label: 'Supporting Document', field: 'otherDocs' }
     ]
 }
 
@@ -76,7 +76,9 @@ const requiredDocs = computed(() =>
 const uploadFiles = reactive<Record<string, File | null>>({})
 
 const handleFileUpload = (event: Event, field: string) => {
-    const file = (event.target as HTMLInputElement).files?.[0]
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+
     if (!file) return
 
     if (file.type !== 'application/pdf') {
@@ -90,16 +92,78 @@ const handleFileUpload = (event: Event, field: string) => {
     }
 
     uploadFiles[field] = file
+    toast.add({
+        severity: 'success',
+        summary: 'Uploaded',
+        detail: 'This file is valid for upload.',
+        life: 3000,
+    });
 }
+const showFiles = computed(() => {
+    return (props.files || [])
+        .map((file: any) => ({
+            id: file.id,
+            application_type: file.application_type,
+            application_id: file.application_id,
+            attachment_id: file.attachment_id,
+            name: file.file_name,
+            url: file.file_url,
+        }))
+        .filter((file: any) =>
+            typeof file.name === 'string' &&
+            file.application_id === props.form.id && (
+                file.name.startsWith('other_supporting_documents') ||
+                file.name.startsWith('permit_to_sell') ||
+                file.name.startsWith('mayors_permit') ||
+                file.name.startsWith('notarized_affidavit')
+            )
+        );
+});
 
 /* -------------------- FILE PREVIEW -------------------- */
 const selectedFile = ref<any>(null)
 const showModal = ref(false)
-
+const selectedFileToUpdate = ref(null);
+const updateFileInput = ref(null);
 const openFileModal = (file: any) => {
     selectedFile.value = file
     showModal.value = true
 }
+const triggerUpdateFile = (file) => {
+    selectedFileToUpdate.value = file;
+    updateFileInput.value.click();
+};
+const handleFileUpdate = async (event) => {
+    const newFile = event.target.files[0];
+    if (!newFile || !selectedFileToUpdate.value) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('application_id', selectedFileToUpdate.value.application_id);
+        formData.append('application_type', selectedFileToUpdate.value.application_type);
+        formData.append('file', newFile);
+        formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
+        formData.append('name', selectedFileToUpdate.value.name);
+
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        // Update file list
+        const updatedIndex = files.value.findIndex((f) => f.id === selectedFileToUpdate.value.id);
+        if (updatedIndex !== -1) {
+            files.value[updatedIndex] = response.data.updatedFile;
+        }
+
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'File updated successfully', life: 3000 });
+    } catch (error) {
+        console.error(error);
+        toast.add({ severity: 'error', summary: 'Successful', detail: 'Failed to update the file.', life: 3000 });
+    } finally {
+        updateFileInput.value.value = ''; // reset file input
+        selectedFileToUpdate.value = null;
+    }
+};
 
 const getEmbedUrl = (url: string) =>
     url ? url.replace('/view', '/preview') : ''
@@ -119,14 +183,17 @@ const submitStep = () => {
     if (props.isProcessing) return
 
     isLoading.value = true
-
     emit('next', {
+        ...props.form,
+
+        permit: uploadFiles.permit,
+        affidavit: uploadFiles.affidavit,
+        mayorDTI: uploadFiles.mayorDTI,
+        otherDocs: uploadFiles.otherDocs,
         application_type: props.application_type,
-        purpose: selectedPurpose.value,
-        suppliers: props.suppliers,
-        files: uploadFiles
     })
 }
+
 </script>
 <template>
     <div class="space-y-6">
@@ -148,40 +215,78 @@ const submitStep = () => {
                     @cancel="defaultSupplierDialog = false" />
             </Dialog>
 
-            <Button class="w-full bg-blue-900" @click="defaultSupplierDialog = true">
+            <Button class="w-full bg-blue-900 hover:bg-blue-600" @click="defaultSupplierDialog = true">
                 Chainsaw Supplier Form
             </Button>
 
             <!-- PURPOSE -->
-            <FloatLabel class="mt-2">
-                <Select v-model="selectedPurpose" :options="options" class="w-full" />
-                <label>Purpose of Purchase</label>
-            </FloatLabel>
-
+            <FloatLabel>Purpose of Purchase</FloatLabel>
+            <Select v-model="selectedPurpose" :options="options" class="w-full" />
+          
             <!-- REQUIRED DOCS -->
-            <div v-if="requiredDocs.length" class="p-3 bg-blue-50 border border-blue-200 mt-4 rounded-lg">
 
-                <div v-for="doc in requiredDocs" :key="doc.field" class="mb-3">
+            <div v-if="isEdit && showFiles.length > 0" class="md:col-span-2">
+                <div class="container">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <FileCard v-for="(file, index) in showFiles" :key="index" :file="file"
+                            @openPreview="openFileModal" @updateFile="triggerUpdateFile" />
 
-                    <div class="flex items-center gap-2 mb-2">
-                        <Info class="w-4 h-4 text-blue-600" />
-                        <span class="text-sm font-medium text-blue-800">
-                            Required: {{ doc.label }}
-                        </span>
                     </div>
-
-                    <!-- UPLOAD -->
-                    <div class="relative border-2 border-dashed p-4 rounded bg-white">
-                        <input type="file" class="absolute inset-0 opacity-0 cursor-pointer"
-                            @change="(e) => handleFileUpload(e, doc.field)" />
-
-                        <div class="text-sm text-gray-500">
-                            Click or drop PDF file
-                        </div>
-                    </div>
+                    <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
 
                 </div>
             </div>
+            <div v-else>
+                <div v-if="requiredDocs.length" class="mt-4 rounded-lg">
+
+                    <div v-for="doc in requiredDocs" :key="doc.field" class="mb-3">
+
+                        <div
+                            class="mt-4 group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 transition hover:bg-gray-50">
+                            <!-- Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="mb-3 h-10 w-10 text-gray-400 group-hover:text-gray-500" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4" />
+                            </svg>
+
+                            <!-- Text -->
+                            <p class="font-medium text-gray-700">Required: <b>{{ doc.label }}</b></p>
+                            <p class="mt-1 text-sm text-gray-500">PDF File up to 5MB</p>
+
+                            <input type="file" id="permitToSell" accept="application/pdf"
+                                @change="(e) => handleFileUpload(e, doc.field)"
+                                class="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+
+                        </div>
+                    </div>
+                </div>
+
+                <FloatLabel>Permit to Sell:</FloatLabel>
+                <div
+                    class="mt-4 group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 transition hover:bg-gray-50">
+                    <!-- Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="mb-3 h-10 w-10 text-gray-400 group-hover:text-gray-500" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+
+                    <!-- Text -->
+                    <p class="font-medium text-gray-700">Upload Permit to Sell</p>
+                    <p class="mt-1 text-sm text-gray-500">PDF File up to 5MB</p>
+
+                    <!-- Click overlay -->
+                    <input type="file" id="permitToSell" accept="application/pdf"
+                        @change="(e) => handleFileUpload(e, 'permit')"
+                        class="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                </div>
+            </div>
+
+
+
 
             <!-- ACTION -->
             <div :class="[

@@ -185,7 +185,7 @@ const proceed = async () => {
 
 const nextStep = async (payload: any) => {
     if (isProcessing.value) return
-    isProcessing.value = true
+    isProcessing.value = true;
 
     try {
         let res: any
@@ -209,15 +209,19 @@ const nextStep = async (payload: any) => {
             })
 
         } else if (currentStep.value === 2) {
-            res = await saveChainsaw(
-                {
-                    ...payload,
-                    mode: props.mode,
-                    suppliers: suppliers.value,
-                    application_type: payload.application_type,
-                },
-                form.value.application_id
-            )
+            res = await saveChainsaw({
+                ...payload,
+                mode: props.mode,
+                suppliers: suppliers.value,
+                id: form.value.application_id,
+                application_no: form.value.application_no,
+                application_type: payload.application_type,
+                uploaded_by: userId,
+            })
+            form.value.application_id
+            Object.assign(form.value, res.application)
+
+
 
             toast.add({
                 severity: 'success',
@@ -261,6 +265,7 @@ const nextStep = async (payload: any) => {
             )
         }
     } catch (error: any) {
+        isProcessing.value = false;
         console.error(error)
         toast.add({
             severity: 'error',
@@ -384,8 +389,8 @@ onMounted(async () => {
                 <div class="space-y-6 p-6">
                     <component :is="activeComponent" :application="application" :form="form" :suppliers="suppliers"
                         :application_type="type" :isProcessing="isProcessing" :currentStep="currentStep"
-                        :supplier="suppliers" :routingHistory="routingHistory" :files="files" @proceed="proceed" @next="nextStep" @back="goBack"
-                        :mode="props.mode" @supplierSaved="supplierSaved" />
+                        :supplier="suppliers" :routingHistory="routingHistory" :files="files" @proceed="proceed"
+                        @next="nextStep" @back="goBack" :mode="props.mode" @supplierSaved="supplierSaved" />
                 </div>
 
                 <Dialog header="Privacy Consent" v-model:visible="showPrivacyDialog" modal :closable="false"

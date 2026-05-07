@@ -226,7 +226,7 @@ class ApplicationController extends Controller
     public function company_apply(Request $request, GoogleDriveService $driveService)
     {
         try {
-
+            $date_applied = Carbon::parse($request->input('date_applied'))->format('Y-m-d');
             $application = ChainsawIndividualApplication::updateOrCreate(
                 ['id' => $request->input('id')], // 🔥 match condition
                 [
@@ -235,7 +235,7 @@ class ApplicationController extends Controller
                     'classification' => $request->input('classification'),
                     'transaction_type' => $request->input('type_of_transaction'),
                     'application_no' => $request->input('application_no'),
-                    'date_applied' => $request->input('date_applied'),
+                    'date_applied' => $date_applied,
                     'encoded_by' => $request->input('encoded_by'),
                     'company_name' => $request->input('company_name'),
                     'company_address' => $request->input('company_address'),

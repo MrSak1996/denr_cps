@@ -63,7 +63,7 @@ const requireConfirmation = () => {
 
     confirm.require({
         group: 'headless',
-        header: 'Are you sure?',
+        header: 'Are you sure you want to ENDORSE this application?',
         message: isRegionalDirector
             ? 'Please confirm to approve this application.'
             : 'Please confirm to submit all assessments.',
@@ -111,8 +111,8 @@ onMounted(() => {
                     <div class="rounded-full bg-white inline-flex justify-center items-center h-20 w-20 -mt-16">
                         <img src="../../../../images/denr_logo.png" class="h-16 w-16" />
                     </div>
-                    <span class="font-bold text-xl block mb-2 mt-6">{{ message.header }}</span>
-                    <p class="mb-0">{{ message.message }}</p>
+                    <span class="font-bold text-2xl block mb-2 mt-6" style="color:red">{{ message.header }}</span>
+                    <!-- <p class="mb-0">{{ message.message }}</p> -->
                     <div class="flex items-center gap-3 mt-6">
                         <Button label="Submit" class="bg-green-900 text-white hover:bg-green-800"
                             @click="acceptCallback" />
