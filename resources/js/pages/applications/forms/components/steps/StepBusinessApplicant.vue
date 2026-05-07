@@ -89,7 +89,7 @@ const handleFileUpdate = async (event) => {
         formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
         formData.append('name', selectedFileToUpdate.value.name);
 
-        const response = await axios.post('http://cps.denrcalabarzon.com/api/files/update', formData, {
+        const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
 
