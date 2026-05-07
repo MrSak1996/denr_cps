@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const ProductService = {
   async getProducts(userId) {
-    const response = await axios.get('http://cps.denrcalabarzon.com/api/application-details', {
+    const response = await axios.get('https://cps.denrcalabarzon.com/api/application-details', {
       params: { id: userId }
     });
          return {
@@ -10,14 +10,14 @@ export const ProductService = {
   },
 
    async getUserList(userId) {
-    const response = await axios.get('http://cps.denrcalabarzon.com/api/getUserList')
+    const response = await axios.get('https://cps.denrcalabarzon.com/api/getUserList')
     return response.data.data;
   },
 
 
 
  async getApplicationsByStatus(status,id,role_id) {
-    const response = await axios.get('http://cps.denrcalabarzon.com/api/applicationStatus', {
+    const response = await axios.get('https://cps.denrcalabarzon.com/api/applicationStatus', {
       params: { status:status,office_id:id,role_id:role_id }
     });
       return {
@@ -31,7 +31,7 @@ export const ProductService = {
   async updateStatus(applicationId, status) {
     try {
       const response = await axios.put(
-        `http://cps.denrcalabarzon.com/api/applications/${applicationId}/status`,
+        `https://cps.denrcalabarzon.com/api/applications/${applicationId}/status`,
         {
           status: status,
         }
