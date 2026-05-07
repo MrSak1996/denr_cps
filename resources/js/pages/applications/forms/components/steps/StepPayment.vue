@@ -186,7 +186,7 @@ const handleFileUpdate = async (event) => {
     formData.append('attachment_id', selectedFileToUpdate.value.attachment_id);
     formData.append('name', selectedFileToUpdate.value.name);
 
-    const response = await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData, {
+    const response = await axios.post('http://localhost:8000/api/files/update', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
@@ -255,9 +255,10 @@ const handleFileUpdate = async (event) => {
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FileCard v-for="(file, index) in showFiles" :key="index" :file="file" @openPreview="openFileModal"
                   @updateFile="triggerUpdateFile" />
+                  <input type="file" ref="updateFileInput" class="absolute inset-0 opacity-0 cursor-pointer" @change="handleFileUpdate" />
+
               </div>
             </div>
-            <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
 
           </div>
           <div v-else class="md:col-span-2">
@@ -287,6 +288,14 @@ const handleFileUpdate = async (event) => {
       <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
         Back
       </Button>
+      <Button
+  v-if="currentStep > 1"
+  type="button"
+  @click="$emit('back')"
+  class="w-full bg-gray-300 hover:bg-gray-400"
+>
+  Back
+</Button>
 
       <Button :disabled="isProcessing"
         class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="submitStep">

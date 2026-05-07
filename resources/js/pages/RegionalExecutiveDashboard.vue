@@ -27,28 +27,20 @@ const breadcrumbs: BreadcrumbItem[] = [
 const page = usePage();
 const userId = page.props.auth.user.id;
 const officeId = page.props.auth.user.office_id;
-const totalApplications = computed(() =>
-    dashboardData.value.reduce((sum, item) => sum + item.total, 0)
-)
 
-const totalApproved = computed(() =>
-    dashboardData.value.reduce((sum, item) => sum + item.approved, 0)
-)
+const totalApplications = computed(() => dashboardData.value?.total || 0)
+const totalApproved = computed(() => dashboardData.value?.approved || 0)
 
-const totalDeferred = computed(() =>
-    dashboardData.value.reduce((sum, item) => sum + item.deferred, 0)
-)
+const totalDeferred = computed(() =>dashboardData.value?.deferred || 0)
 
-const totalDraft = computed(() =>
-    dashboardData.value.reduce((sum, item) => sum + item.draft, 0)
-)
+const totalDraft = computed(() => dashboardData.value?.draft || 0)
 
 const dashboardData = ref([])
 
 const fetchDashboardData = async () => {
     try {
 
-        const response = await axios.get('https://cps.denrcalabarzon.com/api/summary', {
+        const response = await axios.get('http://localhost:8000/api/summary', {
             params: { user_id: userId,office_id:officeId }
 
         });

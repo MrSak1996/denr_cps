@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import axios from 'axios'
 import { useToast } from 'primevue/usetoast'
 import Tag from 'primevue/tag'
@@ -7,7 +7,6 @@ import Select from 'primevue/select'
 import Fieldset from 'primevue/fieldset'
 import Dialog from 'primevue/dialog'
 import FloatLabel from 'primevue/floatlabel'
-import InputText from 'primevue/inputtext'
 import ProgressBar from 'primevue/progressbar'
 import { Button } from '@/components/ui/button'
 import ChainsawSupplierForm from '@/components/ChainsawSupplierForm.vue'
@@ -31,272 +30,183 @@ const props = defineProps({
 const toast = useToast()
 
 const isEdit = computed(() => props.mode === 'edit')
-const isCreate = computed(() => props.mode === 'create')
 
-/* -------------------- STATE -------------------- */
-const defaultSupplierDialog = ref(false)
-const showModal = ref(false)
-const isLoading = ref(false)
-
-const selectedFile = ref<any>(null)
-const selectedFileToUpdate = ref<any>(null)
-const updateFileInput = ref<HTMLInputElement | null>(null)
-    /* ------------------------------------------------------- | OPTIONS ------------------------------------------------------- */ 
-    const options = ['For cutting of trees with legal permit', 
-    'For post-calamity clearing operations', 
-    'For farm lot/tree orchard maintenance', 
-    'For maintenance of trees/vegetation within private property', 
-    'For cutting/trimming of trees posing danger within a private property', 
-    'For selling / re-selling', 
-    'For cutting of trees to be used for house repair/perimeter fencing/residential area development', 
-    'For commercial use', 'Forestry/landscaping service provider', 
-    'Other legal purpose(s)', 
-    'Other Supporting Documents',]
-
-
-/* -------------------- PURPOSE (FIXED CORE ISSUE) -------------------- */
+/* -------------------- PURPOSE -------------------- */
 const selectedPurpose = computed({
-    get() {
-        if (isEdit.value) {
-            return props.suppliers?.[0]?.purpose || null
-        }
-        return props.form.purpose
-    },
-    set(value) {
-        if (isEdit.value) {
-            if (props.suppliers?.length) {
-                props.suppliers[0].purpose = value
-            }
-        } else {
-            props.form.purpose = value
-        }
-    }
+    get: () => props.form.purpose,
+    set: (val) => props.form.purpose = val
 })
 
-/* -------------------- FILE FILTER (FIXED) -------------------- */
-const showFiles = computed(() => {
-    return (props.files || [])
-        .filter((file: any) => {
-            if (!file?.file_name) return false
+/* -------------------- OPTIONS -------------------- */
+const options = [
+    'For cutting of trees with legal permit',
+    'For post-calamity clearing operations',
+    'For farm lot/tree orchard maintenance',
+    'For maintenance of trees/vegetation within private property',
+    'For cutting/trimming of trees posing danger within a private property',
+    'For selling / re-selling',
+    'For cutting of trees to be used for house repair/perimeter fencing/residential area development',
+    'For commercial use',
+    'Forestry/landscaping service provider',
+    'Other legal purpose(s)',
+    'Other Supporting Documents'
+]
 
-            const validPrefixes = [
-                'notarized_affidavit_',
-                'mayors_permit_',
-                'permit_'
-            ]
-
-            return (
-                file.application_id === props.form.application_id &&
-                validPrefixes.some(prefix => file.file_name.startsWith(prefix))
-            )
-        })
-        .map((file: any) => ({
-            id: file.id,
-            application_type: file.application_type,
-            application_id: file.application_id,
-            attachment_id: file.attachment_id,
-            name: file.file_name,
-            url: file.file_url
-        }))
-})
-
-/* -------------------- UPLOAD TYPE -------------------- */
-const getUploadType = (purpose: string | null) => {
-    if (!purpose) return null
-
-    const map: Record<string, string> = {
-        'For selling / re-selling': 'mayorDTI',
-        'Forestry/landscaping service provider': 'mayorDTI',
-        'Other legal purpose(s)': 'affidavit',
-        'Other Supporting Documents': 'permit'
-    }
-
-    return map[purpose] || null
+/* -------------------- PURPOSE REQUIREMENTS -------------------- */
+const purposeRequirements: Record<string, { label: string; field: string }[]> = {
+    'For selling / re-selling': [
+        { label: 'Mayor’s Permit / DTI', field: 'mayorDTI' }
+    ],
+    'Forestry/landscaping service provider': [
+        { label: 'Mayor’s Permit / DTI', field: 'mayorDTI' }
+    ],
+    'Other legal purpose(s)': [
+        { label: 'Notarized Affidavit', field: 'affidavit' }
+    ],
+    'Other Supporting Documents': [
+        { label: 'Supporting Document', field: 'permit' }
+    ]
 }
 
-/* -------------------- FILE UPLOAD -------------------- */
-const uploadFiles = ref<Record<string, File | null>>({
-    mayorDTI: null,
-    affidavit: null,
-    permit: null
-})
+const requiredDocs = computed(() =>
+    purposeRequirements[selectedPurpose.value] || []
+)
 
-const handleFileUpload = (event: Event, field: string | null) => {
-    if (!field) return
+/* -------------------- FILE STATE -------------------- */
+const uploadFiles = reactive<Record<string, File | null>>({})
 
+const handleFileUpload = (event: Event, field: string) => {
     const file = (event.target as HTMLInputElement).files?.[0]
     if (!file) return
 
     if (file.type !== 'application/pdf') {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Only PDF allowed', life: 3000 })
+        toast.add({ severity: 'error', summary: 'Invalid', detail: 'PDF only', life: 3000 })
         return
     }
 
     if (file.size > 5 * 1024 * 1024) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Max 5MB', life: 3000 })
+        toast.add({ severity: 'error', summary: 'Too large', detail: 'Max 5MB', life: 3000 })
         return
     }
 
-    uploadFiles.value[field] = file
+    uploadFiles[field] = file
 }
 
-/* -------------------- EMBED -------------------- */
-const getEmbedUrl = (url: string) => url?.replace('/view', '/preview') || ''
+/* -------------------- FILE PREVIEW -------------------- */
+const selectedFile = ref<any>(null)
+const showModal = ref(false)
 
-/* -------------------- SUBMIT -------------------- */
-const submitStep = () => {
-    if (props.isProcessing) return
-    isLoading.value = true
-
-    emit('next', {
-        application_type: props.application_type,
-        purpose: isEdit.value
-            ? props.suppliers.map(s => s.purpose)
-            : props.form.purpose,
-        suppliers: props.suppliers,
-        ...uploadFiles.value
-    })
-}
-
-/* -------------------- FILE MODAL -------------------- */
 const openFileModal = (file: any) => {
     selectedFile.value = file
     showModal.value = true
 }
 
-/* -------------------- FILE UPDATE -------------------- */
-const triggerUpdateFile = (file: any) => {
-    selectedFileToUpdate.value = file
-    updateFileInput.value?.click()
-}
-
-const handleFileUpdate = async (event: Event) => {
-    const file = (event.target as HTMLInputElement).files?.[0]
-    if (!file || !selectedFileToUpdate.value) return
-
-    const formData = new FormData()
-    formData.append('application_id', selectedFileToUpdate.value.application_id)
-    formData.append('application_type', selectedFileToUpdate.value.application_type)
-    formData.append('file', file)
-    formData.append('attachment_id', selectedFileToUpdate.value.attachment_id)
-    formData.append('name', selectedFileToUpdate.value.name)
-
-    try {
-        await axios.post('https://cps.denrcalabarzon.com/api/files/update', formData)
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'File updated', life: 3000 })
-    } catch {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Update failed', life: 3000 })
-    } finally {
-        updateFileInput.value = null
-        selectedFileToUpdate.value = null
-    }
-}
+const getEmbedUrl = (url: string) =>
+    url ? url.replace('/view', '/preview') : ''
 
 /* -------------------- SUPPLIER -------------------- */
-const handleSupplierSaved = async (data: any) => {
+const defaultSupplierDialog = ref(false)
+
+const handleSupplierSaved = (data: any) => {
     emit('supplierSaved', data)
     defaultSupplierDialog.value = false
 }
-</script>
 
+/* -------------------- SUBMIT -------------------- */
+const isLoading = ref(false)
+
+const submitStep = () => {
+    if (props.isProcessing) return
+
+    isLoading.value = true
+
+    emit('next', {
+        application_type: props.application_type,
+        purpose: selectedPurpose.value,
+        suppliers: props.suppliers,
+        files: uploadFiles
+    })
+}
+</script>
 <template>
     <div class="space-y-6">
+
+        <!-- STATUS -->
         <div class="flex items-center gap-2" v-if="isEdit">
             <Info class="h-5 w-5" />
             <h1 class="text-xl font-semibold">
                 Application Status:
             </h1>
-
-            <Tag severity="danger">
-                {{ props.form.status_title }}
-            </Tag>
+            <Tag severity="danger">{{ props.form.status_title }}</Tag>
         </div>
+
         <Fieldset legend="Chainsaw Information">
 
-            <!-- Supplier Dialog -->
+            <!-- SUPPLIER -->
             <Dialog v-model:visible="defaultSupplierDialog" modal header="Supplier Form">
-                <ChainsawSupplierForm :supplierData=props.suppliers @cancel="defaultSupplierDialog = false"
-                    @save="handleSupplierSaved" />
+                <ChainsawSupplierForm :supplierData="props.suppliers" @save="handleSupplierSaved"
+                    @cancel="defaultSupplierDialog = false" />
             </Dialog>
 
-            <!-- Open Dialog -->
-            <Button class="w-full bg-blue-900 hover:bg-blue-700" @click="defaultSupplierDialog = true">
+            <Button class="w-full bg-blue-900" @click="defaultSupplierDialog = true">
                 Chainsaw Supplier Form
             </Button>
 
-            <!-- PURPOSE + FILES SECTION -->
-            <div class="mt-6 space-y-6">
+            <!-- PURPOSE -->
+            <FloatLabel class="mt-2">
+                <Select v-model="selectedPurpose" :options="options" class="w-full" />
+                <label>Purpose of Purchase</label>
+            </FloatLabel>
 
-                <!-- PURPOSE SELECT (SINGLE SOURCE OF TRUTH) -->
-                <FloatLabel>
-                    <Select v-model="selectedPurpose" :options="options" class="w-full" />
-                    <label>Purpose of Purchase</label>
-                </FloatLabel>
+            <!-- REQUIRED DOCS -->
+            <div v-if="requiredDocs.length" class="p-3 bg-blue-50 border border-blue-200 mt-4 rounded-lg">
 
-                <!-- ===================== -->
-                <!-- EDIT MODE: SHOW FILES -->
-                <!-- ===================== -->
-                <div v-if="isEdit && showFiles.length > 0" class="space-y-4">
+                <div v-for="doc in requiredDocs" :key="doc.field" class="mb-3">
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <FileCard v-for="(file, i) in showFiles" :key="i" :file="file" @openPreview="openFileModal"
-                            @updateFile="triggerUpdateFile" />
+                    <div class="flex items-center gap-2 mb-2">
+                        <Info class="w-4 h-4 text-blue-600" />
+                        <span class="text-sm font-medium text-blue-800">
+                            Required: {{ doc.label }}
+                        </span>
                     </div>
 
-                    <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
-                </div>
-
-                <!-- ========================= -->
-                <!-- CREATE MODE: UPLOAD AREA -->
-                <!-- ========================= -->
-                <div v-if="getUploadType(selectedPurpose)" class="space-y-2">
-                    <label class="text-sm font-medium">
-                        Upload Document
-                    </label>
-
-                    <div
-                        class="relative mt-2 border-4 border-dashed p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
-                        <MonitorUp class="w-10 h-10 text-blue-400 mb-2" />
-
-                        <p class="text-sm text-gray-600">
-                            Click or drag PDF file
-                        </p>
-
+                    <!-- UPLOAD -->
+                    <div class="relative border-2 border-dashed p-4 rounded bg-white">
                         <input type="file" class="absolute inset-0 opacity-0 cursor-pointer"
-                            @change="(e) => handleFileUpload(e, getUploadType(selectedPurpose))" />
-                    </div>
-                </div>
+                            @change="(e) => handleFileUpload(e, doc.field)" />
 
+                        <div class="text-sm text-gray-500">
+                            Click or drop PDF file
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <!-- Actions -->
-            <div :class="[
-                'w-full pt-6',
-                currentStep > 1 ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
-            ]">
-                <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
-                    Back
-                </Button>
-
-                <Button :disabled="isProcessing"
-                    class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white"
-                    @click="submitStep">
-                    {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
-                </Button>
-
+            <!-- ACTION -->
+            <div class="flex justify-end pt-4">
+                <button class="bg-green-700 text-white px-4 py-2 rounded" @click="submitStep">
+                    Save & Continue
+                </button>
             </div>
 
         </Fieldset>
 
+        <!-- LOADING -->
+        <Dialog v-model:visible="isLoading" modal :closable="false">
+            <ProgressBar mode="indeterminate" />
+        </Dialog>
+
+        <!-- PREVIEW -->
+        <Dialog v-model:visible="showModal" modal header="File Preview" style="width:70vw">
+            <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500" />
+        </Dialog>
         <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
             <div class="flex flex-col items-center gap-4 py-4">
                 <span>Saving, please wait...</span>
                 <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
             </div>
         </Dialog>
-        <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
-            <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500"
-                allow="autoplay"></iframe>
-        </Dialog>
+
     </div>
 </template>

@@ -349,11 +349,11 @@ const formatDate = (date: any) => {
 const getApplicantFile = async (application_id) => {
   try {
     const checklistRes = await axios.get(
-      `https://cps.denrcalabarzon.com/api/getChecklistEntries/${application_id}`
+      `http://localhost:8000/api/getChecklistEntries/${application_id}`
     );
 
     const attachmentsRes = await axios.get(
-      `https://cps.denrcalabarzon.com/api/getApplicantFile/${application_id}`
+      `http://localhost:8000/api/getApplicantFile/${application_id}`
     );
 
     if (checklistRes.data.status && attachmentsRes.data.status) {
