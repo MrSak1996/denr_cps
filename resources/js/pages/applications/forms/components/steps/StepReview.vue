@@ -277,8 +277,8 @@ const submitAllAssessments = async (applicationId) => {
 
     // send email only for ARD/TSD
     const emailRoutingMap = {
-      10: 'oardts.r4a@denr.gov.ph', // LPDD Chief → ARD/TSD
-      11: 'r4a@denr.gov.ph',   // ARD/TSD
+      10: 'vhirielle09@gmail.com', // LPDD Chief → ARD/TSD
+      11: 'kimsacluti10101996@gmail.com',   // ARD/TSD
     };
 
     const recipientEmail = emailRoutingMap[roleId];
