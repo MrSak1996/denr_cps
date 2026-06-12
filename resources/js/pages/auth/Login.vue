@@ -39,58 +39,184 @@ const submit = () => {
     });
 };
 
-</script>
 
+</script>
 <template>
-    <AuthBase title="Log in to your account" description="Enter your username and password below to log in">
+    <AuthBase title="" description="">
 
         <Head title="Log in" />
 
-        <div v-if="status" class="mb-2 text-center text-sm font-medium text-green-600">
-            {{ status }}
-        </div>
-                <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-10">
+        <!-- Background -->
+        <div
+            class="relative min-h-screen flex items-center justify-center bg-cover bg-center px-4"
+            style="background-image: url('/images/wall.png');"
+        >
 
-        <form @submit.prevent="submit" class="flex flex-col gap-6">
-            <div class="grid gap-6">
-                <div class="grid gap-2">
-                    <Label for="uname">Username</Label>
-                    <Input id="uname" type="text" required autofocus :tabindex="1" autocomplete="email"
-                        v-model="form.uname" placeholder="Username" name="uname" />
-                    <InputError :message="form.errors.uname" />
+            <!-- Overlay -->
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-slate-900/70 via-emerald-900/40 to-cyan-900/60">
+            </div>
+
+            <!-- Login Card -->
+            <div
+                class="relative w-full max-w-md rounded-3xl border border-white/20 bg-white/15 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,.45)] p-10 animate-in fade-in duration-500">
+
+                <!-- Logo -->
+                <div class="flex flex-col items-center mb-8">
+
+                    <img
+                        src="/images/denr_logo.png"
+                        alt="DENR Logo"
+                        class="w-20 h-20 mb-4 object-contain"
+                    />
+
+                    <h1
+                        class="text-2xl font-bold text-white text-center tracking-wide">
+                        Chainsaw Purchase System
+                    </h1>
+
+                    <p
+                        class="text-sm text-slate-200 text-center mt-2">
+                        Department of Environment and Natural Resources
+                    </p>
+
                 </div>
 
-                <div class="grid gap-2">
-                    <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
-                        <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm"
-                            :tabindex="5">
-                            Forgot password?
-                        </TextLink>
+                <!-- Status -->
+                <div
+                    v-if="status"
+                    class="mb-4 rounded-lg bg-green-500/20 border border-green-400/30 p-3 text-center text-sm text-green-100">
+                    {{ status }}
+                </div>
+
+                <!-- Form -->
+                <form
+                    @submit.prevent="submit"
+                    class="space-y-5">
+
+                    <!-- Username -->
+                    <div>
+
+                        <Label
+                            for="uname"
+                            class="text-white mb-2 block">
+                            Username
+                        </Label>
+
+                        <Input
+                            id="uname"
+                            v-model="form.uname"
+                            type="text"
+                            required
+                            autofocus
+                            autocomplete="username"
+                            placeholder="Enter your username"
+                            class="h-12 rounded-xl bg-white/80 border-white/30 focus:ring-emerald-500"
+                        />
+
+                        <InputError
+                            :message="form.errors.uname" />
+
                     </div>
-                    <Input id="password" type="password" required :tabindex="2" autocomplete="current-password"
-                        v-model="form.password" placeholder="Password" />
-                    <InputError :message="form.errors.password" />
+
+                    <!-- Password -->
+                    <div>
+
+                        <div
+                            class="flex justify-between items-center mb-2">
+
+                            <Label
+                                for="password"
+                                class="text-white">
+                                Password
+                            </Label>
+
+                            <TextLink
+                                v-if="canResetPassword"
+                                :href="route('password.request')"
+                                class="text-xs text-cyan-200 hover:text-white">
+
+                                Forgot password?
+
+                            </TextLink>
+
+                        </div>
+
+                        <Input
+                            id="password"
+                            v-model="form.password"
+                            type="password"
+                            required
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            class="h-12 rounded-xl bg-white/80 border-white/30 focus:ring-emerald-500"
+                        />
+
+                        <InputError
+                            :message="form.errors.password" />
+
+                    </div>
+
+                    <!-- Remember -->
+                    <div
+                        class="flex items-center">
+
+                        <Label
+                            for="remember"
+                            class="flex items-center gap-3 text-white cursor-pointer">
+
+                            <Checkbox
+                                id="remember"
+                                v-model="form.remember" />
+
+                            <span>
+                                Remember me
+                            </span>
+
+                        </Label>
+
+                    </div>
+
+                    <!-- Button -->
+
+                    <Button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white text-base font-semibold transition-all">
+
+                        <LoaderCircle
+                            v-if="form.processing"
+                            class="mr-2 h-4 w-4 animate-spin" />
+
+                        Sign In
+
+                    </Button>
+
+                </form>
+
+                <!-- Footer -->
+
+                <div
+                    class="mt-8 border-t border-white/20 pt-5 text-center">
+
+                    <p class="text-xs text-slate-200">
+
+                        Authorized Personnel Only
+
+                    </p>
+
+                    <p class="text-xs text-slate-300 mt-1">
+
+                        © DENR Region IV-A • Chainsaw Purchase System
+
+                    </p>
+
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
-                        <span>Remember me</span>
-                    </Label>
-                </div>
-
-                <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">
-                    <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Log in
-                </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
-            </div>
-        </form>
         </div>
+
     </AuthBase>
 </template>
+

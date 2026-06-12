@@ -277,14 +277,14 @@ const submitAllAssessments = async (applicationId) => {
 
     // send email only for ARD/TSD
     const emailRoutingMap = {
-      10: 'vhirielle09@gmail.com', // LPDD Chief → ARD/TSD
-      11: 'kimsacluti10101996@gmail.com',   // ARD/TSD
+      10: 'oardts.r4a@denr.gov.ph', // LPDD Chief → ARD/TSD
+      11: 'r4a@denr.gov.ph',   // ARD/TSD
     };
 
     const recipientEmail = emailRoutingMap[roleId];
 
     if (recipientEmail) {
-      await sendEmail(recipientEmail);
+      await sendEmail(recipientEmail,roleId);
     }
 
 
@@ -319,7 +319,7 @@ const submitAllAssessments = async (applicationId) => {
 ------------------------------------------------------- */
 
 // send notification email
-const sendEmail = async (recipientEmail) => {
+const sendEmail = async (recipientEmail,roleId) => {
   try {
     const response = await axios.post('/api/send-email', {
       email: recipientEmail, // or the actual recipient
@@ -332,6 +332,7 @@ const sendEmail = async (recipientEmail) => {
           ? props.form.i_complete_address
           : props.form.company_address,
       application_no: props.form.application_no,
+      role_id:roleId
     });
 
     toast.add({

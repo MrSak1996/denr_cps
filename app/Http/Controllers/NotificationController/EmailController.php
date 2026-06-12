@@ -29,6 +29,7 @@ class EmailController extends Controller
                 'applicant_name' => 'required|string',
                 'application_no' => 'required|string',
                 'address' => 'nullable|string',
+                'role_id' => 'required'
             ]);
 
             $to = $request->email;
@@ -36,21 +37,30 @@ class EmailController extends Controller
             $applicationNo = $request->application_no;
             $address = $request->address ?? 'N/A';
             $companyName = $request->company_name ?? 'N/A';
+            $role_id = $request->role_id;
+            
 
             NotificationModel::create([
                 'email' => $to,
                 'permit_no' => $applicationNo,
                 'expires_at' => Carbon::now()->addDays(7),
             ]);
-
+            if($role_id == 11)
+                {
+                    $recipient = 'ARD for Technical Services';
+                }else if($role_id == 12){
+                    $recipient = 'Regional Executive Director';
+                }else{
+                    $recipient = '';
+                }
             $messageBody =
-                "Dear Regional Executive Director,
+                "Dear {$recipient},
 
                 A new Permit to Purchase application has been submitted and is awaiting your approval.
 
-                ----------------------------------------
+                ======================================================
                 APPLICATION DETAILS
-                ----------------------------------------
+                ======================================================
 
                 Application Number : {$applicationNo}
                 Applicant Name     : {$applicantName}
@@ -61,7 +71,7 @@ class EmailController extends Controller
 
                 Thank you.
 
-                Chainsaw Permitting System
+                Chainsaw Purchase System
                 Department of Environment and Natural Resources
 
                 
@@ -71,7 +81,7 @@ class EmailController extends Controller
             Mail::raw($messageBody, function ($message) use ($to, $applicationNo) {
 
                 $message->to($to)
-                    ->subject("🌿Chainsaw Permit Application #{$applicationNo} - Approval Required");
+                    ->subject("Chainsaw Purchase Sysem No. {$applicationNo} - Approval Required");
             });
 
             return response()->json([
