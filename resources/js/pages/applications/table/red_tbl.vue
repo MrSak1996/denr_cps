@@ -949,20 +949,18 @@ const buttonState = (row: any) => {
                             {{ app.application_type }}
                         </div>
 
-                        <Tag value="Approved" severity="info" class="text-xs"
-                            v-if="app.status_title == 'Approved by Regional Executive Director'" />
-                        <Tag value="Endorsed to RED" severity="success" class="text-xs"
-                            v-if="app.status_title == 'Endorsed to Regional Executive Director'" />
-                        <Tag value="Endorsed to RED" severity="warn" class="text-xs"
-                            v-if="app.status_title == 'Received by Regional Executive Director'" />
+                        <Tag :value="app.status_title" :severity="app.status_title === 'Approved by Regional Executive Director'
+                                ? 'info'
+                                : app.status_title === 'Endorsed to Regional Executive Director'
+                                    ? 'success'
+                                    : 'warn'
+                            " class="text-xs" />
                     </div>
 
                     <!-- ACTION BUTTONS -->
                     <div class="flex gap-2">
-                        <Button 
-                        :disabled="buttonState(app.data).receiveDisable"
-                        @click="openDialog('receive', app.id)" style="background-color: #0f766e"
-                            class="p-2 text-white">
+                        <Button :disabled="buttonState(app).receiveDisable" @click="openDialog('receive', app.id)"
+                            style="background-color: #0f766e" class="p-2 text-white">
                             <BadgeCheck :size="15" />
                         </Button>
                         <!-- APPROVE -->
@@ -973,7 +971,8 @@ const buttonState = (row: any) => {
                             application_id: app.id,
                             type: app.application_type,
                             step: 4
-                        })" class="inline-flex items-center justify-center rounded-md p-2 text-white" style="background-color:#0f766e">
+                        })" class="inline-flex items-center justify-center rounded-md p-2 text-white"
+                            style="background-color:#0f766e">
                             <Eye :size="15" />
                         </Link>
 
