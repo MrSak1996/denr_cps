@@ -11,31 +11,34 @@ defineProps<{
 
 <template>
     <div
-        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background bg_cover p-6 md:p-10" :style="{ backgroundImage: `url(${bg_cover})` }" > 
-        <div class="w-full max-w-sm">
-            <div class="flex flex-col gap-8">
-                <div class="flex flex-col items-center gap-4">
-                    <Link
-                        :href="route('home')"
-                        class="flex flex-col items-center gap-2 font-medium"
-                    >
-                        <div
-                            class="mb-1 flex h-9 w-9 items-center justify-center rounded-md"
-                        >
-                            <AppLogoIcon
-                                class="size-9 fill-current text-[var(--foreground)] dark:text-white"
-                            />
-                        </div>
-                        <span class="sr-only">{{ title }}</span>
-                    </Link>
-                    <div class="space-y-2 text-center">
-                        <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p class="text-center text-sm text-muted-foreground">
-                            {{ description }}
-                        </p>
+        class="relative min-h-screen flex items-center justify-center overflow-hidden bg-center bg-cover bg-no-repeat px-6 py-10"
+        :style="{ backgroundImage: `url(${bg_cover})` }"
+    >
+        <!-- Overlay for blue-green tone -->
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-950/70 via-emerald-950/40 to-cyan-900/60"></div>
+
+        <!-- Content -->
+        <div class="relative z-10 w-full max-w-7xl">
+            <div class="flex flex-col items-center gap-8">
+
+                <!-- Logo -->
+                <Link :href="route('home')" class="flex flex-col items-center gap-2 font-medium text-white">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 backdrop-blur">
+                        <AppLogoIcon class="size-8 fill-current text-white" />
                     </div>
+
+                    <span class="sr-only">{{ title }}</span>
+                </Link>
+
+                <!-- Title -->
+                <div class="text-center text-white space-y-2">
+                    <h1 class="text-2xl font-semibold">{{ title }}</h1>
+                    <p class="text-sm text-slate-200">{{ description }}</p>
                 </div>
+
+                <!-- Form Slot -->
                 <slot />
+
             </div>
         </div>
     </div>

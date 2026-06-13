@@ -8,10 +8,6 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
-import { useAuth } from '@/composables/useAuth'
-import { usePage, router } from '@inertiajs/vue3'
-
-const { userId } = useAuth()
 
 defineProps<{
     status?: string;
@@ -24,71 +20,118 @@ const form = useForm({
     remember: false,
 });
 
-// const submit = () => {
-//     form.post(route('login'), {
-//         onFinish: () => {
-//             form.reset('password');
-//             const page = usePage();
-//         },
-//     });
-// };
-
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password')
     });
 };
-
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your uname and password below to log in">
-
+    <AuthBase
+        title="Chainsaw Purchase System"
+        description="Department of Environment and Natural Resources"
+    >
         <Head title="Log in" />
 
-        <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
+        <!-- STATUS -->
+        <div
+            v-if="status"
+            class="mb-4 text-center text-sm text-emerald-200"
+        >
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit" class="flex flex-col gap-6">
-            <div class="grid gap-6">
-                <div class="grid gap-2">
-                    <Label for="uname">Username</Label>
-                    <Input id="uname" type="text" required autofocus :tabindex="1" autocomplete="email"
-                        v-model="form.uname" placeholder="Username" name="uname" />
+        <!-- GLASS LOGIN CARD (WIDER) -->
+        <div
+            class="w-full max-w-3xl mx-auto rounded-3xl border border-white/15 bg-black/20 backdrop-blur-xl shadow-2xl p-10 lg:p-14"
+        >
+
+            <!-- HEADER -->
+
+            <!-- FORM -->
+            <form @submit.prevent="submit" class="space-y-6">
+
+                <!-- Username -->
+                <div>
+                    <Label for="uname" class="text-white mb-2 block">
+                        Username
+                    </Label>
+
+                    <Input
+                        id="uname"
+                        v-model="form.uname"
+                        type="text"
+                        required
+                        autofocus
+                        placeholder="Enter username"
+                        class="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-300 focus:ring-emerald-400"
+                    />
+
                     <InputError :message="form.errors.uname" />
                 </div>
 
-                <div class="grid gap-2">
-                    <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
-                        <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm"
-                            :tabindex="5">
+                <!-- Password -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <Label for="password" class="text-white">
+                            Password
+                        </Label>
+
+                        <TextLink
+                            v-if="canResetPassword"
+                            :href="route('password.request')"
+                            class="text-sm text-cyan-200 hover:text-white"
+                        >
                             Forgot password?
                         </TextLink>
                     </div>
-                    <Input id="password" type="password" required :tabindex="2" autocomplete="current-password"
-                        v-model="form.password" placeholder="Password" />
+
+                    <Input
+                        id="password"
+                        v-model="form.password"
+                        type="password"
+                        required
+                        placeholder="Enter password"
+                        class="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-300 focus:ring-emerald-400"
+                    />
+
                     <InputError :message="form.errors.password" />
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
-                        <span>Remember me</span>
+                <!-- REMEMBER -->
+                <div class="flex items-center">
+                    <Label class="flex items-center gap-3 text-white">
+                        <Checkbox v-model="form.remember" />
+                        Remember me
                     </Label>
                 </div>
 
-                <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">
-                    <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
+                <!-- BUTTON -->
+                <Button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-600 to-cyan-600 text-lg font-semibold hover:scale-[1.02] transition-all"
+                >
+                    <LoaderCircle
+                        v-if="form.processing"
+                        class="mr-2 h-5 w-5 animate-spin"
+                    />
                     Log in
                 </Button>
+
+            </form>
+
+            <!-- FOOTER -->
+            <div class="mt-10 text-center border-t border-white/10 pt-5">
+                <p class="text-xs text-slate-300">
+                    Authorized Personnel Only
+                </p>
+                <p class="text-xs text-slate-400 mt-2">
+                    © DENR Chainsaw Purchase System
+                </p>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
-            </div>
-        </form>
+        </div>
     </AuthBase>
 </template>

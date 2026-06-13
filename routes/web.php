@@ -27,7 +27,7 @@ use App\Http\Controllers\UserManagement\UserController;
 | PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn() => Inertia::render('Welcome'))->name('home');
+Route::get('/', fn() => Inertia::render('auth/Login'))->name('home');
 
 /*
 |--------------------------------------------------------------------------
@@ -210,31 +210,7 @@ Route::post('/impersonate/leave', [ImpersonationController::class, 'leave'])
 */
 
 
-Route::get('/send-test-mail', function () {
-    try {
-        $to = 'kimsacluti10101996@gmail.com';
 
-        Mail::raw(
-            'Test mail from Laravel + Brevo API. Time: ' . now(),
-            function ($message) use ($to) {
-                $message->to($to)
-                        ->subject('Laravel Brevo Test — ' . now());
-            }
-        );
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Email sent to ' . $to,
-            'time'    => now()->toDateTimeString(),
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'failed',
-            'error'  => $e->getMessage(),
-        ], 500);
-    }
-});
 require __DIR__ . '/application.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
