@@ -536,6 +536,7 @@ class ChainsawController extends Controller
             ->where('s.application_id', $applicationId)
             ->select(
                 's.id as supplier_id',
+                's.purpose',
                 's.supplier_name',
                 's.supplier_address',
                 's.permit_to_sell_no',
@@ -560,6 +561,7 @@ class ChainsawController extends Controller
                     'id' => $row->supplier_id,
                     'supplier_name' => $row->supplier_name,
                     'supplier_address' => $row->supplier_address,
+                    'purpose' => $row->purpose,
                     'permit_to_sell_no' => $row->permit_to_sell_no,
                     'issued_by' => $row->issued_by,
                     'issued_date' => $row->issued_date,

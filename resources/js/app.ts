@@ -15,6 +15,7 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 
 import { initializeTheme } from './composables/useAppearance';
+import Tooltip from 'primevue/tooltip';
 
 const appName = import.meta.env.VITE_APP_NAME || 'DENR Chainsaw Permitting';
 
@@ -36,6 +37,7 @@ createInertiaApp({
                     },
                 },
             })
+            .directive('tooltip',Tooltip)
             .use(ZiggyVue)
             .use(ToastService)
             .use(DialogService)

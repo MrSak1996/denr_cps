@@ -959,7 +959,9 @@ const buttonState = (row: any) => {
 
                     <!-- ACTION BUTTONS -->
                     <div class="flex gap-2">
-                        <Button @click="openDialog('receive', app.id)" style="background-color: #0f766e"
+                        <Button 
+                        :disabled="buttonState(app.data).receiveDisable"
+                        @click="openDialog('receive', app.id)" style="background-color: #0f766e"
                             class="p-2 text-white">
                             <BadgeCheck :size="15" />
                         </Button>
@@ -972,7 +974,7 @@ const buttonState = (row: any) => {
                             type: app.application_type,
                             step: 4
                         })" class="inline-flex items-center justify-center rounded-md p-2 text-white" style="background-color:#0f766e">
-                            <Eye :size="14" />
+                            <Eye :size="15" />
                         </Link>
 
                     </div>

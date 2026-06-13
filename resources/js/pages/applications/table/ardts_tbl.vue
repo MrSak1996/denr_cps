@@ -1022,7 +1022,7 @@ const canView = (row: any) => {
                             step: 4
                         })" class="inline-flex items-center justify-center rounded-md p-2 text-white"
                             style="background-color:#0f766e">
-                            <Eye :size="14" />
+                            <Eye :size="15" />
                         </Link>
 
                     </div>

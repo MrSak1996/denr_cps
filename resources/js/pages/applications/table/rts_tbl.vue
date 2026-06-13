@@ -797,7 +797,27 @@ const canView = (row: any) => {
         25
     ].includes(row.application_status)
 }
+const avatarColors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-cyan-500',
+    'bg-indigo-500',
+    'bg-red-500',
+];
 
+const getAvatarColor = (name: string) => {
+    if (!name) return 'bg-gray-500';
+
+    let sum = 0;
+    for (const ch of name) {
+        sum += ch.charCodeAt(0);
+    }
+
+    return avatarColors[sum % avatarColors.length];
+};
 
 
 // const buttonState = (row: any) => {
@@ -894,11 +914,9 @@ const canView = (row: any) => {
                                 <div class="mt-2 flex gap-2">
 
                                     <!-- ✅ RECEIVE (disabled if endorsed) -->
-                                    <Button 
-                                        v-tooltip.top="buttonState(slotProps.data).receiveDisable
+                                    <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
                                         ? 'Application cannot be received yet'
-                                        : 'Receive Application'"
-                                        :disabled="buttonState(slotProps.data).receiveDisable"
+                                        : 'Receive Application'" :disabled="buttonState(slotProps.data).receiveDisable"
                                         @click="openDialog('receive', slotProps.data.id)"
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
@@ -918,10 +936,41 @@ const canView = (row: any) => {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,
                                             step: 4
-                                        })" class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
+                                        })"
+                                        class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
                                         <View :size="16" />
                                     </Link>
 
+                                </div>
+                            </template>
+                        </Column>
+                        <Column header="Applicant Name" style="min-width: 16rem">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-3">
+                                    <div :class="[
+                                        'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                                        getAvatarColor(
+                                            slotProps.data.application_type === 'Individual'
+                                                ? slotProps.data.applicant_name
+                                                : slotProps.data.authorized_representative
+                                        )
+                                    ]">
+                                        {{
+                                            (
+                                                slotProps.data.application_type === 'Individual'
+                                                    ? slotProps.data.applicant_name
+                                                    : slotProps.data.authorized_representative
+                                        )?.charAt(0)
+                                        }}
+                                    </div>
+
+                                    <span>
+                                        {{
+                                            slotProps.data.application_type === 'Individual'
+                                                ? slotProps.data.applicant_name
+                                                : slotProps.data.authorized_representative
+                                        }}
+                                    </span>
                                 </div>
                             </template>
                         </Column>
@@ -968,17 +1017,7 @@ const canView = (row: any) => {
                                 {{ slotProps.data.office_title }}
                             </template>
                         </Column>
-                        <Column header="Applicant Name" style="min-width: 12rem">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.application_type == 'Individual'">
-                                    {{ slotProps.data.applicant_name }}
 
-                                </div>
-                                <div v-else>
-                                    {{ slotProps.data.authorized_representative }}
-                                </div>
-                            </template>
-                        </Column>
 
                         <Column field="application_type" header="Application Type" sortable />
                         <Column header="Type of Transaction" field="transaction_type" sortable></Column>

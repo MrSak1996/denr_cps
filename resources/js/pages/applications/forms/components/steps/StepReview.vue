@@ -1105,14 +1105,11 @@ onMounted(() => {
       <ReusableConfirmDialog ref="confirmDialogRef" />
 
       <!-- Status -->
-      <div v-if="isEdit" class="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border">
-        <div class="flex items-center gap-2">
+      <div v-if="isEdit" class="flex items-center justify-between rounded-xl p-4 shadow-sm border">
           <Info class="h-5 w-5" />
-          <h1 class="text-xl font-semibold">
+          <h1 class="text-3xl font-bold text-gray-800">
             Application Status
           </h1>
-        </div>
-
         <Tag severity="danger">
           {{ props.form.status_title }}
         </Tag>
