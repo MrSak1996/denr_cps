@@ -960,7 +960,7 @@ const getAvatarColor = (name: string) => {
                                                 slotProps.data.application_type === 'Individual'
                                                     ? slotProps.data.applicant_name
                                                     : slotProps.data.authorized_representative
-                                        )?.charAt(0)
+                                            )?.charAt(0)
                                         }}
                                     </div>
 
@@ -983,6 +983,9 @@ const getAvatarColor = (name: string) => {
                                             ? 'info'
                                             : 'success'
                                         " class="text-center" />
+                                    <div class="italic text-gray-600">
+                                        {{ data.updated_by }}
+                                    </div>
 
                                     <Button v-if="data.application_status >= 25 && data.application_status <= 27" style="
                                         display: inline;

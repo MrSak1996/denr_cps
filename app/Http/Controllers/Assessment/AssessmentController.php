@@ -253,6 +253,7 @@ class AssessmentController extends Controller
         DB::beginTransaction();
         try {
             $userRole     = $request->role_id;
+            $userId     = $request->user_id;
             $workflowType = $request->workflow_type ?? 'smooth';
             $config       = $this->workflowConfig($workflowType);
             // $config       = $this->workflowConfig();
@@ -278,6 +279,7 @@ class AssessmentController extends Controller
             DB::table('tbl_application_checklist')
                 ->where('id', $request->application_id)
                 ->update([
+                    'updated_by'      => $request->userId,
                     'findings'        => $request->overall_remarks,
                     'updated_at'      => now(),
                 ]);
@@ -393,6 +395,7 @@ class AssessmentController extends Controller
 
         try {
             $userRole = $request->role_id;
+            $userId = $request->user_id;
             $config   = $this->workflowConfig();
 
             // -----------------------------
@@ -408,6 +411,7 @@ class AssessmentController extends Controller
             // -----------------------------
             $updateData = [
                 'application_status' => $receiveStatus,
+                'updated_by'         => $userId,
                 'updated_at'         => now(),
             ];
 

@@ -255,7 +255,7 @@ const submitAllAssessments = async (applicationId) => {
   try {
     await axios.post('/api/saveAssessment', {
       application_id: applicationId,
-      userId,
+      user_id:userId,
       application_status: 4,
       toTSD: isEndorsingToRD,
       role_id: roleId,

@@ -315,6 +315,7 @@ class RPSChiefDashboardController extends Controller
             ->leftJoin('tbl_application_payment as ap', 'ap.application_id', '=', 'ac.id')
             ->leftJoin('tbl_status as s', 'ac.application_status', '=', 's.id')
             ->leftJoin('users as u', 'u.id', '=', 'ac.encoded_by')
+            ->leftJoin('users as updated', 'updater.id', '=', 'ac.updated_by')
             ->leftJoin('tbl_office as o', 'o.id', '=', 'u.office_id')
 
             ->select(
@@ -330,6 +331,7 @@ class RPSChiefDashboardController extends Controller
                 'ac.id',
                 'ac.return_reason',
                 'u.name as encoded_by',
+                'updater.name as updated_by',
                 'u.office_id',
                 'u.role_id',
                 's.status_title',
@@ -358,10 +360,10 @@ class RPSChiefDashboardController extends Controller
             )
 
 			 // ✅ ALWAYS APPLY STATUS FILTER
-->when(
-    $office_id == 13,
-    fn ($query) => $query->whereIn('ac.application_status',$statusFilter)
-)
+        ->when(
+            $office_id == 13,
+            fn ($query) => $query->whereIn('ac.application_status',$statusFilter)
+        )
 
             // ✅ OFFICE FILTER FOR NON-REGIONAL
             ->when($office_id != 13, function ($query) use ($officeFilter) {

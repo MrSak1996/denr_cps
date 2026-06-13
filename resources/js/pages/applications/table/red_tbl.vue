@@ -2,7 +2,7 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { PrinterCheck, SquarePen, BadgeCheck, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { PrinterCheck, SquarePen, BadgeCheck, Eye,View, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -863,14 +863,16 @@ const buttonState = (row: any) => {
                             <Column header="Action" :exportable="false" style="min-width: 2rem">
                                 <template #body="slotProps">
                                     <div class="mt-2 flex gap-2">
-                                        <Button v-if="slotProps.data.application_status === STATUS_APPROVED_BY_RED"
+                                        <Button v-tooltip.top="'Print'" v-if="slotProps.data.application_status === STATUS_APPROVED_BY_RED"
                                             @click="generatePdf(slotProps.data)" style="background-color: #0D47A1"
                                             class="p-2 text-white">
                                             <PrinterCheck :size="15" />
                                         </Button>
 
                                         <!-- ✅ RECEIVE (disabled if endorsed) -->
-                                        <Button :disabled="buttonState(slotProps.data).receiveDisable"
+                                        <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
+                                        ? 'Application cannot be received yet'
+                                        : 'Receive Application'"  :disabled="buttonState(slotProps.data).receiveDisable"
                                             @click="openDialog('receive', slotProps.data.id)"
                                             style="background-color: #0f766e" class="p-2 text-white">
                                             <BadgeCheck :size="15" />
@@ -879,16 +881,17 @@ const buttonState = (row: any) => {
 
 
                                         <!-- ✅ VIEW (ALWAYS ENABLED) -->
-                                        <Button type="button" style="background-color: #0f766e"
-                                            class="rounded p-2 text-white hover:bg-teal-900">
-                                            <Link :href="route('applications.edit', {
+                                       
+                                            <Link v-tooltip.top="'View Application'"  
+                                                :href="route('applications.edit', {
                                                 application_id: slotProps.data.id,
                                                 type: slotProps.data.application_type,
                                                 step: 4
-                                            })">
-                                                <Eye :size="15" />
+                                            })"
+                                            class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
+                                            
+                                                <View :size="15" />
                                             </Link>
-                                        </Button>
 
 
 
@@ -950,17 +953,20 @@ const buttonState = (row: any) => {
                         </div>
 
                         <Tag :value="app.status_title" :severity="app.status_title === 'Approved by Regional Executive Director'
-                                ? 'info'
-                                : app.status_title === 'Endorsed to Regional Executive Director'
-                                    ? 'success'
-                                    : 'warn'
+                            ? 'info'
+                            : app.status_title === 'Endorsed to Regional Executive Director'
+                                ? 'success'
+                                : 'warn'
                             " class="text-xs" />
                     </div>
 
                     <!-- ACTION BUTTONS -->
                     <div class="flex gap-2">
-                        <Button :disabled="buttonState(app).receiveDisable" @click="openDialog('receive', app.id)"
-                            style="background-color: #0f766e" class="p-2 text-white">
+                        <Button v-tooltip.top="buttonState(app).receiveDisable
+                            ? 'Application cannot be received yet'
+                            : 'Receive Application'" :disabled="buttonState(app).receiveDisable"
+                            @click="openDialog('receive', app.id)" style="background-color: #0f766e"
+                            class="p-2 text-white">
                             <BadgeCheck :size="15" />
                         </Button>
                         <!-- APPROVE -->

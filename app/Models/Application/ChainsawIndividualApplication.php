@@ -17,6 +17,7 @@ class ChainsawIndividualApplication extends Model
     protected $fillable = [
         'id',
         'application_status',
+        'updated_by',
         'application_type',
         'transaction_type',
         'classification',
