@@ -158,8 +158,24 @@
 
                         <td class="px-3 py-2 border text-xs">
                             <ul>
-                                <li v-for="(file, fIndex) in row.resubmissions" :key="fIndex">
-                                    {{ file.file_name }}
+                                <li v-for="(file, fIndex) in row.resubmissions" :key="fIndex" :class="[
+                                    'flex justify-between items-center mb-1 px-2 py-1 rounded text-gray-600',
+                                    fIndex === row.resubmissions.length - 1
+                                        ? 'bg-green-100 font-semibold'
+                                        : ''
+                                ]">
+                                    <span class="flex items-center gap-2 cursor-pointer"
+                                        @click="$emit('view-file', file)">
+                                        <CircleCheck v-if="fIndex === row.resubmissions.length - 1"
+                                            class="w-4 h-4 text-green-600" />
+
+                                        <span>
+                                            • {{ file.file_name }}
+                                            <small class="text-gray-500">
+                                                ({{ formatDate(file.created_at) }})
+                                            </small>
+                                        </span>
+                                    </span>
                                 </li>
                             </ul>
                         </td>
@@ -217,8 +233,15 @@ import Fieldset from 'primevue/fieldset';
 import Textarea from 'primevue/textarea';
 import { reactive, ref, computed } from 'vue';
 import { Upload, View, CircleCheck } from 'lucide-vue-next';
-import { formatDate } from '@vueuse/core';
 
+const formatDate = (date) => {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit'
+    });
+};
 // Props
 const props = defineProps({
     title: String,
