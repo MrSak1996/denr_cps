@@ -60,23 +60,20 @@
                     <div class="text-xs">
                         <div class="font-medium mb-1">Resubmissions</div>
 
-                        <ul>
+                        <ul class="text-xs text-gray-700">
                             <li v-for="(file, fIndex) in row.resubmissions" :key="fIndex" :class="[
-                                'flex justify-between items-center mb-1 px-2 py-1 rounded text-gray-600',
-                                fIndex === row.resubmissions.length - 1
-                                    ? 'bg-green-100 font-semibold'
-                                    : ''
+                                'flex justify-between items-center mb-1 px-2 py-1 rounded',
+                                fIndex === row.resubmissions.length - 1 ? 'bg-green-100 font-semibold' : ''
                             ]">
                                 <span class="flex items-center gap-2 cursor-pointer" @click="$emit('view-file', file)">
+                                    <!-- ✅ show icon only for latest file -->
                                     <CircleCheck v-if="fIndex === row.resubmissions.length - 1"
                                         class="w-4 h-4 text-green-600" />
 
-                                    <span>
-                                        • {{ file.file_name }}
-                                        <small class="text-gray-500">
-                                            ({{ formatDate(file.created_at) }})
-                                        </small>
-                                    </span>
+                                    {{ file.file_name }}
+                                    <small class="text-gray-500">
+                                        ({{ formatDate(file.created_at) }})
+                                    </small>
                                 </span>
                             </li>
                         </ul>
@@ -157,24 +154,21 @@
                         </td>
 
                         <td class="px-3 py-2 border text-xs">
-                            <ul>
+                            <ul class="text-xs text-gray-700">
                                 <li v-for="(file, fIndex) in row.resubmissions" :key="fIndex" :class="[
-                                    'flex justify-between items-center mb-1 px-2 py-1 rounded text-gray-600',
-                                    fIndex === row.resubmissions.length - 1
-                                        ? 'bg-green-100 font-semibold'
-                                        : ''
+                                    'flex justify-between items-center mb-1 px-2 py-1 rounded',
+                                    fIndex === row.resubmissions.length - 1 ? 'bg-green-100 font-semibold' : ''
                                 ]">
                                     <span class="flex items-center gap-2 cursor-pointer"
                                         @click="$emit('view-file', file)">
+                                        <!-- ✅ show icon only for latest file -->
                                         <CircleCheck v-if="fIndex === row.resubmissions.length - 1"
                                             class="w-4 h-4 text-green-600" />
 
-                                        <span>
-                                            • {{ file.file_name }}
-                                            <small class="text-gray-500">
-                                                ({{ formatDate(file.created_at) }})
-                                            </small>
-                                        </span>
+                                        {{ file.file_name }}
+                                        <small class="text-gray-500">
+                                            ({{ formatDate(file.created_at) }})
+                                        </small>
                                     </span>
                                 </li>
                             </ul>
@@ -234,13 +228,9 @@ import Textarea from 'primevue/textarea';
 import { reactive, ref, computed } from 'vue';
 import { Upload, View, CircleCheck } from 'lucide-vue-next';
 
-const formatDate = (date) => {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: '2-digit'
-    });
+const formatDate = (dateString: string) => {
+    const d = new Date(dateString);
+    return d.toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 // Props
 const props = defineProps({
