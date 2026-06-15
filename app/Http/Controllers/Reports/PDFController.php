@@ -193,12 +193,14 @@ class PDFController extends Controller
         }
 
         // 👉 Your existing logic
-        $rows = DB::table('chainsaw_permits_to_sell')
+        $rows = DB::table('chainsaw_permits_to_sell as s')
+            ->leftJoin('chainsaw_brands as b', 'b.supplier_id', '=', 's.id')
+
             ->where('application_id', $id)
             ->get();
 
-        $modelCount = $rows->whereNotNull('model')->count();
-        $supplierCount = $rows->pluck('supplier_name')->unique()->count();
+        $modelCount = $rows->whereNotNull('b.model_name')->count();
+        $supplierCount = $rows->pluck('s.supplier_name')->unique()->count();
 
         if ($modelCount == 1 && $supplierCount == 1) {
             $result = $this->generatePermitDocx($id);

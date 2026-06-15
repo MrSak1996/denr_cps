@@ -766,6 +766,8 @@ const buttonState = (row: any) => {
     const isReceived = row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
     row.application_status === STATUS_DRAFT ||
     row.application_status === STATUS_RETURNED_TO_PENRO_TECHNICAL ||
+    row.application_status === STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF ||
+
     row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
     row.application_status === STATUS_RECEIVED_PENRO_CHIEF_RPS ||
     row.application_status === STATUS_RECEIVED_PENRO_CHIEF_TSD ||

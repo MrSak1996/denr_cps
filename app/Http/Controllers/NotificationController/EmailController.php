@@ -17,8 +17,8 @@ class EmailController extends Controller
     /**
      * Send OTP to email
      */
-   
-    
+
+
 
     public function sendEmail(Request $request)
     {
@@ -38,21 +38,20 @@ class EmailController extends Controller
             $address = $request->address ?? 'N/A';
             $companyName = $request->company_name ?? 'N/A';
             $role_id = $request->role_id;
-            
+
 
             NotificationModel::create([
                 'email' => $to,
                 'permit_no' => $applicationNo,
                 'expires_at' => Carbon::now()->addDays(7),
             ]);
-            if($role_id == 11)
-                {
-                    $recipient = 'ARD for Technical Services';
-                }else if($role_id == 12){
-                    $recipient = 'Regional Executive Director';
-                }else{
-                    $recipient = '';
-                }
+            if ($role_id == 11) {
+                $recipient = 'ARD for Technical Services';
+            } else if ($role_id == 12) {
+                $recipient = 'Regional Executive Director';
+            } else {
+                $recipient = '';
+            }
             $messageBody =
                 "Dear {$recipient},
 

@@ -315,7 +315,7 @@ class RPSChiefDashboardController extends Controller
             ->leftJoin('tbl_application_payment as ap', 'ap.application_id', '=', 'ac.id')
             ->leftJoin('tbl_status as s', 'ac.application_status', '=', 's.id')
             ->leftJoin('users as u', 'u.id', '=', 'ac.encoded_by')
-            ->leftJoin('users as updated', 'updater.id', '=', 'ac.updated_by')
+            ->leftJoin('users as updater', 'updater.id', '=', 'ac.updated_by')
             ->leftJoin('tbl_office as o', 'o.id', '=', 'u.office_id')
 
             ->select(
