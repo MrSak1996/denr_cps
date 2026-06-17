@@ -66,7 +66,6 @@ const files = computed(() => {
             typeof file.name === 'string' &&
             file.application_id === props.form.id && (
                 file.name.startsWith('other_supporting_documents_') ||
-                file.name.startsWith('permit_to_sell_') ||
                 file.name.startsWith('authorization_documents') ||
                 file.name.startsWith('application_form') ||
                 file.name.startsWith('notarized_affidavit_')
@@ -94,6 +93,14 @@ const save = () => {
 
     emit('next', {
         ...props.form,
+        date_applied: props.form.date_applied
+            ? new Date(
+                props.form.date_applied.getTime() -
+                props.form.date_applied.getTimezoneOffset() * 60000
+            )
+                .toISOString()
+                .split('T')[0]
+            : null,
         application_type: props.application_type,
     });
 };
@@ -372,6 +379,17 @@ onMounted(async () => {
         },
     );
 });
+const applicationFormFile = computed(() =>
+    files.value.find(file =>
+        file.name.startsWith('application_form')
+    )
+)
+
+const authorizationFile = computed(() =>
+    files.value.find(file =>
+        file.name.startsWith('authorization_documents')
+    )
+)
 </script>
 
 <template>
@@ -401,10 +419,13 @@ onMounted(async () => {
             </div>
 
             <div class="mt-4 grid gap-4 md:grid-cols-3">
-                <FloatLabel class="mt-2">
-                    <InputText type="date" v-model="props.form.date_applied" class="w-full" />
-                    <label>Date Applied</label>
+
+
+                <FloatLabel>
+                    <DatePicker v-model="props.form.date_applied" date-format="yy-mm-dd" show-icon class="w-full" />
+                    <label>Date of Applied</label>
                 </FloatLabel>
+
                 <FloatLabel class="mt-2">
                     <Select v-model="props.form.type_of_transaction" :options="['G2C', 'G2B', 'G2G']" :disabled="isEdit"
                         class="w-full" />
@@ -442,62 +463,51 @@ onMounted(async () => {
                     <label>Sex</label>
                 </FloatLabel>
             </div>
+
             <div class="mb-3">
+
                 <input type="file" ref="updateFileInput" class="hidden" @change="handleFileUpdate" />
 
-                <div v-if="files && files.length > 0">
-                    <div class="container">
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <FileCard v-for="(file, index) in files" :key="index" :file="file"
-                                @openPreview="openFileModal" @updateFile="triggerUpdateFile"
-                                @deleteFile="deleteApplicantFile" />
+                <div class="grid gap-6 md:grid-cols-1">
+
+                    <!-- APPLICATION FORM -->
+                    <div class="flex flex-col">
+
+                        <label class="mb-2 text-sm font-medium text-gray-700">
+                            Upload Duly Accomplished Application Form and/or Letter of Intent
+                        </label>
+
+                        <div v-if="applicationFormFile">
+                            <FileCard :file="applicationFormFile" @openPreview="openFileModal"
+                                @updateFile="triggerUpdateFile" @deleteFile="deleteApplicantFile" />
                         </div>
+
+                        <input v-else type="file" accept="application/pdf"
+                            @change="e => handleFileUpload(e, 'application_form')"
+                            class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
+
+                    </div>
+
+                    <!-- AUTHORIZATION DOCUMENT -->
+                    <div class="flex flex-col">
+
+                        <label class="mb-2 text-sm font-medium text-gray-700">
+                            Upload Authorization of Representative/Requesting Person (if applicable)
+                        </label>
+
+                        <div v-if="authorizationFile">
+                            <FileCard :file="authorizationFile" @openPreview="openFileModal"
+                                @updateFile="triggerUpdateFile" @deleteFile="deleteApplicantFile" />
+                        </div>
+
+                        <input v-else type="file" accept="application/pdf"
+                            @change="e => handleFileUpload(e, 'authorization_documents')"
+                            class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
+
                     </div>
 
                 </div>
 
-                <!-- ✅ SHOW UPLOAD UI WHEN NO FILES -->
-                <div v-else>
-                    <div class="grid gap-6 md:grid-cols-1 mt-2">
-                        <div class="flex flex-col md:col-span-2">
-                            <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700"> Upload Duly Accomplished Application Form and/or Letter of Intent</label>
-                            <input type="file" id="requestLetter" accept="application/pdf"
-                                @change="e => handleFileUpload(e, 'application_form')"
-                                class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
-                        </div>
-                    </div>
-
-                    <div class="grid gap-6 md:grid-cols-1 mt-2">
-                        <div class="flex flex-col md:col-span-2">
-                            <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700">Upload Authorization of representative/requesting person (if applicable)</label>
-                            <input type="file" id="requestLetter" accept="application/pdf"
-                                @change="e => handleFileUpload(e, 'authorization_letter')"
-                                class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
-                        </div>
-                    </div>
-
-                  
-                    <!-- <div class="grid gap-6 md:grid-cols-1 mt-2">
-                        <div class="flex flex-col md:col-span-2">
-                            <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700"> Upload Valid ID</label>
-                            <input type="file" id="requestLetter" accept="application/pdf"
-                                @change="e => handleImageUpload(e, 'valid_id')"
-                                class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
-                        </div>
-                    </div>
-
-
-                    <div class="grid gap-6 md:grid-cols-1 mt-2">
-                        <div class="flex flex-col md:col-span-2">
-                            <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700"> Upload
-                                Application Letter / Request Letter </label>
-                            <input type="file" id="requestLetter" accept="application/pdf"
-                                @change="e => handleFileUpload(e, 'request_letter')"
-                                class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
-
-                        </div>
-                    </div> -->
-                </div>
             </div>
         </Fieldset>
 
@@ -552,9 +562,8 @@ onMounted(async () => {
                 <div class="md:col-span-4">
                     <label class="mb-2 block text-sm font-medium"> Complete Address </label>
 
-                    <Textarea v-model="props.form.i_complete_address" rows="4" 
-                    placeholder="Please input the complete address"
-                    class="w-full"/>
+                    <Textarea v-model="props.form.i_complete_address" rows="4"
+                        placeholder="Please input the complete address" class="w-full" />
                 </div>
             </div>
         </Fieldset>
