@@ -8,6 +8,7 @@ import { Info } from 'lucide-vue-next';
 import Dialog from 'primevue/dialog';
 import Fieldset from 'primevue/fieldset';
 import FloatLabel from 'primevue/floatlabel';
+import DatePicker from 'primevue/datepicker';
 import InputText from 'primevue/inputtext';
 import ProgressBar from 'primevue/progressbar';
 import Select from 'primevue/select';
