@@ -195,7 +195,7 @@ const nextStep = async (payload: any) => {
             res = await saveApplicant({
                 ...payload,
                 mode: props.mode,
-                status:props.application_status,
+                status:payload.application_status,
                 encoded_by: userId,
                 application_type: payload.application_type,
             })
