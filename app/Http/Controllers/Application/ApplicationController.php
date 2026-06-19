@@ -135,10 +135,12 @@ class ApplicationController extends Controller
         $application = ChainsawIndividualApplication::updateOrCreate(
             ['id' => $request->input('id')],
             [
-                'application_status' => self::STATUS_DRAFT,
+                'application_status' => $request->input('status') ?? self::STATUS_DRAFT,
                 'application_type' => 'Individual',
                 'transaction_type' => $validated['type_of_transaction'],
                 'application_no' => $validated['application_no'],
+                'date_applied' => $request->input('date_applied'),
+
 
                 'encoded_by' => $validated['encoded_by'] ?? null,
                 'classification' => $validated['classification'] ?? null,
@@ -239,7 +241,7 @@ class ApplicationController extends Controller
             $application = ChainsawIndividualApplication::updateOrCreate(
                 ['id' => $request->input('id')], // 🔥 match condition
                 [
-                    'application_status' => self::STATUS_DRAFT,
+                    'application_status' => $request->input('status') ?? self::STATUS_DRAFT,
                     'application_type' => 'Company',
                     'classification' => $request->input('classification'),
                     'transaction_type' => $request->input('type_of_transaction'),
@@ -335,7 +337,7 @@ class ApplicationController extends Controller
             $application = ChainsawIndividualApplication::updateOrCreate(
                 ['id' => $request->input('id')], // 🔥 match condition
                 [
-                    'application_status' => self::STATUS_DRAFT,
+                    'application_status' => $request->input('status') ?? self::STATUS_DRAFT,
                     'application_type' => 'Government',
                     'classification' => $request->input('classification'),
                     'transaction_type' => $request->input('type_of_transaction'),

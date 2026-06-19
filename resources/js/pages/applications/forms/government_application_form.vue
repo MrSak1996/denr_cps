@@ -38,6 +38,7 @@ const props = defineProps({
     step: Number,
     type: String,
     mode: String,
+    application_status: Number
 })
 
 const isEdit = computed(() => props.mode === 'edit')
@@ -193,6 +194,7 @@ const nextStep = async (payload: any) => {
             res = await saveGovernmentApplication({
                 ...payload,
                 mode: props.mode,
+                status:props.application_status,
                 encoded_by: userId,
                 application_type: payload.application_type,
             })
