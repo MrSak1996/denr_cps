@@ -75,9 +75,7 @@ const files = computed(() => {
 });
 
 // default date only if empty
-if (!props.form.date_applied) {
-    props.form.date_applied = new Date();
-}
+
 
 const formData = computed(() => props.form);
 
@@ -87,6 +85,23 @@ const permitNo = computed({
         formData.value.permit_no = value.startsWith(PREFIX) ? value : PREFIX + value;
     },
 });
+const formatDate = (date: string | Date | null) => {
+    if (!date) return null;
+
+    const d = typeof date === 'string'
+        ? new Date(date)
+        : date;
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
 
 const save = () => {
     if (props.isProcessing) return;
@@ -94,14 +109,8 @@ const save = () => {
 
     emit('next', {
         ...props.form,
-        date_applied: props.form.date_applied
-            ? new Date(
-                props.form.date_applied.getTime() -
-                props.form.date_applied.getTimezoneOffset() * 60000
-            )
-                .toISOString()
-                .split('T')[0]
-            : null,
+        date_applied: formatDate(props.form.date_applied),
+
         application_type: props.application_type,
     });
 };
@@ -424,7 +433,7 @@ const authorizationFile = computed(() =>
 
                 <FloatLabel>
                     <DatePicker v-model="props.form.date_applied" date-format="yy-mm-dd" show-icon class="w-full" />
-                    <label>Date of Applied</label>
+                    <label>Date of Application</label>
                 </FloatLabel>
 
                 <FloatLabel class="mt-2">

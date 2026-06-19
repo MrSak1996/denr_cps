@@ -838,25 +838,28 @@ const canView = (row: any) => {
         25
     ].includes(row.application_status)
 }
-// const buttonState = (row: any) => {
-//     const isReceived = !!row.is_fus_received;
-//     const isEndorsedToFUS =
-//         row.application_status === STATUS_ENDORSED_LPDD_FUS;
 
-//     const isEndorsedToARDTS =
-//         row.application_status === STATUS_ENDORSED_ARDTS || !STATUS_ENDORSED_LPDD_FUS;
+const avatarColors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-cyan-500',
+    'bg-indigo-500',
+    'bg-red-500',
+];
 
-//     return {
-//         // 🔵 Receive is ENABLED when endorsed to TSD and not yet received
-//         receiveDisabled: !isEndorsedToFUS,
+const getAvatarColor = (name: string) => {
+    if (!name) return 'bg-gray-500';
 
-//         // 🔵 Endorse is ENABLED only while still at TSD level
-//         endorseDisabled: isEndorsedToARDTS,
+    let sum = 0;
+    for (const ch of name) {
+        sum += ch.charCodeAt(0);
+    }
 
-//         // 🔵 adjust if you later add rules
-//         returnDisabled: false
-//     };
-// };
+    return avatarColors[sum % avatarColors.length];
+};
 </script>
 
 <template>
@@ -908,12 +911,15 @@ const canView = (row: any) => {
                                 <template #body="slotProps">
                                     <div class="mt-2 flex gap-2">
                                           <!-- ✅ RECEIVE (disabled if endorsed) -->
-                                    <Button :disabled="buttonState(slotProps.data).receiveDisable"
+                                    <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
+                                        ? 'Application cannot be received yet'
+                                        : 'Receive Application'" :disabled="buttonState(slotProps.data).receiveDisable"
                                         @click="openDialog('receive', slotProps.data.id)"
                                         style="background-color: #0f766e" class="p-2 text-white">
                                         <BadgeCheck :size="15" />
                                     </Button>
                                     <Link
+                                        v-tooltip.top="'Edit Application'"
                                         v-if="canView(slotProps.data)"
                                         :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
@@ -924,7 +930,9 @@ const canView = (row: any) => {
                                         style="background-color: #0f766e">
                                         <SquarePen :size="16" />
                                     </Link>
-                                     <Link v-if="slotProps.data.application_status != STATUS_DRAFT" :href="route('applications.edit', {
+                                     <Link 
+                                        v-tooltip.top="'View Application'"
+                                        v-if="slotProps.data.application_status != STATUS_DRAFT" :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
                                         type: slotProps.data.application_type,
                                         step: 4
@@ -938,6 +946,36 @@ const canView = (row: any) => {
                                     </div>
                                 </template>
                             </Column>
+                            <Column header="Applicant Name" style="min-width: 16rem">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-3">
+                                    <div :class="[
+                                        'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                                        getAvatarColor(
+                                            slotProps.data.application_type === 'Individual'
+                                                ? slotProps.data.applicant_name
+                                                : slotProps.data.authorized_representative
+                                        )
+                                    ]">
+                                        {{
+                                            (
+                                                slotProps.data.application_type === 'Individual'
+                                                    ? slotProps.data.applicant_name
+                                                    : slotProps.data.authorized_representative
+                                            )?.charAt(0)
+                                        }}
+                                    </div>
+
+                                    <span>
+                                        {{
+                                            slotProps.data.application_type === 'Individual'
+                                                ? slotProps.data.applicant_name
+                                                : slotProps.data.authorized_representative
+                                        }}
+                                    </span>
+                                </div>
+                            </template>
+                        </Column>
                             <Column field="status_title" header="Status" sortable style="min-width: 12rem">
                             <template #body="{ data }">
                                 <div class="flex flex-col items-center">
@@ -975,17 +1013,7 @@ const canView = (row: any) => {
                                 <b>{{ data.permit_no }}</b>
                             </template>
                         </Column>
-                         <Column header="Applicant Name" style="min-width: 12rem">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.application_type == 'Individual'">
-                                    {{ slotProps.data.applicant_name }}
-
-                                </div>
-                                <div v-else>
-                                    {{ slotProps.data.authorized_representative }}
-                                </div>
-                            </template>
-                        </Column>
+                         
 
                         <Column field="application_type" header="Application Type" sortable />
                         <Column header="Type of Transaction" field="transaction_type" sortable></Column>

@@ -111,10 +111,41 @@ const files = computed(() => {
 const payment = computed(() => applicationData.value?.payment || {})
 
 // filter requirements depending on applicant type
+// const companyRequirements = computed(() => {
+//   return assessmentRows.value.filter(
+//     r => r.applicant_type === applicationData.value.application_type
+//   );
+// });
+
 const companyRequirements = computed(() => {
-  return assessmentRows.value.filter(
-    r => r.applicant_type === applicationData.value.application_type
-  );
+
+  const orders = {
+    INDIVIDUAL: [28, 4, 3, 19, 18, 20],
+
+    COMPANY: [29, 10, 8, 9, 31, 11, 14, 12],
+
+    GOVERNMENT: [30, 24, 23, 26, 22, 21]
+  };
+
+  const applicationType =
+    applicationData.value.application_type;
+
+  const order =
+    orders[applicationType] || [];
+
+  return assessmentRows.value
+    .filter(
+      row => row.applicant_type === applicationType
+    )
+    .sort((a, b) => {
+      const indexA = order.indexOf(a.permit_checklist_id);
+      const indexB = order.indexOf(b.permit_checklist_id);
+
+      return (
+        (indexA === -1 ? 999 : indexA) -
+        (indexB === -1 ? 999 : indexB)
+      );
+    });
 });
 
 // check if any failed assessment exists
@@ -460,14 +491,14 @@ const getApplicantFile = async (application_id) => {
         18: 'Authorization of representative/requesting person (if applicable)',
         20: 'Other Supporting Documents',
 
+        29: 'Duly accomplished Application Form and/or Letter of Intent',
+        10: 'Copy of Permit to Sell/Re-Sell Chainsaw',
         8: 'Official Receipt of Permit Fee',
         9: 'Certificate of Registration of Business Name from DTI or SEC',
-        10: 'Copy of Permit to Sell/Re-Sell Chainsaw',
-        11: 'Authorization/Secretarys Certificate',
-        12: 'Other Supporting Documents',
-        14: 'Duly signed and notarized affidavit (purpose of chainsaw purchase)',
-        29: 'Duly accomplished Application Form and/or Letter of Intent',
         31: 'Business License/Mayors Permit',
+        11: 'Authorization/Secretarys Certificate',
+        14: 'Duly signed and notarized affidavit (purpose of chainsaw purchase)',
+        12: 'Other Supporting Documents',
 
         30: 'Duly accomplished Application Form and/or Letter of Intent',
         24: 'Copy of Permit to Sell/Re-Sell Chainsaw',

@@ -922,7 +922,8 @@ const getAvatarColor = (name: string) => {
                                         <BadgeCheck :size="15" />
                                     </Button>
 
-                                    <Link v-if="canView(slotProps.data)" v-tooltip.top="'Edit Application'" :href="route('applications.edit', {
+                                    <Link v-if="canView(slotProps.data)" 
+                                    v-tooltip.top="'Edit Application'" :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
                                         type: slotProps.data.application_type,
                                         step: 4

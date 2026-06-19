@@ -380,8 +380,7 @@ if (props.form.date_applied && typeof props.form.date_applied === 'string') {
                 </FloatLabel>
                 <FloatLabel>
                     <DatePicker v-model="props.form.date_applied" date-format="yy-mm-dd" show-icon class="w-full" />
-
-                    <label>Date Applied</label>
+                    <label>Date of Application</label>
                 </FloatLabel>
 
             </div>

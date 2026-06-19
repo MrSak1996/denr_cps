@@ -113,7 +113,7 @@ onMounted(() => {
                     <div class="rounded-full bg-white inline-flex justify-center items-center h-20 w-20 -mt-16">
                         <img src="../../../../images/denr_logo.png" class="h-16 w-16" />
                     </div>
-                    <span class="font-bold text-2xl block mb-2 mt-6" style="color:red">{{ message.header }}</span>
+                    <span class="font-bold text-2xl block mb-2 mt-6">{{ message.header }}</span>
                     <!-- <p class="mb-0">{{ message.message }}</p> -->
                     <div class="flex items-center gap-3 mt-6">
                         <Button label="Submit" class="bg-green-900 text-white hover:bg-green-800"
@@ -126,8 +126,10 @@ onMounted(() => {
 
         <!-- Submit Button -->
 
-        <Button @click="requireConfirmation()" style="background-color: rgba(0,77,64,1) !important;"
-            class="ml-auto -full px-4 py-2 flex items-center gap-2 rounded-md bg-green-900 text-white hover:bg-green-800">
+        <Button @click="requireConfirmation()" 
+            style="background-color: rgba(0,77,64,1) !important;"
+            class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-green-900 text-white hover:bg-green-800">
+
             <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
 
             <CircleCheckBig />
