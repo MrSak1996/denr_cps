@@ -120,11 +120,11 @@ const payment = computed(() => applicationData.value?.payment || {})
 const companyRequirements = computed(() => {
 
   const orders = {
-    INDIVIDUAL: [28, 4, 3, 19, 18, 20],
+    Individual: [28, 4, 3, 19, 18, 20],
 
-    COMPANY: [29, 10, 8, 9, 31, 11, 14, 12],
+    Company: [29, 10, 8, 9, 31, 11, 14, 12],
 
-    GOVERNMENT: [30, 24, 23, 26, 22, 21]
+    Government: [30, 24, 23, 26, 22, 21]
   };
 
   const applicationType =
