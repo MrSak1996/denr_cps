@@ -186,16 +186,15 @@ class PDFController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        if ($download && $download->download_count >= 3) {
-            return response()->json([
-                'message' => 'Download limit reached (max 3).'
-            ], 403);
-        }
+        // if ($download && $download->download_count >= 3) {
+        //     return response()->json([
+        //         'message' => 'Download limit reached (max 3).'
+        //     ], 403);
+        // }
 
         // 👉 Your existing logic
         $rows = DB::table('chainsaw_permits_to_sell as s')
             ->leftJoin('chainsaw_brands as b', 'b.supplier_id', '=', 's.id')
-
             ->where('application_id', $id)
             ->get();
 
@@ -213,28 +212,30 @@ class PDFController extends Controller
         }
 
         // ✅ Increment or insert
-        DB::table('tbl_application_downloads')->updateOrInsert(
-            [
-                'application_id' => $id,
-                'user_id' => $userId
-            ],
-            [
-                'download_count' => DB::raw('COALESCE(download_count, 0) + 1'),
-                'updated_at' => now(),
-                'created_at' => now()
-            ]
-        );
+        // DB::table('tbl_application_downloads')->updateOrInsert(
+        //     [
+        //         'application_id' => $id,
+        //         'user_id' => $userId
+        //     ],
+        //     [
+        //         'download_count' => DB::raw('COALESCE(download_count, 0) + 1'),
+        //         'updated_at' => now(),
+        //         'created_at' => now()
+        //     ]
+        // );
 
         return $result;
     }
 
     public function generatePermitDocxMultipleBrandsModels($id)
     {
-        $e = function ($value) {
-            return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-        };
+        $e = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 
-
+        /*
+    |--------------------------------------------------------------------------
+    | MAIN APPLICATION
+    |--------------------------------------------------------------------------
+    */
         $application = DB::table('tbl_application_checklist as ac')
             ->leftJoin('chainsaw_permits_to_sell as ps', 'ps.application_id', '=', 'ac.id')
             ->leftJoin('tbl_application_payment as ap', 'ap.application_id', '=', 'ac.id')
@@ -263,11 +264,10 @@ class PDFController extends Controller
         }
 
         /*
-        |--------------------------------------------------------------------------
-        | Get Brands + Models
-        |--------------------------------------------------------------------------
-        */
-
+    |--------------------------------------------------------------------------
+    | BRANDS + MODELS DATA
+    |--------------------------------------------------------------------------
+    */
         $rows = DB::table('chainsaw_permits_to_sell as s')
             ->leftJoin('chainsaw_brands as b', 'b.supplier_id', '=', 's.id')
             ->where('s.application_id', $id)
@@ -281,51 +281,68 @@ class PDFController extends Controller
             )
             ->get();
 
+        /*
+    |--------------------------------------------------------------------------
+    | SAFELY COMPUTE SUPPLIER INFO (FIXED)
+    |--------------------------------------------------------------------------
+    */
+        $supplierText = $rows->pluck('supplier_name')->filter()->unique()->implode(' and ');
+
+        $supplierAddressText = $rows->pluck('supplier_address')
+            ->filter()
+            ->unique()
+            ->implode(', ');
 
         /*
-        |--------------------------------------------------------------------------
-        | Compute Quantity
-        |--------------------------------------------------------------------------
-        */
-
+    |--------------------------------------------------------------------------
+    | QUANTITY COMPUTATION
+    |--------------------------------------------------------------------------
+    */
         $totalQuantity = $rows->sum('quantity');
-        $quantityInWords = ucfirst($this->numberToWords((int)$totalQuantity));
+
+        $quantityInWords = ucfirst($this->numberToWords((int) $totalQuantity));
         $quantityText = "{$quantityInWords} ({$totalQuantity}) unit" . ($totalQuantity > 1 ? 's' : '');
 
         /*
-        |--------------------------------------------------------------------------
-        | Brand Summary (Page 1)
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | BRAND SUMMARY
+    |--------------------------------------------------------------------------
+    */
+        $brandText = $rows->pluck('brand_name')->filter()->unique()->implode(' and ');
 
-        $brandText = $rows->pluck('brand_name')->unique()->implode(' and ');
-        $supplier = $rows->first();
-        $supplierText = $supplier ? $e($supplier->supplier_name) : '';
-        $supplierAddressText = $supplier ? $e($supplier->supplier_address) : '';
         /*
-        |--------------------------------------------------------------------------
-        | Load Word Template
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | TEMPLATE LOADING
+    |--------------------------------------------------------------------------
+    */
+        $template = new \PhpOffice\PhpWord\TemplateProcessor(
+            storage_path('app/templates/chainsaw-permit-MULTIPLE-MODELS-ONE-SUPPLIER.docx')
+        );
 
-        $template = new TemplateProcessor(storage_path('app/templates/chainsaw-permit-MULTIPLE-MODELS-ONE-SUPPLIER.docx'));
         /*
-        |--------------------------------------------------------------------------
-        | Page 1 Values
-        |--------------------------------------------------------------------------
-        */
-
+    |--------------------------------------------------------------------------
+    | PAGE 1 VALUES
+    |--------------------------------------------------------------------------
+    */
         $template->setValue('permit_number', $application->permit_number);
-        $template->setValue('name', $application->authorized_representative ?? $application->applicant_name);
-        $template->setValue('address', $e($application->applicant_complete_address ?: $application->company_address));
+        $template->setValue(
+            'name',
+            $application->authorized_representative ?? $application->applicant_name
+        );
+
+        $template->setValue(
+            'address',
+            $e($application->applicant_complete_address ?: $application->company_address)
+        );
+
         $template->setValue('quantity', $e($quantityText));
         $template->setValue('brand', $brandText);
         $template->setValue('model', 'See Annex "A"');
 
         $template->setValue('engine_serial_no', $application->engine_serial_no);
 
-        $template->setValue('supplier_name', $supplierText);
-        $template->setValue('supplier_address', $supplierAddressText);
+        $template->setValue('supplier_name', $e($supplierText));
+        $template->setValue('supplier_address', $e($supplierAddressText));
 
         $template->setValue('purpose', $application->purpose);
         $template->setValue('or_number', $application->official_receipt);
@@ -341,24 +358,23 @@ class PDFController extends Controller
         $template->setValue(
             'issued_on',
             $application->date_approved_red
-                ? $e(Carbon::parse($application->date_approved_red)->format('F d, Y'))
+                ? Carbon::parse($application->date_approved_red)->format('F d, Y')
                 : ''
         );
 
         $template->setValue(
             'expiry_date',
             $application->valid_until
-                ? $e(Carbon::parse($application->valid_until)->format('F d, Y'))
-                : ''
-        );
-        $template->setValue(
-            'date_approved_red',
-            $application->date_approved_red
-                ? $e(Carbon::parse($application->date_approved_red)->format('F d, Y h:i A'))
+                ? Carbon::parse($application->valid_until)->format('F d, Y')
                 : ''
         );
 
-        $template->setValue('or_number', $application->official_receipt);
+        $template->setValue(
+            'date_approved_red',
+            $application->date_approved_red
+                ? Carbon::parse($application->date_approved_red)->format('F d, Y h:i A')
+                : ''
+        );
 
         $template->setValue(
             'or_date',
@@ -368,31 +384,25 @@ class PDFController extends Controller
         );
 
         /*
-        |--------------------------------------------------------------------------
-        | Build Annex Table
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | ANNEX TABLE
+    |--------------------------------------------------------------------------
+    */
+        $phpWord = new \PhpOffice\PhpWord\PhpWord();
 
-        $phpWord = new PhpWord();
-
-        $table = new Table([
+        $table = new \PhpOffice\PhpWord\Element\Table([
             'borderSize' => 6,
             'borderColor' => '000000',
             'cellMargin' => 50
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Table Header
-        |--------------------------------------------------------------------------
-        */
-
-        $table->addRow();
         $arialFont = [
             'name' => 'Arial',
             'size' => 10
         ];
 
+        // Header
+        $table->addRow();
         $table->addCell(2000)->addText('Brand', $arialFont);
         $table->addCell(2000)->addText('Model', $arialFont);
         $table->addCell(1500)->addText('No of Units', $arialFont);
@@ -400,14 +410,8 @@ class PDFController extends Controller
         $table->addCell(2000)->addText('Date of Issuance', $arialFont);
         $table->addCell(2000)->addText('Date of Expiry', $arialFont);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Table Data
-        |--------------------------------------------------------------------------
-        */
-
+        // Rows
         foreach ($rows as $row) {
-
             $table->addRow();
 
             $table->addCell(2000)->addText($row->brand_name, $arialFont);
@@ -430,37 +434,23 @@ class PDFController extends Controller
             );
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Inject Table Into Template
-        |--------------------------------------------------------------------------
-        */
-
         $template->setComplexBlock('annex_table', $table);
 
         /*
-        |--------------------------------------------------------------------------
-        | Save Temporary File
-        |--------------------------------------------------------------------------
-        */
-        /*
-        |--------------------------------------------------------------------------
-        | Save File
-        |--------------------------------------------------------------------------
-        */
-
-        $fileName = "chainsaw-permit-" . $application->permit_number . ".docx";
-
+    |--------------------------------------------------------------------------
+    | SAVE FILE
+    |--------------------------------------------------------------------------
+    */
+        $fileName = "chainsaw-permit-{$application->permit_number}.docx";
         $tempFile = storage_path($fileName);
 
         $template->saveAs($tempFile);
 
         /*
-            |--------------------------------------------------------------------------
-            | Apply Word Protection Without Rewriting the Document
-            |--------------------------------------------------------------------------
-            */
-
+    |--------------------------------------------------------------------------
+    | WORD PROTECTION
+    |--------------------------------------------------------------------------
+    */
         $zip = new \ZipArchive();
         $zip->open($tempFile);
 
@@ -468,14 +458,14 @@ class PDFController extends Controller
 
         $protectionXml = '
         <w:documentProtection 
-        w:edit="forms" 
-        w:enforcement="1" 
-        w:cryptProviderType="rsaAES" 
-        w:cryptAlgorithmClass="hash" 
-        w:cryptAlgorithmType="typeAny" 
-        w:cryptAlgorithmSid="14" 
-        w:cryptSpinCount="100000" 
-        w:hash="DENR123"
+            w:edit="forms" 
+            w:enforcement="1" 
+            w:cryptProviderType="rsaAES" 
+            w:cryptAlgorithmClass="hash" 
+            w:cryptAlgorithmType="typeAny" 
+            w:cryptAlgorithmSid="14" 
+            w:cryptSpinCount="100000" 
+            w:hash="DENR123"
         />';
 
         $settingsXml = str_replace(
@@ -488,18 +478,6 @@ class PDFController extends Controller
         $zip->close();
 
         return response()->download($tempFile)->deleteFileAfterSend(true);
-        // return response()->json([
-        //     'application' => $application,
-
-        //     'supplier_name'    => $supplierText,
-        //     'supplier_address' => $supplierAddressText,
-
-        //     'total_quantity'   => $totalQuantity,
-        //     'quantity_text'    => $quantityText,
-
-        //     'supplier_text'    => $supplierText,
-        //     'brand_text'       => $brandText,
-        // ]);
     }
 
     public function generatePermitDocxMultipleSuppliers($id)
@@ -935,7 +913,7 @@ class PDFController extends Controller
         );
 
 
-       
+
 
         $template->setValue(
             'date_approved_red',

@@ -863,7 +863,7 @@ const buttonState = (row: any) => {
                             <Column header="Action" :exportable="false" style="min-width: 2rem">
                                 <template #body="slotProps">
                                     <div class="mt-2 flex gap-2">
-                                        <Button v-tooltip.top="'Print'" v-if="slotProps.data.application_status === STATUS_APPROVED_BY_RED"
+                                        <Button v-tooltip.top="'Preview'"
                                             @click="generatePdf(slotProps.data)" style="background-color: #0D47A1"
                                             class="p-2 text-white">
                                             <PrinterCheck :size="15" />
