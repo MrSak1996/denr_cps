@@ -186,11 +186,11 @@ class PDFController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        // if ($download && $download->download_count >= 3) {
-        //     return response()->json([
-        //         'message' => 'Download limit reached (max 3).'
-        //     ], 403);
-        // }
+        if ($download && $download->download_count >= 3) {
+            return response()->json([
+                'message' => 'Download limit reached (max 3).'
+            ], 403);
+        }
 
         // 👉 Your existing logic
         $rows = DB::table('chainsaw_permits_to_sell as s')
@@ -198,31 +198,33 @@ class PDFController extends Controller
             ->where('application_id', $id)
             ->get();
 
-        $modelCount = $rows->whereNotNull('b.model_name')->count();
-        $supplierCount = $rows->pluck('s.supplier_name')->unique()->count();
+        $modelCount = DB::table('chainsaw_permits_to_sell as s')
+            ->join('chainsaw_brands as b', 'b.supplier_id', '=', 's.id')
+            ->where('s.application_id', $id)
+            ->whereNotNull('b.model_name')
+            ->distinct('b.model_name')
+            ->count('b.model_name');
+
+        $supplierCount = DB::table('chainsaw_permits_to_sell')
+            ->where('application_id', $id)
+            ->distinct('supplier_name')
+            ->count('supplier_name');
 
         if ($modelCount == 1 && $supplierCount == 1) {
+
             $result = $this->generatePermitDocx($id);
         } elseif ($modelCount > 1 && $supplierCount == 1) {
+
             $result = $this->generatePermitDocxMultipleBrandsModels($id);
         } elseif ($modelCount > 1 && $supplierCount > 1) {
+
             $result = $this->generatePermitDocxMultipleSuppliers($id);
         } else {
-            return abort(404, 'Invalid permit configuration.');
+            dd('No brand & model found for application id: ', $id);
         }
 
         // ✅ Increment or insert
-        // DB::table('tbl_application_downloads')->updateOrInsert(
-        //     [
-        //         'application_id' => $id,
-        //         'user_id' => $userId
-        //     ],
-        //     [
-        //         'download_count' => DB::raw('COALESCE(download_count, 0) + 1'),
-        //         'updated_at' => now(),
-        //         'created_at' => now()
-        //     ]
-        // );
+
 
         return $result;
     }
@@ -479,6 +481,7 @@ class PDFController extends Controller
 
         return response()->download($tempFile)->deleteFileAfterSend(true);
     }
+
 
     public function generatePermitDocxMultipleSuppliers($id)
     {
@@ -909,7 +912,7 @@ class PDFController extends Controller
             'issued_on',
             $application->date_approved_red
                 ? $e(Carbon::parse($application->date_approved_red)->format('F d, Y'))
-                : ''
+                : Carbon::now()->format('F d, Y')
         );
 
 
@@ -928,7 +931,7 @@ class PDFController extends Controller
             'expiry_date',
             $application->valid_until
                 ? $e(Carbon::parse($application->valid_until)->format('F d, Y'))
-                : ''
+                : Carbon::now()->format('F d, Y')
         );
 
 
@@ -936,7 +939,7 @@ class PDFController extends Controller
             'date_expired',
             $application->date_approved_red
                 ? $e(Carbon::parse($application->date_approved_red)->addYear()->format('F d, Y'))
-                : ''
+                : Carbon::now()->format('F d, Y')
         );
 
         $template->setValue('or_number', $e($application->official_receipt));

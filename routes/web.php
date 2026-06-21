@@ -174,6 +174,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | PERMITS / PDF
     |--------------------------------------------------------------------------
     */
+
+
+Route::get('/permit/print/{id}', [PDFController::class, 'printPermit'])
+    ->name('permit.print');
+
     Route::prefix('permit')->group(function () {
         Route::get('print/{id}', [PDFController::class, 'printPermit'])->name('permit.print');
         Route::get('{id}/preview', [PDFController::class, 'generateTable'])->name('permit.preview');
