@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\IOFactory;
 use Illuminate\Support\Facades\Response;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 
 
 use PhpOffice\PhpWord\PhpWord;
@@ -177,6 +179,19 @@ class PDFController extends Controller
     //     //TABLE: tbl_application_checklist
     //     //field:download_counter
     // }
+    private function generateQrCode($application)
+    {
+        $path = storage_path("app/qrcodes/{$application->id}.png");
+
+        QrCode::format('png')
+            ->size(250)
+            ->generate(
+                "Application ID: {$application->id}\nPermit No: {$application->permit_number}",
+                
+            );
+
+        return $path;
+    }
     public function printPermit($id)
     {
         $userId = auth()->id();
@@ -793,6 +808,7 @@ class PDFController extends Controller
             ->leftJoin('tbl_application_payment as ap', 'ap.application_id', '=', 'ac.id')
             ->where('ac.id', $id)
             ->select([
+                'ac.id',
                 'ac.permit_no as permit_number',
                 'ac.authorized_representative',
                 DB::raw("CONCAT_WS(' ', ac.applicant_firstname, ac.applicant_middlename, ac.applicant_lastname) AS applicant_name"),
@@ -827,8 +843,8 @@ class PDFController extends Controller
 
             ->where('s.application_id', $id)
             ->select(
-                'supplier_name',
-                'supplier_address',
+                's.supplier_name',
+                's.supplier_address',
                 'b.brand_name',
                 'b.model_name as model',
                 'b.quantity',
@@ -901,6 +917,11 @@ class PDFController extends Controller
         // $template->setValue('purpose', $e($application->purpose));
         $template->setValue('purpose', $this->formatMultiline($application->purpose));
         $template->setValue('issued_by', $e($application->issued_by));
+        $template->setImageValue('barcode', [
+            'path' => $this->generateQrCode($application),
+            'width' => 150,
+            'height' => 150,
+        ]);
 
         $template->setValue(
             'issued_date',

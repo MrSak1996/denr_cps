@@ -77,11 +77,22 @@ class EmailController extends Controller
 
                 Sent: " . now();
 
-            Mail::raw($messageBody, function ($message) use ($to, $applicationNo) {
+            // Mail::raw($messageBody, function ($message) use ($to, $applicationNo) {
 
+            //     $message->to($to)
+            //         ->subject("Chainsaw Purchase Sysem No. {$applicationNo} - Approval Required");
+            // });
+
+            Mail::raw($messageBody, function ($message) use ($to, $applicationNo) {
                 $message->to($to)
-                    ->subject("Chainsaw Purchase Sysem No. {$applicationNo} - Approval Required");
+                    ->cc([
+                        'fus.lpdd4a@gmail.com',
+                        'r4a@denr.gov.ph',
+                        'kimsacluti10101996@gmail.com',
+                    ])
+                    ->subject("Chainsaw Purchase System No. {$applicationNo} - Approval Required");
             });
+
 
             return response()->json([
                 'status' => true,

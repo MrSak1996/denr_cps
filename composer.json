@@ -15,7 +15,9 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "masbug/flysystem-google-drive-ext": "2.4",
+        "milon/barcode": "^13.1",
         "phpoffice/phpword": "^1.1",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "symfony/brevo-mailer": "^7.4",
         "symfony/http-client": "^7.4",
         "tightenco/ziggy": "^2.4"
