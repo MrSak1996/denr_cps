@@ -185,11 +185,15 @@ class RPSChiefDashboardController extends Controller
 
             case 5:
                 $statusFilter = [
-                    self::STATUS_DRAFT,
+                      self::STATUS_DRAFT,
                     self::STATUS_ENDORSED_PENRO_CHIEF_RPS,
                     self::STATUS_ENDORSED_PENRO_TECHNICAL,
                     self::STATUS_RECEIVED_PENRO_TECHNICAL,
                     self::STATUS_RETURNED_TO_PENRO_TECHNICAL,
+                    self::STATUS_ENDORSED_RED,
+                    self::STATUS_RECEIVED_RED,
+                    self::STATUS_ENDORSED_ARDTS,
+                    self::STATUS_RECEIVED_ARDTS,
                     self::STATUS_APPROVED_BY_RED,
                 ];
                 break;
@@ -338,6 +342,7 @@ class RPSChiefDashboardController extends Controller
                 'ac.application_status',
                 'ac.application_type',
                 'ac.application_no',
+				'ac.permit_no',
                 'ac.transaction_type',
                 'ac.classification',
                 'ci.permit_chainsaw_no',

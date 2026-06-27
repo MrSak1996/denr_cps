@@ -272,7 +272,13 @@ const submitAllAssessments = async (applicationId) => {
   if (![1, 4, 11, 12].includes(roleId)) {
     const incomplete = companyRequirements.value.some(row => !row.assessment);
     if (incomplete) {
-      alert('Please complete all assessments before submitting.');
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Please complete all assessments before submitting.',
+        life: 3000,
+      });
+
       return;
     }
   }
@@ -286,7 +292,7 @@ const submitAllAssessments = async (applicationId) => {
   try {
     await axios.post('/api/saveAssessment', {
       application_id: applicationId,
-      user_id:userId,
+      user_id: userId,
       application_status: 4,
       toTSD: isEndorsingToRD,
       role_id: roleId,
@@ -315,7 +321,7 @@ const submitAllAssessments = async (applicationId) => {
     const recipientEmail = emailRoutingMap[roleId];
 
     if (recipientEmail) {
-      await sendEmail(recipientEmail,roleId);
+      await sendEmail(recipientEmail, roleId);
     }
 
 
@@ -350,7 +356,7 @@ const submitAllAssessments = async (applicationId) => {
 ------------------------------------------------------- */
 
 // send notification email
-const sendEmail = async (recipientEmail,roleId) => {
+const sendEmail = async (recipientEmail, roleId) => {
   try {
     const response = await axios.post('/api/send-email', {
       email: recipientEmail, // or the actual recipient
@@ -363,7 +369,7 @@ const sendEmail = async (recipientEmail,roleId) => {
           ? props.form.i_complete_address
           : props.form.company_address,
       application_no: props.form.application_no,
-      role_id:roleId
+      role_id: roleId
     });
 
     toast.add({
@@ -1137,10 +1143,10 @@ onMounted(() => {
 
       <!-- Status -->
       <div v-if="isEdit" class="flex items-center justify-between rounded-xl p-4 shadow-sm border">
-          <Info class="h-5 w-5" />
-          <h1 class="text-xl font-bold text-gray-800">
-            Application Status
-          </h1>
+        <Info class="h-5 w-5" />
+        <h1 class="text-xl font-bold text-gray-800">
+          Application Status
+        </h1>
         <Tag severity="danger">
           {{ props.form.status_title }}
         </Tag>

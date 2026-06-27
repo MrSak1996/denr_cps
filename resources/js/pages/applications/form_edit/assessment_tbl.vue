@@ -151,6 +151,9 @@
                             </div>
 
                             <span v-else class="text-xs text-gray-400">No file</span>
+                            <input type="file" class="hidden" multiple
+                            :ref="el => fileInputRefs[row.checklist_entry_id] = el"
+                            @change="handleFileSelection($event, row.checklist_entry_id)" />
                         </td>
 
                         <td class="px-3 py-2 border text-xs">

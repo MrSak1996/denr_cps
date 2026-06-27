@@ -9,9 +9,8 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\IOFactory;
 use Illuminate\Support\Facades\Response;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-
+use Milon\Barcode\DNS1D;
 
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Element\Table;
@@ -179,18 +178,38 @@ class PDFController extends Controller
     //     //TABLE: tbl_application_checklist
     //     //field:download_counter
     // }
-    private function generateQrCode($application)
+
+
+
+
+    private function generateBarcode($application): string
     {
-        $path = storage_path("app/qrcodes/{$application->id}.png");
+        $directory = storage_path('app/barcodes');
 
-        QrCode::format('png')
-            ->size(250)
-            ->generate(
-                "Application ID: {$application->id}\nPermit No: {$application->permit_number}",
-                
-            );
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
 
-        return $path;
+        $filePath = "{$directory}/{$application->permit_number}.png";
+        // dd($filePath);
+
+        $barcodeContent = sprintf(
+            'PTS-%s',
+            'DENR-IV-A',
+        );
+
+        $dns1d = new DNS1D();
+
+        $barcode = $dns1d->getBarcodePNG(
+            $barcodeContent,
+            'C128',
+            4,
+            120
+        );
+
+        file_put_contents($filePath, base64_decode($barcode));
+        
+        return $filePath;
     }
     public function printPermit($id)
     {
@@ -398,6 +417,21 @@ class PDFController extends Controller
             $application->date_of_payment
                 ? Carbon::parse($application->date_of_payment)->format('F d, Y')
                 : ''
+        );
+
+         $barcodePath = $this->generateBarcode($application);
+
+        if (!file_exists($barcodePath)) {
+            dd('Barcode file not found', $barcodePath);
+        }
+
+        $template->setImageValue(
+            'barcode',
+            [
+                'path' => $barcodePath,
+                'width' => 250,
+                'height' => 60,
+            ]
         );
 
         /*
@@ -628,6 +662,20 @@ class PDFController extends Controller
         $template->setValue('issued_by', $e($application->issued_by));
 
         $template->setValue('or_number', $e($application->official_receipt));
+         $barcodePath = $this->generateBarcode($application);
+
+        if (!file_exists($barcodePath)) {
+            dd('Barcode file not found', $barcodePath);
+        }
+
+        $template->setImageValue(
+            'barcode',
+            [
+                'path' => $barcodePath,
+                'width' => 250,
+                'height' => 60,
+            ]
+        );
 
         /*
     |--------------------------------------------------------------------------
@@ -658,9 +706,9 @@ class PDFController extends Controller
 
         $template->setValue(
             'date_approved_red',
-            $application->date_approved_red
-                ? $e(Carbon::parse($application->date_approved_red)->format('F d, Y h:i A'))
-                : ''
+            'Date: ' . Carbon::parse($application->date_approved_red)
+                ->format('Y.m.d') . '' . Carbon::parse($application->date_approved_red)
+                ->format('h:i:s P')
         );
 
         $template->setValue(
@@ -871,7 +919,7 @@ class PDFController extends Controller
         */
 
         $supplierText = $rows ? $e($rows->supplier_name) : '';
-        $supplierAddressText = $rows ? $e($rows->supplier_address) : '';
+        $supplierAddressText = $rows ? $e("\t".$rows->supplier_address) : '';
 
         $brandText = $rows ? $e($rows->brand_name) : '';
         $modelText = $rows ? $e($rows->model) : '';
@@ -917,11 +965,21 @@ class PDFController extends Controller
         // $template->setValue('purpose', $e($application->purpose));
         $template->setValue('purpose', $this->formatMultiline($application->purpose));
         $template->setValue('issued_by', $e($application->issued_by));
-        $template->setImageValue('barcode', [
-            'path' => $this->generateQrCode($application),
-            'width' => 150,
-            'height' => 150,
-        ]);
+
+        $barcodePath = $this->generateBarcode($application);
+
+        if (!file_exists($barcodePath)) {
+            dd('Barcode file not found', $barcodePath);
+        }
+
+        $template->setImageValue(
+            'barcode',
+            [
+                'path' => $barcodePath,
+                'width' => 250,
+                'height' => 60,
+            ]
+        );
 
         $template->setValue(
             'issued_date',
@@ -941,11 +999,8 @@ class PDFController extends Controller
 
         $template->setValue(
             'date_approved_red',
-            'Date: ' . Carbon::parse($application->date_approved_red)
-                ->format('Y.m.d') .
-                "\n" .
-                Carbon::parse($application->date_approved_red)
-                ->format('h:i:s P')
+            Carbon::parse($application->date_approved_red)
+                ->format('Y.m.d') . ' ' . Carbon::parse($application->date_approved_red)->format('h:i:s P')
         );
 
         $template->setValue(

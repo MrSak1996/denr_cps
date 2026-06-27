@@ -279,7 +279,7 @@ class AssessmentController extends Controller
             DB::table('tbl_application_checklist')
                 ->where('id', $request->application_id)
                 ->update([
-                    'updated_by'      => $request->userId,
+                    'updated_by'      => $request->user_id,
                     'findings'        => $request->overall_remarks,
                     'updated_at'      => now(),
                 ]);
@@ -309,8 +309,8 @@ class AssessmentController extends Controller
 
                 DB::table('tbl_application_routing')->insert([
                     'application_id' => $request->application_id,
-                    'sender_id'      => $request->userId,   // RED user
-                    'receiver_id'    => $request->userId,               // no next receiver (final)
+                    'sender_id'      => $request->user_id,   // RED user
+                    'receiver_id'    => $request->user_id,               // no next receiver (final)
                     'action'         => 'Approved by RED',
                     'remarks'        => "Permit No: {$permitNo}",
                     'is_read'        => 1,
@@ -365,7 +365,7 @@ class AssessmentController extends Controller
 
             DB::table('tbl_application_routing')->insert([
                 'application_id' => $request->application_id,
-                'sender_id'      => $request->userId,
+                'sender_id'      => $request->user_id,
                 'receiver_id'    => $receiver->id,
                 'action'         => "Submitted to " . ($roleLabels[$nextRole] ?? 'Next Level'),
                 'remarks'        => "Waiting to be received by " . ($roleLabels[$nextRole] ?? 'Next Level'),
@@ -692,46 +692,80 @@ class AssessmentController extends Controller
     }
 
     private function generatePermitNumber(int $applicationId): string
-    {
-        // 1️⃣ Get application_no
-        $applicationNo = DB::table('tbl_application_checklist')
-            ->where('id', $applicationId)
-            ->value('application_no');
+{
+    // Get application_no
+    $applicationNo = DB::table('tbl_application_checklist')
+        ->where('id', $applicationId)
+        ->value('application_no');
 
-        if (!$applicationNo) {
-            throw new \Exception('Application number not found.');
-        }
-
-        // 2️⃣ Extract suffix from application_no (first letter before dash)
-        $suffix = explode('-', $applicationNo)[0]; // L, Q, R, etc.
-
-        if (!$suffix) {
-            throw new \Exception('Invalid application number format.');
-        }
-
-        // 3️⃣ Build base format
-        $datePart = now()->format('mdY'); // MMDDYYYY
-        $baseFormat = "DENR-IV-A-{$datePart}";
-
-        // 4️⃣ Get latest permit for the same date
-        $latestPermit = DB::table('tbl_application_checklist')
-            ->where('permit_no', 'like', "{$baseFormat}-%")
-            ->orderBy('permit_no', 'desc')
-            ->lockForUpdate()
-            ->first();
-
-        // 5️⃣ Get next sequence
-        if ($latestPermit && preg_match('/-(\d{2})[A-Z]$/', $latestPermit->permit_no, $matches)) {
-            $nextSequence = intval($matches[1]) + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        $sequence = str_pad($nextSequence, 2, '0', STR_PAD_LEFT);
-
-        // 6️⃣ Final permit number
-        return "{$baseFormat}-{$sequence}{$suffix}";
+    if (!$applicationNo) {
+        throw new \Exception('Application number not found.');
     }
+
+    // Get the prefix before the first "-"
+    $prefix = strtoupper(explode('-', $applicationNo)[0]);
+
+    // Mapping of application prefixes to permit suffixes
+    $suffixMap = [
+        'CCALACA'    => 'B',
+        'CLIPA'      => 'B',
+        'BAT'        => 'B',
+
+        'LAG'        => 'L',
+        'CSTAX'      => 'L',
+
+        'QUE'        => 'Q',
+        'CCALAUAG'   => 'Q',
+        'CCREAL'     => 'Q',
+        'CCTAYABAS'  => 'Q',
+        'CCATANAUAN' => 'Q',
+
+        'RIZ'        => 'R',
+
+        'CAV'        => 'C',
+    ];
+
+    if (!isset($suffixMap[$prefix])) {
+        throw new \Exception("Unknown application prefix: {$prefix}");
+    }
+
+    $suffix = $suffixMap[$prefix];
+
+    // Current date for the new permit number
+    $datePart = now()->format('mdY');
+    $baseFormat = "DENR-IV-A-{$datePart}";
+
+    // Get the latest permit with the same suffix (regardless of date)
+    $latestPermit = DB::table('tbl_application_checklist')
+        ->whereNotNull('permit_no')
+        ->where('permit_no', 'like', "%{$suffix}")
+        ->orderByRaw("
+            CAST(
+                REPLACE(
+                    SUBSTRING_INDEX(permit_no, '-', -1),
+                    '{$suffix}',
+                    ''
+                ) AS UNSIGNED
+            ) DESC
+        ")
+        ->lockForUpdate()
+        ->first();
+
+    // Get the next sequence
+    if (
+        $latestPermit &&
+        preg_match('/-(\d+)' . preg_quote($suffix, '/') . '$/', $latestPermit->permit_no, $matches)
+    ) {
+        $nextSequence = (int) $matches[1] + 1;
+    } else {
+        $nextSequence = 1;
+    }
+
+    // Pad with leading zero
+    $sequence = str_pad($nextSequence, 2, '0', STR_PAD_LEFT);
+
+    return "{$baseFormat}-{$sequence}{$suffix}";
+}
 
 
 
