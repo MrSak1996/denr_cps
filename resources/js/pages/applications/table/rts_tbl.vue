@@ -312,7 +312,7 @@ const approvedApplicants = async () => {
         const { applications: approvedApplications, count: approvedCount } = await ProductService.getApplicationsByStatus(STATUS_APPROVED_BY_RED, officeId);
 
         approved_application.value = approvedApplications;
-        totalCount.value = approvedCount;
+        approvedTotalCount.value = approvedCount;
 
 
     } catch (error) {
@@ -811,6 +811,10 @@ const canView = (row: any) => {
         25
     ].includes(row.application_status)
 }
+const generatePdf = (data) => {
+    window.open(`/permit/print/${data.id}`, "_blank"); //MULTIPLE BRANDS AND MODELS
+
+};
 const avatarColors = [
     'bg-blue-500',
     'bg-green-500',
@@ -980,30 +984,46 @@ const getAvatarColor = (name: string) => {
                         <Column header="Applicant Name" style="min-width: 16rem">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-3">
+
+                                    <!-- Avatar -->
                                     <div :class="[
                                         'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
                                         getAvatarColor(
                                             slotProps.data.application_type === 'Individual'
                                                 ? slotProps.data.applicant_name
-                                                : slotProps.data.authorized_representative
+                                                : slotProps.data.company_name
                                         )
                                     ]">
                                         {{
                                             (
                                                 slotProps.data.application_type === 'Individual'
                                                     ? slotProps.data.applicant_name
-                                                    : slotProps.data.authorized_representative
+                                                    : slotProps.data.company_name
                                             )?.charAt(0)
                                         }}
                                     </div>
 
-                                    <span>
-                                        {{
-                                            slotProps.data.application_type === 'Individual'
-                                                ? slotProps.data.applicant_name
-                                                : slotProps.data.authorized_representative
-                                        }}
-                                    </span>
+                                    <!-- Name -->
+                                    <div class="flex flex-col">
+                                        <!-- Individual -->
+                                        <template v-if="slotProps.data.application_type === 'Individual'">
+                                            <span class="font-medium">
+                                                {{ slotProps.data.applicant_name }}
+                                            </span>
+                                        </template>
+
+                                        <!-- Company / Government -->
+                                        <template v-else>
+                                            <span class="font-medium">
+                                                {{ slotProps.data.company_name }}
+                                            </span>
+
+                                            <span class="text-sm text-gray-500">
+                                                {{ slotProps.data.authorized_representative }}
+                                            </span>
+                                        </template>
+                                    </div>
+
                                 </div>
                             </template>
                         </Column>
@@ -1043,11 +1063,11 @@ const getAvatarColor = (name: string) => {
                                 <b>{{ data.application_no }}</b>
                             </template>
                         </Column>
-                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                        <!-- <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
                             <template #body="{ data }">
                                 <b>{{ data.permit_no }}</b>
                             </template>
-                        </Column>
+                        </Column> -->
                         <Column header="Office" style="min-width: 10rem">
                             <template #body="slotProps">
                                 {{ slotProps.data.office_title }}
@@ -1110,13 +1130,10 @@ const getAvatarColor = (name: string) => {
                                 <div class="mt-2 flex gap-2">
 
                                     <!-- ✅ RECEIVE (disabled if endorsed) -->
-                                    <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
-                                        ? 'Application cannot be received yet'
-                                        : 'Receive Application'" :disabled="buttonState(slotProps.data).receiveDisable"
-                                        @click="openDialog('receive', slotProps.data.id)"
-                                        style="background-color: #0f766e" class="p-2 text-white">
-                                        <BadgeCheck :size="15" />
-                                    </Button>
+                                    <Button v-tooltip.top="'Preview'" @click="generatePdf(slotProps.data)"
+                                            style="background-color: #0D47A1" class="p-2 text-white">
+                                            <PrinterCheck :size="15" />
+                                        </Button>
 
                                     <Link v-if="canView(slotProps.data)" v-tooltip.top="'Edit Application'" :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
@@ -1158,7 +1175,7 @@ const getAvatarColor = (name: string) => {
                                                 slotProps.data.application_type === 'Individual'
                                                     ? slotProps.data.applicant_name
                                                     : slotProps.data.company_name
-                                        )?.charAt(0)
+                                            )?.charAt(0)
                                         }}
                                     </div>
 

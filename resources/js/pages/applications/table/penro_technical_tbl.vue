@@ -897,7 +897,7 @@ const getDownloadCount = async (application_id) => {
                                     </Link>
                                     <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
                                         :disabled="(downloadCount[slotProps.data.id] ?? 0) >= 3"
-                                        @click="generatePdf(slotProps.data)" style="background-color: #BF360C;">
+                                        @click="generatePdf(slotProps.data)" style="background-color: #0D47A1">
                                         <PrinterCheck :size="15" /> 
                                     </Button>
 
