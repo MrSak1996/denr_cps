@@ -2,7 +2,7 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck,SquarePen,View,Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, SquarePen, View, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -24,40 +24,41 @@ import Dialog from 'primevue/dialog';
 
 onMounted(() => {
     applicantsTable();
+    approvedApplicants();
 });
 
 const STATUS_DRAFT = 1;
-    const STATUS_FOR_REVIEW_EVALUATION = 2;
+const STATUS_FOR_REVIEW_EVALUATION = 2;
 
-    const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
-    const STATUS_ENDORSED_CENRO_OFFICER = 4;
-    const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
-    const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
-    const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
-    const STATUS_ENDORSED_PENRO_OFFICER = 8;
-    const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
-    const STATUS_ENDORSED_FUS_CHIEF = 10;
-    const STATUS_ENDORSED_LPDD_CHIEF = 11;
-    const STATUS_ENDORSED_ARDTS = 12;
-    const STATUS_ENDORSED_RED = 13;
+const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
+const STATUS_ENDORSED_CENRO_OFFICER = 4;
+const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
+const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
+const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
+const STATUS_ENDORSED_PENRO_OFFICER = 8;
+const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
+const STATUS_ENDORSED_FUS_CHIEF = 10;
+const STATUS_ENDORSED_LPDD_CHIEF = 11;
+const STATUS_ENDORSED_ARDTS = 12;
+const STATUS_ENDORSED_RED = 13;
 
-    const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
-    const STATUS_RECEIVED_CENRO_OFFICER = 15;
-    const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
-    const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
-    const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
-    const STATUS_RECEIVED_PENRO_OFFICER = 19;
-    const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
-    const STATUS_RECEIVED_FUS_CHIEF = 21;
-    const STATUS_RECEIVED_LPDD_CHIEF = 22;
-    const STATUS_RECEIVED_ARDTS = 23;
-    const STATUS_RECEIVED_RED = 24;
+const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
+const STATUS_RECEIVED_CENRO_OFFICER = 15;
+const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
+const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
+const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
+const STATUS_RECEIVED_PENRO_OFFICER = 19;
+const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
+const STATUS_RECEIVED_FUS_CHIEF = 21;
+const STATUS_RECEIVED_LPDD_CHIEF = 22;
+const STATUS_RECEIVED_ARDTS = 23;
+const STATUS_RECEIVED_RED = 24;
 
-    const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
-    const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
-    const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
+const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
+const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
+const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
 
-    const STATUS_APPROVED_BY_RED = 28;
+const STATUS_APPROVED_BY_RED = 28;
 
 const page = usePage();
 const toast = useToast();
@@ -245,6 +246,20 @@ const applicantsTable = async () => {
         console.error('Error fetching applications:', error);
     }
 };
+
+const approvedApplicants = async () => {
+    try {
+        const officeId = page.props.auth.user.office_id;
+        const { applications: approvedApplications, count: approvedCount } = await ProductService.getApplicationsByStatus(STATUS_APPROVED_BY_RED, officeId);
+
+        approved_application.value = approvedApplications;
+        approvedTotalCount.value = approvedCount;
+
+
+    } catch (error) {
+        console.error('Error fetching applications:', error);
+    }
+}
 
 
 
@@ -740,7 +755,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
             header: 'Receive Application?',
             message: 'Please confirm that you want to receive this application.',
             api: 'applications.fus.receive',
-            payload: { id,office_id,user_id,role_id},
+            payload: { id, office_id, user_id, role_id },
             showTextarea: false,
             showDropdown: false,
             toastMessage: 'Application received',
@@ -769,7 +784,7 @@ const openDialog = (type: 'endorse' | 'return' | 'receive', id: number) => {
                     detail: c.toastMessage,
                     life: 3000,
                 });
-                    setTimeout(() => {
+                setTimeout(() => {
                     router.visit('/dashboard/fus');
                 }, 1000);
             } catch (error) {
@@ -799,30 +814,30 @@ const openCommentModal = async (data) => {
 
 const buttonState = (row: any) => {
     const isReceived = row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
-    row.application_status === STATUS_RETURNED_TO_PENRO_TECHNICAL ||
-    row.application_status === STATUS_RECEIVED_CENRO_RPS_CHIEF ||
-    row.application_status === STATUS_RECEIVED_CENRO_OFFICER ||
-    row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
-    row.application_status === STATUS_RECEIVED_PENRO_CHIEF_RPS ||
-    row.application_status === STATUS_RECEIVED_PENRO_CHIEF_TSD ||
-    row.application_status === STATUS_RECEIVED_PENRO_OFFICER ||
-    row.application_status === STATUS_RECEIVED_FUS_CHIEF ||
-    row.application_status === STATUS_RECEIVED_LPDD_CHIEF ||
-    row.application_status === STATUS_ENDORSED_CENRO_RPS_CHIEF ||
-    row.application_status === STATUS_ENDORSED_CENRO_OFFICER ||
-    row.application_status === STATUS_ENDORSED_PENRO_TECHNICAL ||
-    row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS ||
-    row.application_status === STATUS_ENDORSED_PENRO_CHIEF_TSD ||
-    row.application_status === STATUS_ENDORSED_PENRO_OFFICER ||
-    row.application_status === STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF ||
-    row.application_status === STATUS_ENDORSED_LPDD_CHIEF ||
-    row.application_status === STATUS_ENDORSED_ARDTS ||
-    row.application_status === STATUS_ENDORSED_RED ||
-    row.application_status === STATUS_RETURNED_TO_CENRO_TECHNICAL ||
-    row.application_status === STATUS_RETURNED_TO_PENRO_TECHNICAL ||
-    row.application_status === STATUS_RETURNED_TO_REGIONAL_TECHNICAL ||
-    row.application_status === STATUS_RECEIVED_ARDTS ||
-    row.application_status === STATUS_RECEIVED_RED;
+        row.application_status === STATUS_RETURNED_TO_PENRO_TECHNICAL ||
+        row.application_status === STATUS_RECEIVED_CENRO_RPS_CHIEF ||
+        row.application_status === STATUS_RECEIVED_CENRO_OFFICER ||
+        row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
+        row.application_status === STATUS_RECEIVED_PENRO_CHIEF_RPS ||
+        row.application_status === STATUS_RECEIVED_PENRO_CHIEF_TSD ||
+        row.application_status === STATUS_RECEIVED_PENRO_OFFICER ||
+        row.application_status === STATUS_RECEIVED_FUS_CHIEF ||
+        row.application_status === STATUS_RECEIVED_LPDD_CHIEF ||
+        row.application_status === STATUS_ENDORSED_CENRO_RPS_CHIEF ||
+        row.application_status === STATUS_ENDORSED_CENRO_OFFICER ||
+        row.application_status === STATUS_ENDORSED_PENRO_TECHNICAL ||
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS ||
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_TSD ||
+        row.application_status === STATUS_ENDORSED_PENRO_OFFICER ||
+        row.application_status === STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF ||
+        row.application_status === STATUS_ENDORSED_LPDD_CHIEF ||
+        row.application_status === STATUS_ENDORSED_ARDTS ||
+        row.application_status === STATUS_ENDORSED_RED ||
+        row.application_status === STATUS_RETURNED_TO_CENRO_TECHNICAL ||
+        row.application_status === STATUS_RETURNED_TO_PENRO_TECHNICAL ||
+        row.application_status === STATUS_RETURNED_TO_REGIONAL_TECHNICAL ||
+        row.application_status === STATUS_RECEIVED_ARDTS ||
+        row.application_status === STATUS_RECEIVED_RED;
     return {
         receiveDisable: isReceived, // ✅ disable if already received
         endorsedDisabled: false,
@@ -884,6 +899,24 @@ const getAvatarColor = (name: string) => {
                         <i class="pi pi-list" style="font-size: 25px" />
                     </div>
                 </button>
+                <button @click="activeTab = 'aa'" :class="[
+                    'border-b-2 px-4 py-2 text-sm font-medium transition flex items-center space-x-2',
+                    activeTab === 'aa'
+                        ? 'border-green-600 text-green-700'
+                        : 'border-transparent text-gray-500 hover:border-green-500 hover:text-green-600'
+                ]">
+                    <!-- Tab Title -->
+                    <span>Approved Applications</span>
+
+
+
+
+                    <div class="relative inline-block">
+                        <OverlayBadge v-if="approvedTotalCount > 0" :value="approvedTotalCount" severity="danger"
+                            size="small" class="absolute top-0 right-0" />
+                        <i class="pi pi-check-circle" style="font-size: 25px" />
+                    </div>
+                </button>
             </div>
             <!-- Content -->
             <div class="flex-1 space-y-4 overflow-y-auto">
@@ -910,36 +943,31 @@ const getAvatarColor = (name: string) => {
                             <Column header="Action" :exportable="false" style="min-width: 2rem">
                                 <template #body="slotProps">
                                     <div class="mt-2 flex gap-2">
-                                          <!-- ✅ RECEIVE (disabled if endorsed) -->
-                                    <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
-                                        ? 'Application cannot be received yet'
-                                        : 'Receive Application'" :disabled="buttonState(slotProps.data).receiveDisable"
-                                        @click="openDialog('receive', slotProps.data.id)"
-                                        style="background-color: #0f766e" class="p-2 text-white">
-                                        <BadgeCheck :size="15" />
-                                    </Button>
-                                    <Link
-                                        v-tooltip.top="'Edit Application'"
-                                        v-if="canView(slotProps.data)"
-                                        :href="route('applications.edit', {
+                                        <!-- ✅ RECEIVE (disabled if endorsed) -->
+                                        <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
+                                            ? 'Application cannot be received yet'
+                                            : 'Receive Application'" :disabled="buttonState(slotProps.data).receiveDisable"
+                                            @click="openDialog('receive', slotProps.data.id)"
+                                            style="background-color: #0f766e" class="p-2 text-white">
+                                            <BadgeCheck :size="15" />
+                                        </Button>
+                                        <Link v-tooltip.top="'Edit Application'" v-if="canView(slotProps.data)" :href="route('applications.edit', {
                                             application_id: slotProps.data.id,
                                             type: slotProps.data.application_type,
                                             step: 4
-                                        })"
-                                        class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
-                                        style="background-color: #0f766e">
-                                        <SquarePen :size="16" />
-                                    </Link>
-                                     <Link 
-                                        v-tooltip.top="'View Application'"
-                                        v-if="slotProps.data.application_status != STATUS_DRAFT" :href="route('applications.edit', {
-                                        application_id: slotProps.data.id,
-                                        type: slotProps.data.application_type,
-                                        step: 4
-                                    })" class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
-                                        <View :size="16" />
-                                    </Link>
-                                    
+                                        })" class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                            style="background-color: #0f766e">
+                                            <SquarePen :size="16" />
+                                        </Link>
+                                        <Link v-tooltip.top="'View Application'"
+                                            v-if="slotProps.data.application_status != STATUS_DRAFT" :href="route('applications.edit', {
+                                                application_id: slotProps.data.id,
+                                                type: slotProps.data.application_type,
+                                                step: 4
+                                            })" class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
+                                            <View :size="16" />
+                                        </Link>
+
 
 
 
@@ -947,45 +975,230 @@ const getAvatarColor = (name: string) => {
                                 </template>
                             </Column>
                             <Column header="Applicant Name" style="min-width: 16rem">
+                                <template #body="slotProps">
+                                    <div class="flex items-center gap-3">
+
+                                        <!-- Avatar -->
+                                        <div :class="[
+                                            'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                                            getAvatarColor(
+                                                slotProps.data.application_type === 'Individual'
+                                                    ? slotProps.data.applicant_name
+                                                    : slotProps.data.company_name
+                                            )
+                                        ]">
+                                            {{
+                                                (
+                                                    slotProps.data.application_type === 'Individual'
+                                                        ? slotProps.data.applicant_name
+                                                        : slotProps.data.company_name
+                                                )?.charAt(0)
+                                            }}
+                                        </div>
+
+                                        <!-- Name -->
+                                        <div class="flex flex-col">
+                                            <!-- Individual -->
+                                            <template v-if="slotProps.data.application_type === 'Individual'">
+                                                <span class="font-medium">
+                                                    {{ slotProps.data.applicant_name }}
+                                                </span>
+                                            </template>
+
+                                            <!-- Company / Government -->
+                                            <template v-else>
+                                                <span class="font-medium">
+                                                    {{ slotProps.data.company_name }}
+                                                </span>
+
+                                                <span class="text-sm text-gray-500">
+                                                    {{ slotProps.data.authorized_representative }}
+                                                </span>
+                                            </template>
+                                        </div>
+
+                                    </div>
+                                </template>
+                            </Column>
+                            <Column field="status_title" header="Status" sortable style="min-width: 12rem">
+                                <template #body="{ data }">
+                                    <div class="flex flex-col items-center">
+                                        <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
+                                            data.status_title === 'Endorsed to TSD Chief' ? 'info' :
+                                                'success'
+                                            " class="text-center" />
+
+
+                                        <Button v-if="data.application_status >= 25 && data.application_status <= 27"
+                                            style="
+                                        display: inline;
+                                        padding: .2em .6em .3em;
+                                        font-size: 75%;
+                                        font-weight: 700;
+                                        line-height: 1;
+                                        color: #fff;
+                                        text-align: center;
+                                        white-space: nowrap;
+                                        vertical-align: baseline;
+                                        border-radius: .25em;
+                                    " severity="info" class="mt-1 rounded bg-blue-900 px-1 py-1 text-xs text-white"
+                                            @click="openCommentModal(data)" size="small">
+                                            View Comments
+                                        </Button>
+                                    </div>
+                                </template>
+                            </Column>
+                            <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
+                                <template #body="{ data }">
+                                    <b>{{ data.application_no }}</b>
+                                </template>
+                            </Column>
+
+
+
+                            <Column field="application_type" header="Application Type" sortable />
+                            <Column header="Type of Transaction" field="transaction_type" sortable></Column>
+                            <Column header="Classification" field="classification" sortable></Column>
+
+                            <Column field="date_applied" header="Date of Application" sortable
+                                style="min-width: 4rem" />
+
+                        </DataTable>
+                    </div>
+                </div>
+                 <div v-else-if="activeTab === 'aa'" class="space-y-2 text-sm text-gray-700">
+                <div class="h-auto w-full">
+                    <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="approved_application"
+                        dataKey="id" :paginator="true" :rows="20" :filters="filters" filterDisplay="menu"
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                        :rowsPerPageOptions="[5, 10, 25]"
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                        responsiveLayout="scroll" class="w-full text-sm">
+                        <template #header>
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+
+                                <!-- Search -->
+                                <IconField>
+                                    <InputIcon>
+                                        <i class="pi pi-search" />
+                                    </InputIcon>
+
+                                    <InputText v-model="filters['global'].value" placeholder="Search..." class="w-64" />
+                                </IconField>
+
+                                <!-- Filters -->
+                                <div class="flex flex-wrap gap-2">
+
+                                    <!-- Office Filter -->
+                                    <Select v-model="filters['office_id'].value" :options="officeOptions" filter
+                                        optionLabel="label" optionValue="value" placeholder="Filter by Office"
+                                        class="w-52" showClear />
+
+                                    <!-- Application Type Filter -->
+                                    <Select v-model="filters['application_type'].value" filter
+                                        :options="applicationTypeOptions" optionLabel="label" optionValue="value"
+                                        placeholder="Application Type" class="w-52" showClear />
+
+                                    <!-- Status Filter -->
+                                    <Select v-model="filters['application_status'].value" :options="statusOptions"
+                                        filter optionLabel="label" optionValue="value" placeholder="Filter by Status"
+                                        class="w-52" showClear />
+
+                                </div>
+                            </div>
+                        </template>
+                        <Column header="Action" :exportable="false" style="min-width: 2rem">
+                            <template #body="slotProps">
+                                <div class="mt-2 flex gap-2">
+
+                                    <!-- ✅ RECEIVE (disabled if endorsed) -->
+                                    <Button v-tooltip.top="'Preview'" @click="generatePdf(slotProps.data)"
+                                            style="background-color: #0D47A1" class="p-2 text-white">
+                                            <PrinterCheck :size="15" />
+                                        </Button>
+
+                                    <Link v-if="canView(slotProps.data)" v-tooltip.top="'Edit Application'" :href="route('applications.edit', {
+                                        application_id: slotProps.data.id,
+                                        type: slotProps.data.application_type,
+                                        step: 4
+                                    })" class="inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
+                                        style="background-color: #0f766e">
+                                        <SquarePen :size="16" />
+                                    </Link>
+
+                                    <Link v-if="slotProps.data.application_status != STATUS_DRAFT"
+                                        v-tooltip.top="'View Application'" :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: 4
+                                        })"
+                                        class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
+                                        <View :size="16" />
+                                    </Link>
+
+                                </div>
+                            </template>
+                        </Column>
+                        <Column header="Applicant Name" style="min-width: 16rem">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-3">
+
+                                    <!-- Avatar -->
                                     <div :class="[
                                         'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
                                         getAvatarColor(
                                             slotProps.data.application_type === 'Individual'
                                                 ? slotProps.data.applicant_name
-                                                : slotProps.data.authorized_representative
+                                                : slotProps.data.company_name
                                         )
                                     ]">
                                         {{
                                             (
                                                 slotProps.data.application_type === 'Individual'
                                                     ? slotProps.data.applicant_name
-                                                    : slotProps.data.authorized_representative
+                                                    : slotProps.data.company_name
                                             )?.charAt(0)
                                         }}
                                     </div>
 
-                                    <span>
-                                        {{
-                                            slotProps.data.application_type === 'Individual'
-                                                ? slotProps.data.applicant_name
-                                                : slotProps.data.authorized_representative
-                                        }}
-                                    </span>
+                                    <!-- Name -->
+                                    <div class="flex flex-col">
+                                        <!-- Individual -->
+                                        <template v-if="slotProps.data.application_type === 'Individual'">
+                                            <span class="font-medium">
+                                                {{ slotProps.data.applicant_name }}
+                                            </span>
+                                        </template>
+
+                                        <!-- Company / Government -->
+                                        <template v-else>
+                                            <span class="font-medium">
+                                                {{ slotProps.data.company_name }}
+                                            </span>
+
+                                            <span class="text-sm text-gray-500">
+                                                {{ slotProps.data.authorized_representative }}
+                                            </span>
+                                        </template>
+                                    </div>
+
                                 </div>
                             </template>
                         </Column>
-                            <Column field="status_title" header="Status" sortable style="min-width: 12rem">
+                        <Column field="status_title" header="Status" sortable style="min-width: 12rem">
                             <template #body="{ data }">
                                 <div class="flex flex-col items-center">
-                                    <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
-                                        data.status_title === 'Endorsed to TSD Chief' ? 'info' :
-                                            'success'
+                                    <Tag :value="data.status_title" :severity="data.application_status >= 25 && data.application_status <= 27
+                                        ? 'danger'
+                                        : data.status_title === 'Endorsed to TSD Chief' || data.status_title === 'Received by ARDTS'
+                                            ? 'info'
+                                            : 'success'
                                         " class="text-center" />
+                                    <div class="italic text-gray-600">
+                                        {{ data.updated_by }}
+                                    </div>
 
-
-                                     <Button v-if="data.application_status >= 25 && data.application_status <= 27" style="
+                                    <Button v-if="data.application_status >= 25 && data.application_status <= 27" style="
                                         display: inline;
                                         padding: .2em .6em .3em;
                                         font-size: 75%;
@@ -1008,12 +1221,17 @@ const getAvatarColor = (name: string) => {
                                 <b>{{ data.application_no }}</b>
                             </template>
                         </Column>
-                         <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
                             <template #body="{ data }">
                                 <b>{{ data.permit_no }}</b>
                             </template>
                         </Column>
-                         
+                        <Column header="Office" style="min-width: 10rem">
+                            <template #body="slotProps">
+                                {{ slotProps.data.office_title }}
+                            </template>
+                        </Column>
+
 
                         <Column field="application_type" header="Application Type" sortable />
                         <Column header="Type of Transaction" field="transaction_type" sortable></Column>
@@ -1021,9 +1239,9 @@ const getAvatarColor = (name: string) => {
 
                         <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
 
-                        </DataTable>
-                    </div>
+                    </DataTable>
                 </div>
+            </div>
             </div>
         </div>
 
@@ -1467,7 +1685,7 @@ const getAvatarColor = (name: string) => {
             </div>
         </Dialog>
 
-          <Dialog v-model:visible="showCommentsModal" modal header="Comments History" :style="{ width: '60vw' }">
+        <Dialog v-model:visible="showCommentsModal" modal header="Comments History" :style="{ width: '60vw' }">
             <div class="overflow-x-auto">
 
                 <!-- Loading -->
