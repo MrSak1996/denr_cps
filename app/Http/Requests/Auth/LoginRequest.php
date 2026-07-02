@@ -31,7 +31,7 @@ class LoginRequest extends FormRequest
             'password' => ['required', 'string'],
         ];
     }
- public function username()
+    public function username()
     {
         return 'uname'; // override username field here
     }
@@ -40,7 +40,7 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-     public function authenticate(): void
+    public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
@@ -83,6 +83,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('uname')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('uname')) . '|' . $this->ip());
     }
 }

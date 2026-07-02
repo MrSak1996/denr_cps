@@ -12,6 +12,7 @@ use App\Http\Controllers\Routing\RoutingController;
 use App\Http\Controllers\UserManagement\UserController;
 use App\Http\Controllers\Reports\PDFController;
 use App\Http\Controllers\NotificationController\EmailController;
+use App\Http\Controllers\Dashboard\RegionalExecutiveController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -37,6 +38,7 @@ Route::get( '/chainsaw/{applicationId}/brands', [ChainsawController::class, 'get
 Route::get( '/chainsaw/{applicationId}/supplier', [ChainsawController::class, 'getSupplierInfo'] );
 Route::get( '/getUserList', [UserController::class, 'getUserList'] );
 
+Route::post('/mobileAuthenticate', [RegionalExecutiveController::class, 'mobileAuthenticate']);
 Route::post('/chainsaw/apply', [ApplicationController::class, 'apply']);
 Route::post('/chainsaw/company_apply', [ApplicationController::class, 'company_apply']);
 Route::post('/chainsaw/government_apply', [ApplicationController::class, 'government_apply']);
@@ -55,7 +57,7 @@ Route::get('/application-routing/{id}', [RoutingController::class, 'show']);
 Route::get('/getCommentsByID/{id}', [RoutingController::class,'getCommentsByID']);
 Route::get('/applicationDownloads', [ApplicationController::class,'applicationDownloads']);
 Route::post('/send-email',[EmailController::class,'sendEmail']);
-Route::get('/summary', [ApplicationController::class, 'summary']);
+Route::get('/summary', [ApplicationController::class, 'summa    ry']);
 Route::put('/updateApplicantDetails/{id}', [ChainsawController::class, 'updateApplicantDetails']);
 Route::put('/updateChainsawInformation/{id}', [ChainsawController::class, 'updateChainsawInformation']);
 Route::put('/updateApplicationStatus/{id}', [ChainsawController::class, 'updateApplicationStatus']);

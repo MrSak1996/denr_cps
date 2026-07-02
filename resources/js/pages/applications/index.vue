@@ -136,7 +136,7 @@ const selectApplicant = (type: string) => {
                                     </h4>
 
                                     <ul class="requirements-list">
-                                        <li>Duly accomplished Application Form/Letter of Intent</li>
+                                        <li>Duly accomplished Application Form and/or Letter of Intent</li>
                                         <li>Copy of Permit to Sell/Re-Sell Chainsaw</li>
                                         <li>Official Receipt of Permit Fee</li>
                                         <li>Authorization of representative/requesting person (if applicable)</li>
@@ -194,7 +194,7 @@ const selectApplicant = (type: string) => {
                                     </h4>
 
                                     <ul class="requirements-list">
-                                        <li>Duly accomplished Application Form/Letter of Intent</li>
+                                        <li>Duly accomplished Application Form and/or Letter of Intent</li>
                                         <li>Copy of Permit to Sell/Re-Sell Chainsaw</li>
                                         <li>Official Receipt of Permit Fee</li>
                                         <li>Certificate of Registration of Business Name from DTI or SEC</li>
@@ -252,7 +252,7 @@ const selectApplicant = (type: string) => {
                                     </h4>
 
                                     <ul class="requirements-list">
-                                         <li>Duly accomplished Application Form/Letter of Intent</li>
+                                         <li>Duly accomplished Application Form and/or Letter of Intent</li>
                                         <li>Copy of Permit to Sell/Re-Sell Chainsaw</li>
                                         <li>Official Receipt of Permit Fee</li>
                                         <li>Duly signed and notarized affidavit (purpose of chainsaw purchase)</li>

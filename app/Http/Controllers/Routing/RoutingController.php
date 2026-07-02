@@ -98,7 +98,7 @@ class RoutingController extends Controller
                 'ac.application_no',
                 'u.name as action_officer',
                 'r.role_title as sender_role',
-                'ar.comments',
+                'ee.remarks as comments',
                 's.status_title',
                 'ar.created_at',
             ])

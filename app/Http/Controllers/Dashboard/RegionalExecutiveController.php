@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Application\ChainsawIndividualApplication;
+
+
 
 class RegionalExecutiveController extends Controller
 {
@@ -228,5 +231,51 @@ class RegionalExecutiveController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+		
+		
+    }
+
+	public function mobileAuthenticate(Request $request)
+    {
+        $credentials = $request->validate([
+            'uname' => 'required',
+            'password' => 'required',
+        ]);
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => $request->password
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        // If you're using Sanctum
+
+        return response()->json([
+            'success' => true,
+            'user' => $user,
+            'role_id' => $user->role_id,
+            'redirect' => $this->getDashboard($user->role_id),
+        ]);
+    }
+
+    private function getDashboard($roleId)
+    {
+        return match ($roleId) {
+            1 => 'applications.pending_application',
+            2 => 'rps.chief.dashboard',
+            3 => 'cenro.dashboard',
+            4 => 'penro.technical.dashboard',
+            5 => 'penro.rps.chief.dashboard',
+            6 => 'penro.tsd.chief.dashboard',
+            7 => 'penro.dashboard',
+            8 => 'rts.dashboard',
+            9 => 'fus.dashboard',
+            10 => 'lpdd.chief.dashboard',
+            11 => 'ardts.dashboard',
+            12 => 'regional.executive.dashboard',
+            default => 'dashboard',
+        };
     }
 }
