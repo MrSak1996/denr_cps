@@ -1075,38 +1075,15 @@ const getAvatarColor = (name: string) => {
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
                         responsiveLayout="scroll" class="w-full text-sm">
                         <template #header>
-                            <div class="flex flex-wrap items-center justify-between gap-3">
-
-                                <!-- Search -->
-                                <IconField>
-                                    <InputIcon>
-                                        <i class="pi pi-search" />
-                                    </InputIcon>
-
-                                    <InputText v-model="filters['global'].value" placeholder="Search..." class="w-64" />
-                                </IconField>
-
-                                <!-- Filters -->
-                                <div class="flex flex-wrap gap-2">
-
-                                    <!-- Office Filter -->
-                                    <Select v-model="filters['office_id'].value" :options="officeOptions" filter
-                                        optionLabel="label" optionValue="value" placeholder="Filter by Office"
-                                        class="w-52" showClear />
-
-                                    <!-- Application Type Filter -->
-                                    <Select v-model="filters['application_type'].value" filter
-                                        :options="applicationTypeOptions" optionLabel="label" optionValue="value"
-                                        placeholder="Application Type" class="w-52" showClear />
-
-                                    <!-- Status Filter -->
-                                    <Select v-model="filters['application_status'].value" :options="statusOptions"
-                                        filter optionLabel="label" optionValue="value" placeholder="Filter by Status"
-                                        class="w-52" showClear />
-
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <IconField>
+                                        <InputIcon>
+                                            <i class="pi pi-search" />
+                                        </InputIcon>
+                                        <InputText v-model="filters['global'].value" placeholder="Search..." />
+                                    </IconField>
                                 </div>
-                            </div>
-                        </template>
+                            </template>
                         <Column header="Action" :exportable="false" style="min-width: 2rem">
                             <template #body="slotProps">
                                 <div class="mt-2 flex gap-2">
