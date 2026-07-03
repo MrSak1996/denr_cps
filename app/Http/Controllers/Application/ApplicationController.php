@@ -142,7 +142,7 @@ class ApplicationController extends Controller
                 'date_applied' => $request->input('date_applied'),
 
 
-                'encoded_by' => $validated['encoded_by'] ?? null,
+                // 'encoded_by' => $validated['encoded_by'] ?? null,
                 'classification' => $validated['classification'] ?? null,
 
                 // ✅ UPPERCASE CLEAN DATA

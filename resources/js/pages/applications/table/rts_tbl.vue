@@ -2,7 +2,7 @@
 import { router, usePage, Link } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { SaveAll, SquarePen, View, Eye, BadgeCheck, SendIcon, History, Import, Undo2 } from 'lucide-vue-next';
+import { SaveAll, SquarePen, View, PrinterCheck, Eye, BadgeCheck, SendIcon, History, Import, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
@@ -102,7 +102,7 @@ const product = ref({});
 const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    office_id: { value: null, matchMode: FilterMatchMode.EQUALS },
+    office_id: { value: null, matchMode: FilterMatchMode.IN },
 
     application_type: {
         value: null,
@@ -114,6 +114,25 @@ const filters = ref({
         matchMode: FilterMatchMode.EQUALS
     }
 });
+
+
+const officeGroups = {
+    1: [1],                  // PENRO Cavite
+    2: [2, 6],               // PENRO Laguna + CENRO Sta. Cruz
+    3: [3, 7, 8],            // PENRO Batangas + its CENROs
+    4: [4],                  // PENRO Rizal
+    5: [5, 9, 10, 11, 12],   // PENRO Quezon + its CENROs
+    13: [13]                 // Regional Office
+};
+
+const onOfficeChange = (event) => {
+    const officeId = event.value;
+
+    filters.value.office_id.value = officeId
+        ? officeGroups[officeId]
+        : null;
+};
+
 const submitted = ref(false);
 const statuses = ref([
     { label: 'INSTOCK', value: 'instock' },
@@ -929,9 +948,12 @@ const getAvatarColor = (name: string) => {
                                 <div class="flex flex-wrap gap-2">
 
                                     <!-- Office Filter -->
-                                    <Select v-model="filters['office_id'].value" :options="officeOptions" filter
+                                    <!-- <Select v-model="filters['office_id'].value" :options="officeOptions" filter
                                         optionLabel="label" optionValue="value" placeholder="Filter by Office"
-                                        class="w-52" showClear />
+                                        class="w-52" showClear /> -->
+                                    <Select :modelValue="null" :options="officeOptions" optionLabel="label"
+                                        optionValue="value" placeholder="Filter by Office" class="w-52" filter showClear
+                                        @change="onOfficeChange" />
 
                                     <!-- Application Type Filter -->
                                     <Select v-model="filters['application_type'].value" filter
@@ -1108,9 +1130,13 @@ const getAvatarColor = (name: string) => {
                                 <div class="flex flex-wrap gap-2">
 
                                     <!-- Office Filter -->
-                                    <Select v-model="filters['office_id'].value" :options="officeOptions" filter
+                                    <!-- <Select v-model="filters['office_id'].value" :options="officeOptions" filter
                                         optionLabel="label" optionValue="value" placeholder="Filter by Office"
-                                        class="w-52" showClear />
+                                        class="w-52" showClear /> -->
+
+                                        <Select :modelValue="null" :options="officeOptions" optionLabel="label"
+                                        optionValue="value" placeholder="Filter by Office" class="w-52" filter showClear
+                                        @change="onOfficeChange" />
 
                                     <!-- Application Type Filter -->
                                     <Select v-model="filters['application_type'].value" filter
@@ -1131,9 +1157,9 @@ const getAvatarColor = (name: string) => {
 
                                     <!-- ✅ RECEIVE (disabled if endorsed) -->
                                     <Button v-tooltip.top="'Preview'" @click="generatePdf(slotProps.data)"
-                                            style="background-color: #0D47A1" class="p-2 text-white">
-                                            <PrinterCheck :size="15" />
-                                        </Button>
+                                        style="background-color: #0D47A1" class="p-2 text-white">
+                                        <PrinterCheck :size="15" />
+                                    </Button>
 
                                     <Link v-if="canView(slotProps.data)" v-tooltip.top="'Edit Application'" :href="route('applications.edit', {
                                         application_id: slotProps.data.id,
