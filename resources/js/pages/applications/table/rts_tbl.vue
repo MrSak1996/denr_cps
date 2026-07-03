@@ -75,6 +75,9 @@ const returnedTotalCount = ref(0);
 const endorsedTotalCount = ref(0);
 const approvedTotalCount = ref(0);
 
+const displayedCount = ref(totalCount.value);
+const displayApprovedCount = ref(approvedTotalCount.value);
+
 const products = ref();
 const returned_application = ref();
 const approved_application = ref();
@@ -117,20 +120,30 @@ const filters = ref({
 
 
 const officeGroups = {
-    1: [1],                  // PENRO Cavite
-    2: [2, 6],               // PENRO Laguna + CENRO Sta. Cruz
-    3: [3, 7, 8],            // PENRO Batangas + its CENROs
-    4: [4],                  // PENRO Rizal
-    5: [5, 9, 10, 11, 12],   // PENRO Quezon + its CENROs
-    13: [13]                 // Regional Office
+    // PENRO
+    1: [1],                   // PENRO Cavite
+    2: [2, 6],                // PENRO Laguna + CENRO Sta. Cruz
+    3: [3, 7, 8],             // PENRO Batangas + CENROs
+    4: [4],                   // PENRO Rizal
+    5: [5, 9, 10, 11, 12],    // PENRO Quezon + CENROs
+
+    // CENRO
+    6: [6],
+    7: [7],
+    8: [8],
+    9: [9],
+    10: [10],
+    11: [11],
+    12: [12],
+
+    // Regional Office
+    13: [13]
 };
 
-const onOfficeChange = (event) => {
-    const officeId = event.value;
-
-    filters.value.office_id.value = officeId
-        ? officeGroups[officeId]
-        : null;
+const selectedOffice = ref(null);
+const onOfficeChange = ({ value }) => {
+    filters.value.office_id.value =
+        value == null ? null : (officeGroups[value] ?? [value]);
 };
 
 const submitted = ref(false);
@@ -319,6 +332,7 @@ const applicantsTable = async () => {
 
         endorsed_application.value = endorsedApplications;
         totalCount.value = endorsedCount;
+        displayedCount.value = totalCount.value;
 
 
     } catch (error) {
@@ -332,6 +346,7 @@ const approvedApplicants = async () => {
 
         approved_application.value = approvedApplications;
         approvedTotalCount.value = approvedCount;
+        displayApprovedCount.value = approvedTotalCount.value;
 
 
     } catch (error) {
@@ -855,6 +870,24 @@ const getAvatarColor = (name: string) => {
 
     return avatarColors[sum % avatarColors.length];
 };
+const onTotalFilter = (event) => {
+    if (event.filteredValue) {
+        displayedCount.value = event.filteredValue.length;
+    } else {
+        // No filter applied
+        displayedCount.value = totalCount.value;
+    }
+};
+const onApprovedFilter = (event) => {
+    displayApprovedCount.value = event.filteredValue.length;
+    if (event.filteredValue) {
+        displayApprovedCount.value = event.filteredValue.length;
+    } else {
+        // No filter applied
+        displayApprovedCount.value = approvedTotalCount.value;
+    }
+};
+
 
 
 // const buttonState = (row: any) => {
@@ -896,8 +929,9 @@ const getAvatarColor = (name: string) => {
                 <span>List of Permit Application</span>
 
                 <!-- PrimeVue OverlayBadge with Icon -->
-                <OverlayBadge :value="totalCount" severity="danger" size="small">
+                <OverlayBadge :value="displayedCount" severity="danger" size="small">
                     <i class="pi pi-list" style="font-size: 25px" />
+
                 </OverlayBadge>
             </button>
 
@@ -914,9 +948,10 @@ const getAvatarColor = (name: string) => {
 
 
                 <div class="relative inline-block">
-                    <OverlayBadge v-if="approvedTotalCount > 0" :value="approvedTotalCount" severity="danger"
-                        size="small" class="absolute top-0 right-0" />
+                    <OverlayBadge :value="displayApprovedCount" severity="danger" size="small"
+                        class="absolute top-0 right-0" />
                     <i class="pi pi-check-circle" style="font-size: 25px" />
+
                 </div>
             </button>
         </div>
@@ -931,7 +966,7 @@ const getAvatarColor = (name: string) => {
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         :rowsPerPageOptions="[5, 10, 25]"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-                        responsiveLayout="scroll" class="w-full text-sm">
+                        responsiveLayout="scroll" class="w-full text-sm" @filter="onTotalFilter">
                         <template #header>
                             <div class="flex flex-wrap items-center justify-between gap-3">
 
@@ -951,8 +986,10 @@ const getAvatarColor = (name: string) => {
                                     <!-- <Select v-model="filters['office_id'].value" :options="officeOptions" filter
                                         optionLabel="label" optionValue="value" placeholder="Filter by Office"
                                         class="w-52" showClear /> -->
-                                    <Select :modelValue="null" :options="officeOptions" optionLabel="label"
-                                        optionValue="value" placeholder="Filter by Office" class="w-52" filter showClear
+                              
+
+                                    <Select v-model="selectedOffice" :options="officeOptions" optionLabel="label"
+                                        optionValue="value" placeholder="Filter by Office" filter showClear
                                         @change="onOfficeChange" />
 
                                     <!-- Application Type Filter -->
@@ -1113,7 +1150,7 @@ const getAvatarColor = (name: string) => {
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         :rowsPerPageOptions="[5, 10, 25]"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-                        responsiveLayout="scroll" class="w-full text-sm">
+                        responsiveLayout="scroll" class="w-full text-sm" @filter="onApprovedFilter">
                         <template #header>
                             <div class="flex flex-wrap items-center justify-between gap-3">
 
@@ -1134,7 +1171,7 @@ const getAvatarColor = (name: string) => {
                                         optionLabel="label" optionValue="value" placeholder="Filter by Office"
                                         class="w-52" showClear /> -->
 
-                                        <Select :modelValue="null" :options="officeOptions" optionLabel="label"
+                                    <Select :modelValue="null" :options="officeOptions" optionLabel="label"
                                         optionValue="value" placeholder="Filter by Office" class="w-52" filter showClear
                                         @change="onOfficeChange" />
 
