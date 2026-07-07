@@ -1411,7 +1411,7 @@ onMounted(() => {
             </div>
 
             <!-- Date Received -->
-             <div v-if="Array.from({ length: 75 }, (_, i) => i * 2 + 1).includes(item.route_order)"
+             <div v-if="Array.from({ length: 75 }, (_, i) => i * 2 + 1).includes(Number(item.route_order))"
 
               class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
@@ -1439,7 +1439,7 @@ onMounted(() => {
             </div>
 
             <!-- Date Endorsed -->
-            <div v-if="Array.from({ length: 75 }, (_, i) => (i + 1) * 2).includes(item.route_order)"
+            <div v-if="Array.from({ length: 75 }, (_, i) => (i + 1) * 2).includes(Number(item.route_order))"
               class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
                 Date Endorsed
