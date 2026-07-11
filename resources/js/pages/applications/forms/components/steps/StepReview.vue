@@ -361,13 +361,10 @@ const sendEmail = async (recipientEmail, roleId) => {
     const response = await axios.post('/api/send-email', {
       email: recipientEmail, // or the actual recipient
       applicant_name:
-        props.form.applicant_type === 'Individual'
-          ? `${props.form.first_name || ''} ${props.form.last_name || ''}`.trim()
-          : props.form.authorized_representative || 'N/A',
-      address:
-        props.form.applicant_type === 'Individual'
-          ? props.form.i_complete_address
-          : props.form.company_address,
+      ['Company', 'Government'].includes(props.form.applicant_type)
+      ? props.form.authorized_representative || 'N/A'
+      : `${props.form.first_name || ''} ${props.form.last_name || ''}`.trim(),
+      address: props.form.applicant_type === 'Individual' ? props.form.i_complete_address : props.form.company_address,
       application_no: props.form.application_no,
       role_id: roleId
     });

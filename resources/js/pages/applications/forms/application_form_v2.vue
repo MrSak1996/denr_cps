@@ -178,10 +178,21 @@ const updateStepInUrl = () => {
     )
 }
 
-const proceed = async () => {
+
+const proceed = () => {
+    const url = new URL(window.location.href)
+
+    const currentStep = Number(url.searchParams.get('step') || 1)
+    url.searchParams.set('step', String(currentStep + 1))
+
+    router.visit(url.pathname + url.search, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    })
+
     next()
 }
-
 /* -------------------- MAIN FLOW -------------------- */
 
 const nextStep = async (payload: any) => {

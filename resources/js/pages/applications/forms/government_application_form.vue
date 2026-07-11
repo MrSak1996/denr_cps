@@ -195,7 +195,7 @@ const nextStep = async (payload: any) => {
                 ...payload,
                 mode: props.mode,
                 status:payload.application_status,
-                // encoded_by: userId,
+                encoded_by: userId,
                 application_type: payload.application_type,
             })
 

@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { router } from '@inertiajs/vue3'
 
 export function useApplicationStepper(step = 1){
 
@@ -7,7 +8,9 @@ export function useApplicationStepper(step = 1){
 
     const next = () => {
 
+
         if(currentStep.value < 4) currentStep.value++
+        
         
     }
 
