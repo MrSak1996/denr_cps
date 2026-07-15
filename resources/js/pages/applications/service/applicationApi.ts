@@ -142,6 +142,10 @@ export const getApplicationReview = async (id: any) => {
         files: fileRes.data.data || []
     }
 }
+export const loadPurpose = async () => {
+    const res = await axios.get('/api/permit-purposes')
+    return res.data
+}
 
 
 

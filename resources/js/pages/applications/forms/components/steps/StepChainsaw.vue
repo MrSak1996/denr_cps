@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, computed, reactive, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { useToast } from 'primevue/usetoast'
 import Tag from 'primevue/tag'
@@ -13,9 +13,23 @@ import ChainsawSupplierForm from '@/components/ChainsawSupplierForm.vue'
 import FileCard from '../../file_card.vue'
 import { MonitorUp, Info } from 'lucide-vue-next'
 
+import { loadPurpose } from '../../../service/applicationApi.js'
+
+onMounted(async () => {
+    getPurpose();
+})
+
+
+const purposes = ref([])
+const purpose = ref(null)
+
+const getPurpose = async () => {
+    const res = await loadPurpose()
+    purposes.value = res.data
+}
+
 /* -------------------- EMITS -------------------- */
 const emit = defineEmits(['next', 'back', 'supplierSaved'])
-const purpose = ref('')
 /* -------------------- PROPS -------------------- */
 const props = defineProps({
     form: { type: Object, required: true },
@@ -41,6 +55,10 @@ const selectedPurpose = computed({
 
 const options = [
     'For cutting of trees with legal permit',
+    'For trimming/pruning/cutting of trees along power line corridors',
+    'For cutting of trees',
+    'For trimming of trees',
+    'For business operation as registered Lumber Dealer/Dealer of Wood Materials',
     'For disaster preparedness and response operations',
     'For farm lot/tree orchard maintenance',
     'For maintenance of trees/vegetation within private property',
@@ -70,6 +88,18 @@ const purposeRequirements: Record<string, { label: string; field: string }[]> = 
     ],
 
     'For cutting/trimming of trees posing danger within a private property': [
+        { label: 'Notarized Affidavit', field: 'affidavit' }
+    ],
+    'For cutting/pruning/trimming of trees along power line corridors': [
+        { label: 'Notarized Affidavit', field: 'affidavit' }
+    ],
+    'For cutting of trees': [
+        { label: 'Notarized Affidavit', field: 'affidavit' }
+    ],
+    'For trimming of trees': [
+        { label: 'Notarized Affidavit', field: 'affidavit' }
+    ],
+    'For business operation as registered Lumber Dealer/Dealer of Wood Materials': [
         { label: 'Notarized Affidavit', field: 'affidavit' }
     ],
 
@@ -210,84 +240,84 @@ const deleteApplicantFile = async (file) => {
 };
 
 const handleFileUpdate = async (event: Event) => {
-  const target = event.target as HTMLInputElement
+    const target = event.target as HTMLInputElement
 
-  const newFile = target.files?.[0]
+    const newFile = target.files?.[0]
 
-  if (!newFile || !selectedFileToUpdate.value) return
+    if (!newFile || !selectedFileToUpdate.value) return
 
-  try {
-    isLoading.value = true
+    try {
+        isLoading.value = true
 
-    const formData = new FormData()
+        const formData = new FormData()
 
-    formData.append(
-      'application_id',
-      selectedFileToUpdate.value.application_id
-    )
+        formData.append(
+            'application_id',
+            selectedFileToUpdate.value.application_id
+        )
 
-    formData.append(
-      'application_type',
-      selectedFileToUpdate.value.application_type
-    )
+        formData.append(
+            'application_type',
+            selectedFileToUpdate.value.application_type
+        )
 
-    formData.append(
-      'attachment_id',
-      selectedFileToUpdate.value.attachment_id
-    )
+        formData.append(
+            'attachment_id',
+            selectedFileToUpdate.value.attachment_id
+        )
 
-    formData.append(
-      'name',
-      selectedFileToUpdate.value.name
-    )
+        formData.append(
+            'name',
+            selectedFileToUpdate.value.name
+        )
 
-    formData.append('file', newFile)
+        formData.append('file', newFile)
 
-    const response = await axios.post(
-      'https://cps.denrcalabarzon.com/api/files/update',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+        const response = await axios.post(
+            'https://cps.denrcalabarzon.com/api/files/update',
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }
+        )
+
+        // Update local file list
+        const updatedIndex = files.value.findIndex(
+            (f) => f.id === selectedFileToUpdate.value?.id
+        )
+
+        if (updatedIndex !== -1) {
+            files.value[updatedIndex] = response.data.updatedFile
         }
-      }
-    )
 
-    // Update local file list
-    const updatedIndex = files.value.findIndex(
-      (f) => f.id === selectedFileToUpdate.value?.id
-    )
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'File updated successfully.',
+            life: 3000
+        })
 
-    if (updatedIndex !== -1) {
-      files.value[updatedIndex] = response.data.updatedFile
+    } catch (error) {
+        console.error(error)
+
+        toast.add({
+            severity: 'error',
+            summary: 'Upload Failed',
+            detail: 'Failed to update file.',
+            life: 3000
+        })
+
+    } finally {
+        isLoading.value = false
+
+        if (updateFileInput.value) {
+            updateFileInput.value.value = ''
+        }
+
+        selectedFileToUpdate.value = null
     }
-
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'File updated successfully.',
-      life: 3000
-    })
-
-  } catch (error) {
-    console.error(error)
-
-    toast.add({
-      severity: 'error',
-      summary: 'Upload Failed',
-      detail: 'Failed to update file.',
-      life: 3000
-    })
-
-  } finally {
-    isLoading.value = false
-
-    if (updateFileInput.value) {
-      updateFileInput.value.value = ''
-    }
-
-    selectedFileToUpdate.value = null
-  }
 }
 
 const getEmbedUrl = (url: string) =>
@@ -348,7 +378,7 @@ watch(
             <Dialog v-model:visible="defaultSupplierDialog" modal header="Supplier Form">
                 <ChainsawSupplierForm :supplierData="props.suppliers" @save="handleSupplierSaved"
                     @cancel="defaultSupplierDialog = false" />
-                    
+
             </Dialog>
 
             <Button class="w-full bg-blue-900 hover:bg-blue-600" @click="defaultSupplierDialog = true">
@@ -356,8 +386,10 @@ watch(
             </Button>
 
             <!-- PURPOSE -->
-            <FloatLabel>Purpose of Purchase</FloatLabel>
-            <Select v-model="purpose" :options="options" class="w-full" />
+            <FloatLabel>
+                <Select v-model="purpose" :options="purposes" optionLabel="name" optionValue="name" class="w-full" />
+                <label>Purpose of Purchase</label>
+            </FloatLabel>
 
             <!-- REQUIRED DOCS -->
 
@@ -382,7 +414,8 @@ watch(
                 <div v-for="doc in requiredDocs" :key="doc.field" class="mb-3">
                     <div class="grid gap-6 md:grid-cols-1 mt-4">
                         <div class="flex flex-col md:col-span-2">
-                            <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700"> Upload <b>{{ doc.label }}</b></label>
+                            <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700"> Upload <b>{{
+                                    doc.label }}</b></label>
                             <input type="file" id="requestLetter" accept="application/pdf"
                                 @change="e => handleFileUpload(e, doc.field)"
                                 class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
@@ -420,16 +453,17 @@ watch(
             </div>
             <div class="mt-4 rounded-lg">
                 <FloatLabel>Permit to Sell/Re-Sell No.</FloatLabel>
-                   <div class="grid gap-6 md:grid-cols-1 mt-4">
-                        <div class="flex flex-col md:col-span-2">
-                            <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700"> Upload <b>Permit to Sell/Re-Sell No.</b></label>
-                            <input type="file" id="requestLetter" accept="application/pdf"
-                                @change="e => handleFileUpload(e, 'permit')"
-                                class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
-                        </div>
+                <div class="grid gap-6 md:grid-cols-1 mt-4">
+                    <div class="flex flex-col md:col-span-2">
+                        <label for="requestLetter" class="mb-2 text-sm font-medium text-gray-700"> Upload <b>Permit to
+                                Sell/Re-Sell No.</b></label>
+                        <input type="file" id="requestLetter" accept="application/pdf"
+                            @change="e => handleFileUpload(e, 'permit')"
+                            class="w-full cursor-pointer rounded-lg border border-dashed border-gray-400 bg-white p-3 text-sm text-gray-700 file:mr-4 file:rounded file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-blue-700 hover:bg-gray-50" />
                     </div>
+                </div>
 
-                    <!-- 
+                <!-- 
                     <div class="mt-4 group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 transition hover:bg-gray-50">
 
                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -448,43 +482,44 @@ watch(
                     </div> -->
             </div>
 
-    
 
 
 
 
-    <!-- ACTION -->
-    <div :class="[
-        'w-full pt-6',
-        currentStep > 1 ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
-    ]">
-        <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
-            Back
-        </Button>
 
-        <Button :disabled="isProcessing"
-            class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white" @click="submitStep">
-            {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
-        </Button>
-    </div>
+            <!-- ACTION -->
+            <div :class="[
+                'w-full pt-6',
+                currentStep > 1 ? 'grid grid-cols-2 gap-4' : 'flex justify-end'
+            ]">
+                <Button v-if="currentStep > 1" @click="$emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">
+                    Back
+                </Button>
 
-    </Fieldset>
+                <Button :disabled="isProcessing"
+                    class="w-full bg-green-900 text-white transition-colors hover:bg-green-500 text-white"
+                    @click="submitStep">
+                    {{ isProcessing ? 'Saving...' : 'Save & Continue' }}
+                </Button>
+            </div>
 
-    <!-- LOADING -->
-    <Dialog v-model:visible="isLoading" modal :closable="false">
-        <ProgressBar mode="indeterminate" />
-    </Dialog>
+        </Fieldset>
 
-    <!-- PREVIEW -->
-    <Dialog v-model:visible="showModal" modal header="File Preview" style="width:70vw">
-        <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500" />
-    </Dialog>
-    <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
-        <div class="flex flex-col items-center gap-4 py-4">
-            <span>Saving, please wait...</span>
-            <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
-        </div>
-    </Dialog>
+        <!-- LOADING -->
+        <Dialog v-model:visible="isLoading" modal :closable="false">
+            <ProgressBar mode="indeterminate" />
+        </Dialog>
+
+        <!-- PREVIEW -->
+        <Dialog v-model:visible="showModal" modal header="File Preview" style="width:70vw">
+            <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.url)" width="100%" height="500" />
+        </Dialog>
+        <Dialog v-model:visible="isLoading" modal :closable="false" :draggable="false" :style="{ width: '300px' }">
+            <div class="flex flex-col items-center gap-4 py-4">
+                <span>Saving, please wait...</span>
+                <ProgressBar mode="indeterminate" style="width: 100%; height: 6px" />
+            </div>
+        </Dialog>
 
     </div>
 </template>

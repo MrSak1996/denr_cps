@@ -758,7 +758,17 @@ class ApplicationController extends Controller
             'data' => $applicationDetails,
         ]);
     }
-
+    public function loadPurposes()
+    {
+        $purposeData = DB::table('tbl_permit_purposes')
+         ->select([
+                'id','name','is_active'
+         ])
+         ->get();
+         return response()->json([
+            'data' => $purposeData
+         ]);
+    }
     public function getApplicationDetails($application_id)
     {
         // MAIN APPLICATION DATA
@@ -919,6 +929,7 @@ class ApplicationController extends Controller
                     'aa.file_url',
                     'aa.created_at'
                 )
+                ->where('e.parent_id', $application_id)
                 ->where('e.parent_id', $application_id)
                 ->orderBy('aa.created_at', 'asc')
                 ->get();
