@@ -894,7 +894,7 @@ const purposeForm = ref({
     name: ''
 })
 
-const showDialog = () => {
+const showPurposeDialog = () => {
     purposeForm.value.name = ''
     showPurposeModal.value = true
 }
