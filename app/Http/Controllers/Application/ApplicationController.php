@@ -174,7 +174,7 @@ class ApplicationController extends Controller
                 'folder_name' => 'Authorization Documents',
                 'requirement_id' => 18,
             ],
-       
+
             'application_form' => [
                 'folder_name' => 'Application Form',
                 'requirement_id' => 28,
@@ -198,7 +198,7 @@ class ApplicationController extends Controller
                 ],
             ];
 
-            $folderPath = 'CHAINSAW_PERMITTING/Individual Applications/'.$applicationNo;
+            $folderPath = 'CHAINSAW_PERMITTING/Individual Applications/' . $applicationNo;
 
             foreach ($filesToUpload as $inputName => $config) {
 
@@ -287,7 +287,7 @@ class ApplicationController extends Controller
                     ],
                 ];
 
-                $folderPath = 'CHAINSAW_PERMITTING/Company Applications/'.$applicationNo;
+                $folderPath = 'CHAINSAW_PERMITTING/Company Applications/' . $applicationNo;
 
                 $results = [];
 
@@ -375,7 +375,7 @@ class ApplicationController extends Controller
                     ],
                 ];
 
-                $folderPath = 'CHAINSAW_PERMITTING/Government Applications/'.$applicationNo;
+                $folderPath = 'CHAINSAW_PERMITTING/Government Applications/' . $applicationNo;
 
                 $results = [];
 
@@ -444,7 +444,7 @@ class ApplicationController extends Controller
 
                 sleep(2);
             } catch (Exception $e) {
-                Log::warning("Retry {$i} failed for {$fileName}: ".$e->getMessage());
+                Log::warning("Retry {$i} failed for {$fileName}: " . $e->getMessage());
                 sleep(2);
             }
         }
@@ -649,7 +649,7 @@ class ApplicationController extends Controller
                 $nextSequence = (int) $matches[1] + 1;
             }
 
-            $applicationNo = "{$baseFormat}-".str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $applicationNo = "{$baseFormat}-" . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
 
             $app = DB::table('tbl_application_checklist')->insertGetId([
                 'application_no' => $applicationNo,
@@ -761,13 +761,32 @@ class ApplicationController extends Controller
     public function loadPurposes()
     {
         $purposeData = DB::table('tbl_permit_purposes')
-         ->select([
-                'id','name','is_active'
-         ])
-         ->get();
-         return response()->json([
+            ->select([
+                'id',
+                'name',
+                'is_active'
+            ])
+            ->get();
+        return response()->json([
             'data' => $purposeData
-         ]);
+        ]);
+    }
+    public function savePurpose(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        DB::table('tbl_permit_purposes')->insert([
+            'name' => $request->name,
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Purpose successfully added.'
+        ], 201);
     }
     public function getApplicationDetails($application_id)
     {
@@ -807,7 +826,7 @@ class ApplicationController extends Controller
                 'ac.company_c_city_mun',
                 'ac.company_c_barangay',
                 'ac.company_address',
-                
+
                 'ac.findings',
                 's.status_title',
                 'ac.application_no',
@@ -1280,7 +1299,7 @@ class ApplicationController extends Controller
                 }
             }
 
-           
+
 
             $subFolder = $folderMap[$fileType]['folder'];
             $filePrefix = $folderMap[$fileType]['prefix'];
@@ -1334,7 +1353,7 @@ class ApplicationController extends Controller
                 ],
             ], 200);
         } catch (Exception $e) {
-            Log::error('Error updating applicant file: '.$e->getMessage());
+            Log::error('Error updating applicant file: ' . $e->getMessage());
 
             return response()->json([
                 'status' => false,
@@ -1344,34 +1363,36 @@ class ApplicationController extends Controller
         }
     }
 
-	  public function deleteApplicantFile( Request $request, GoogleDriveService $driveService
-) {
+    public function deleteApplicantFile(
+        Request $request,
+        GoogleDriveService $driveService
+    ) {
 
-    try {
+        try {
 
-        /**
-         * Validate request
-         */
-        $validated = $request->validate([
-            'application_id' => 'required',
-            'attachment_id'  => 'required|exists:tbl_application_attachments,id',
-        ]);
+            /**
+             * Validate request
+             */
+            $validated = $request->validate([
+                'application_id' => 'required',
+                'attachment_id'  => 'required|exists:tbl_application_attachments,id',
+            ]);
 
-        /**
-         * Fetch attachment
-         */
-        $attachment = DB::table('tbl_application_attachments')
-            ->where('id', $request->attachment_id)
-            ->where('application_id', $request->application_id)
-            ->first();
+            /**
+             * Fetch attachment
+             */
+            $attachment = DB::table('tbl_application_attachments')
+                ->where('id', $request->attachment_id)
+                ->where('application_id', $request->application_id)
+                ->first();
 
-         DB::table('tbl_application_attachments')
-            ->where('id', $attachment->id)
-            ->delete();
-        
-        DB::table('tbl_app_checklist_entry')
-            ->where('id', $attachment->checklist_entry_id)
-            ->delete();
+            DB::table('tbl_application_attachments')
+                ->where('id', $attachment->id)
+                ->delete();
+
+            DB::table('tbl_app_checklist_entry')
+                ->where('id', $attachment->checklist_entry_id)
+                ->delete();
 
         // if (!$attachment) {
 
@@ -1490,9 +1511,9 @@ class ApplicationController extends Controller
         //         .$filePath
         // );
 
-        /**
-         * Delete file from Google Drive
-         */
+            /**
+             * Delete file from Google Drive
+             */
         // $deleteDrive = $driveService->deleteAttachmentByPath(
         //     $filePath
         // );
@@ -1507,35 +1528,34 @@ class ApplicationController extends Controller
         //     ], 500);
         // }
 
-        /**
-         * Delete database record
-         */
-       
+            /**
+             * Delete database record
+             */
 
-        /**
-         * Success response
-         */
-        return response()->json([
-            'status'    => true,
-            'message'   => 'File deleted successfully.',
-            // 'file_path' => $filePath,
-        ], 200);
 
-    } catch (Exception $e) {
+            /**
+             * Success response
+             */
+            return response()->json([
+                'status'    => true,
+                'message'   => 'File deleted successfully.',
+                // 'file_path' => $filePath,
+            ], 200);
+        } catch (Exception $e) {
 
-        Log::error(
-            'Error deleting applicant file: '
-                .$e->getMessage()
-        );
+            Log::error(
+                'Error deleting applicant file: '
+                    . $e->getMessage()
+            );
 
-        return response()->json([
-            'status'  => false,
-            'message' => 'An error occurred while deleting the file.',
-            'error'   => $e->getMessage(),
-        ], 500);
+            return response()->json([
+                'status'  => false,
+                'message' => 'An error occurred while deleting the file.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
-}
-    
+
 
     public function returnApplication(Request $request)
     {

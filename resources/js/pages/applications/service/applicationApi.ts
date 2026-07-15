@@ -146,6 +146,9 @@ export const loadPurpose = async () => {
     const res = await axios.get('/api/permit-purposes')
     return res.data
 }
+export const savePurpose = async (payload: any) => {
+    return await axios.post('/api/save-purposes', payload)
+}
 
 
 

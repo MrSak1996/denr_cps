@@ -28,6 +28,7 @@ Route::post('/barangays', [ApplicationController::class, 'getBarangays']);
 Route::get('/application-details', [ApplicationController::class,'showApplicationDetails']);
 Route::get('/getApplicationDetails/{application_id}',[ApplicationController::class,'getApplicationDetails']);
 Route::get('/permit-purposes',[ApplicationController::class,'loadPurposes']);
+Route::post('/save-purposes', [ApplicationController::class, 'savePurpose']);
 Route::get('/getApplicantFile/{application_id}',[ApplicationController::class,'getApplicantFile']);
 Route::get('/getChecklistEntries/{application_id}',[ApplicationController::class,'getChecklistEntries']);
 

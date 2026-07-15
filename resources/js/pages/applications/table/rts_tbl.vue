@@ -2,7 +2,7 @@
 import { router, usePage, Link } from '@inertiajs/vue3';
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { SaveAll, SquarePen, View, PrinterCheck, Eye, BadgeCheck, SendIcon, History, Import, Undo2 } from 'lucide-vue-next';
+import { SaveAll, SquarePen, View, PrinterCheck, Eye, BadgeCheck, SendIcon, History, Import, Undo2, CirclePlus } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
@@ -12,6 +12,8 @@ import Badge from 'primevue/badge';
 import { Text } from 'vue';
 import Timeline from 'primevue/timeline';
 import { ProductService } from '../service/ProductService';
+import { savePurpose } from '../service/applicationApi.js'
+
 import OverlayBadge from 'primevue/overlaybadge';
 import ReusableConfirmDialog from '../modal/endorsed_modal.vue';
 import Toast from 'primevue/toast';
@@ -887,8 +889,34 @@ const onApprovedFilter = (event) => {
         displayApprovedCount.value = approvedTotalCount.value;
     }
 };
+const showPurposeModal = ref(false)
+const purposeForm = ref({
+    name: ''
+})
+
+const showDialog = () => {
+    purposeForm.value.name = ''
+    showPurposeModal.value = true
+}
+const insertPurpose = async () => {
+    try {
+        await savePurpose(purposeForm.value)
+
+        showPurposeModal.value = false
 
 
+        // Optional success message
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Purpose added successfully.',
+            life: 3000
+        })
+
+    } catch (error) {
+        console.error(error)
+    }
+}
 
 // const buttonState = (row: any) => {
 //     const isReceived = !!row.is_tsd_chief_received;
@@ -954,6 +982,10 @@ const onApprovedFilter = (event) => {
 
                 </div>
             </button>
+
+
+
+            |
         </div>
 
         <!-- Content -->
@@ -986,7 +1018,7 @@ const onApprovedFilter = (event) => {
                                     <!-- <Select v-model="filters['office_id'].value" :options="officeOptions" filter
                                         optionLabel="label" optionValue="value" placeholder="Filter by Office"
                                         class="w-52" showClear /> -->
-                              
+
 
                                     <Select v-model="selectedOffice" :options="officeOptions" optionLabel="label"
                                         optionValue="value" placeholder="Filter by Office" filter showClear
@@ -1001,6 +1033,11 @@ const onApprovedFilter = (event) => {
                                     <Select v-model="filters['application_status'].value" :options="statusOptions"
                                         filter optionLabel="label" optionValue="value" placeholder="Filter by Status"
                                         class="w-52" showClear />
+                                    <Button v-tooltip.top="'Insert Purpose of Purchase'" @click="showPurposeDialog"
+                                        class="p-2 text-white">
+                                        <CirclePlus :size="15" />
+                                    </Button>
+
 
                                 </div>
                             </div>
@@ -1610,6 +1647,29 @@ const onApprovedFilter = (event) => {
                     </tbody>
                 </table>
             </div>
+        </Dialog>
+
+        <Dialog v-model:visible="showPurposeModal" modal header="Insert Purpose of Purchase"
+            :style="{ width: '35rem' }">
+            <div class="flex flex-col gap-4">
+
+                <div>
+                    <label class="mb-2 block font-semibold">
+                        Purpose of Purchase
+                    </label>
+
+                    <Textarea v-model="purposeForm.name" rows="5" class="w-full" autoResize />
+                </div>
+
+            </div>
+
+            <template #footer>
+
+                <Button label="Cancel" severity="secondary" outlined @click="showPurposeModal = false" />
+
+                <Button label="Save" icon="pi pi-save" @click="insertPurpose" />
+
+            </template>
         </Dialog>
 
     </div>
