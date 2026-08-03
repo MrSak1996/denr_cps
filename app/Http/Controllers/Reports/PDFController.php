@@ -220,11 +220,11 @@ class PDFController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        if ($download && $download->download_count >= 3) {
-            return response()->json([
-                'message' => 'Download limit reached (max 3).'
-            ], 403);
-        }
+        // if ($download && $download->download_count >= 3) {
+        //     return response()->json([
+        //         'message' => 'Download limit reached (max 3).'
+        //     ], 403);
+        // }
 
         // 👉 Your existing logic
         $rows = DB::table('chainsaw_permits_to_sell as s')
@@ -245,7 +245,7 @@ class PDFController extends Controller
             ->count('supplier_name');
 
         if ($modelCount == 1 && $supplierCount == 1) {
-
+		
             $result = $this->generatePermitDocx($id);
         } elseif ($modelCount > 1 && $supplierCount == 1) {
 
@@ -277,6 +277,8 @@ class PDFController extends Controller
             ->leftJoin('tbl_application_payment as ap', 'ap.application_id', '=', 'ac.id')
             ->where('ac.id', $id)
             ->select([
+				'ac.company_name',
+				'ac.application_type',
                 'ac.permit_no as permit_number',
                 'ac.authorized_representative',
                 DB::raw("CONCAT_WS(' ', ac.applicant_firstname, ac.applicant_middlename, ac.applicant_lastname) AS applicant_name"),
@@ -298,6 +300,7 @@ class PDFController extends Controller
         if (!$application) {
             abort(404, 'Application not found');
         }
+	
 
         /*
     |--------------------------------------------------------------------------
@@ -351,9 +354,14 @@ class PDFController extends Controller
     | TEMPLATE LOADING
     |--------------------------------------------------------------------------
     */
-        $template = new \PhpOffice\PhpWord\TemplateProcessor(
-            storage_path('app/templates/chainsaw-permit-MULTIPLE-MODELS-ONE-SUPPLIER.docx')
-        );
+		
+             $template = new \PhpOffice\PhpWord\TemplateProcessor(
+            storage_path('app/templates/chainsaw-permit-MULTIPLE-MODELS-ONE-SUPPLIER-GOVERNMENT.docx')
+        	);
+        
+		
+       
+		
 
         /*
     |--------------------------------------------------------------------------
@@ -361,14 +369,15 @@ class PDFController extends Controller
     |--------------------------------------------------------------------------
     */
         $template->setValue('permit_number', $application->permit_number);
+        $template->setValue('name', $e(strtoupper($application->company_name)));
         $template->setValue(
-            'name',
-            $application->authorized_representative ?? $application->applicant_name
+            'authorized',
+            strtoupper($e($application->authorized_representative ?: $application->applicant_name))
         );
 
         $template->setValue(
             'address',
-            $e($application->applicant_complete_address ?: $application->company_address)
+            strtoupper($e($application->applicant_complete_address ?: $application->company_address))
         );
 
         $template->setValue('quantity', $e($quantityText));
@@ -384,11 +393,18 @@ class PDFController extends Controller
         $template->setValue('or_number', $application->official_receipt);
         $template->setValue('issued_by', $application->issued_by);
 
+         $issuedDate = $application->date_approved_red
+            ? Carbon::parse($application->date_approved_red)
+            : null;
+
         $template->setValue(
-            'issued_date',
-            $application->issued_date
-                ? Carbon::parse($application->issued_date)->format('F d, Y')
-                : ''
+            'issued_on',
+            $issuedDate ? $issuedDate->format('F d, Y') : ''
+        );
+
+        $template->setValue(
+            'valid_until',
+            $issuedDate ? $issuedDate->copy()->addYear()->format('F d, Y') : ''
         );
 
         $template->setValue(
@@ -486,6 +502,7 @@ class PDFController extends Controller
         }
 
         $template->setComplexBlock('annex_table', $table);
+	
 
         /*
     |--------------------------------------------------------------------------
@@ -496,6 +513,7 @@ class PDFController extends Controller
         $tempFile = storage_path($fileName);
 
         $template->saveAs($tempFile);
+		
 
         /*
     |--------------------------------------------------------------------------
@@ -555,6 +573,8 @@ class PDFController extends Controller
             ->leftJoin('tbl_application_payment as ap', 'ap.application_id', '=', 'ac.id')
             ->where('ac.id', $id)
             ->select([
+                'ac.company_name',
+                'ac.application_type',
                 'ac.permit_no as permit_number',
                 'ac.authorized_representative',
                 DB::raw("CONCAT_WS(' ', ac.applicant_firstname, ac.applicant_middlename, ac.applicant_lastname) AS applicant_name"),
@@ -616,6 +636,7 @@ class PDFController extends Controller
     */
 
         $supplierText = $e($rows->pluck('supplier_name')->unique()->implode(' and '));
+        $supplierAddressText = $e($rows->pluck('supplier_address')->unique()->implode(' and '));
 
         $brandText = $e($rows->pluck('brand_name')->unique()->implode(', '));
 
@@ -637,14 +658,15 @@ class PDFController extends Controller
 
         $template->setValue('permit_number', $e($application->permit_number));
 
+        $template->setValue('name', $e($application->company_name));
         $template->setValue(
-            'name',
-            $e($application->authorized_representative ?: $application->applicant_name)
+            'authorized',
+            strtoupper($e($application->authorized_representative ?: $application->applicant_name))
         );
 
         $template->setValue(
             'address',
-            $e($application->applicant_complete_address ?: $application->company_address)
+            strtoupper($e($application->applicant_complete_address ?: $application->company_address))
         );
 
         $template->setValue('quantity', $e($quantityText));
@@ -655,6 +677,8 @@ class PDFController extends Controller
 
         $template->setValue('supplier_name', $supplierText);
 
+        $template->setValue('supplier_address', $supplierAddressText);
+
         $template->setValue('engine_serial_no', $e($application->engine_serial_no));
 
         $template->setValue('purpose', $e($application->purpose));
@@ -662,6 +686,7 @@ class PDFController extends Controller
         $template->setValue('issued_by', $e($application->issued_by));
 
         $template->setValue('or_number', $e($application->official_receipt));
+     
          $barcodePath = $this->generateBarcode($application);
 
         if (!file_exists($barcodePath)) {
@@ -690,12 +715,21 @@ class PDFController extends Controller
                 : ''
         );
 
+         $issuedDate = $application->date_approved_red
+            ? Carbon::parse($application->date_approved_red)
+            : null;
+
         $template->setValue(
             'issued_on',
-            $application->date_approved_red
-                ? $e(Carbon::parse($application->date_approved_red)->format('F d, Y'))
-                : ''
+            $issuedDate ? $issuedDate->format('F d, Y') : ''
         );
+
+        $template->setValue(
+            'valid_until',
+            $issuedDate ? $issuedDate->copy()->addYear()->format('F d, Y') : ''
+        );
+		
+		
 
         $template->setValue(
             'expiry_date',
@@ -857,6 +891,8 @@ class PDFController extends Controller
             ->where('ac.id', $id)
             ->select([
                 'ac.id',
+                'ac.company_name',
+                'ac.application_type',
                 'ac.permit_no as permit_number',
                 'ac.authorized_representative',
                 DB::raw("CONCAT_WS(' ', ac.applicant_firstname, ac.applicant_middlename, ac.applicant_lastname) AS applicant_name"),
@@ -929,29 +965,34 @@ class PDFController extends Controller
         | Load Word Template
         |--------------------------------------------------------------------------
         */
+        if($application->application_type == 'Individual'){
+            $template = new TemplateProcessor(
+               storage_path('app/templates/chainsaw-permit-basic.docx')
+            );
+        } else if($application->application_type == 'Company'){
+            $template = new TemplateProcessor(
+                storage_path('app/templates/chainsaw-permit-company.docx')
+            );
+        } else if($application->application_type == 'Government') {
+			
+            $template = new TemplateProcessor(
+               storage_path('app/templates/chainsaw-permit-government.docx')
+            );
+        }
 
-        $template = new TemplateProcessor(
-            storage_path('app/templates/chainsaw-permit-basic.docx')
-        );
+  
 
         /*
         |--------------------------------------------------------------------------
         | Page 1 Values
         |--------------------------------------------------------------------------
         */
+        $address = strtoupper($application->applicant_complete_address ?: $application->company_address);
 
         $template->setValue('permit_number', $e($application->permit_number));
-
-        $template->setValue(
-            'name',
-            $e($application->authorized_representative ?: $application->applicant_name)
-        );
-
-        $template->setValue(
-            'address',
-            $e($application->applicant_complete_address ?: $application->company_address)
-        );
-
+        $template->setValue('name', $e($application->company_name));
+        $template->setValue('authorized', $e($application->authorized_representative ?: $application->applicant_name) );
+		$template->setValue('address', $e($address));
         $template->setValue('quantity', $e($quantityText));
         $template->setValue('brand', $brandText);
         $template->setValue('model', $modelText);

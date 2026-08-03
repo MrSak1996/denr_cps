@@ -16,6 +16,7 @@ import Fieldset from 'primevue/fieldset';
 import Tag from 'primevue/tag';
 import Toast from 'primevue/toast';
 import Dialog from 'primevue/dialog';
+import ProgressBar from 'primevue/progressbar';
 
 const isMobile = ref(window.innerWidth < 768)
 
@@ -62,6 +63,9 @@ const props = defineProps({
 const onsite = ref({ findings: '', recommendations: '' });
 const assessmentRows = ref([]);
 const isLoading = ref(false);
+
+const isUploading = ref(false);
+const uploadProgress = ref(0);
 
 const showModal = ref(false);
 const selectedFile = ref<any>(null);
@@ -361,9 +365,9 @@ const sendEmail = async (recipientEmail, roleId) => {
     const response = await axios.post('/api/send-email', {
       email: recipientEmail, // or the actual recipient
       applicant_name:
-      ['Company', 'Government'].includes(props.form.applicant_type)
-      ? props.form.authorized_representative || 'N/A'
-      : `${props.form.first_name || ''} ${props.form.last_name || ''}`.trim(),
+        ['Company', 'Government'].includes(props.form.applicant_type)
+          ? props.form.authorized_representative || 'N/A'
+          : `${props.form.first_name || ''} ${props.form.last_name || ''}`.trim(),
       address: props.form.applicant_type === 'Individual' ? props.form.i_complete_address : props.form.company_address,
       application_no: props.form.application_no,
       role_id: roleId
@@ -544,29 +548,88 @@ const getApplicantFile = async (application_id) => {
 
 
 // upload resubmitted files
-const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
-  try {
-    isLoading.value = true;
+// const handleResubmissionUpload = async (checklistId: number, files: File[]) => {
+//   try {
+//     isLoading.value = true;
 
-    const formData = new FormData();
-    files.forEach(file => formData.append('files[]', file));
+//     const formData = new FormData();
+//     files.forEach(file => formData.append('files[]', file));
 
-    formData.append('uploaded_by', userId);
-    formData.append('application_type', props.form.application_type);
-    formData.append('checklist_entry_id', checklistId.toString());
-    formData.append('application_no', props.form.application_no);
-    formData.append('application_id', props.form.id);
+//     formData.append('uploaded_by', userId);
+//     formData.append('application_type', props.form.application_type);
+//     formData.append('checklist_entry_id', checklistId.toString());
+//     formData.append('application_no', props.form.application_no);
+//     formData.append('application_id', props.form.id);
 
-    const response = await axios.post('/api/resubmit-files', formData);
+//     const response = await axios.post('/api/resubmit-files', formData);
 
-    const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
-    if (row) row.resubmissions.push(...response.data.files);
+//     const row = companyRequirements.value.find(r => r.checklist_entry_id === checklistId);
+//     if (row) row.resubmissions.push(...response.data.files);
 
-  } catch (error) {
-    console.error(error);
-  } finally {
-    isLoading.value = false;
-  }
+//   } catch (error) {
+//     console.error(error);
+//   } finally {
+//     isLoading.value = false;
+//   }
+// };
+
+const handleResubmissionUpload = async (
+    checklistId: number,
+    files: File[]
+) => {
+    try {
+        isLoading.value = true;
+
+        isUploading.value = true;
+        uploadProgress.value = 0;
+
+        const formData = new FormData();
+
+        files.forEach(file => {
+            formData.append('files[]', file);
+        });
+
+        formData.append('uploaded_by', userId);
+        formData.append('application_type', props.form.application_type);
+        formData.append('checklist_entry_id', checklistId.toString());
+        formData.append('application_no', props.form.application_no);
+        formData.append('application_id', props.form.id);
+
+        const response = await axios.post(
+            '/api/resubmit-files',
+            formData,
+            {
+                onUploadProgress: (progressEvent) => {
+                    if (!progressEvent.total) return;
+
+                    uploadProgress.value = Math.round(
+                        (progressEvent.loaded * 100) / progressEvent.total
+                    );
+                }
+            }
+        );
+
+        const row = companyRequirements.value.find(
+            r => r.checklist_entry_id === checklistId
+        );
+
+        if (row) {
+            row.resubmissions.push(...response.data.files);
+        }
+
+        uploadProgress.value = 100;
+
+        // Small delay so the user sees 100%
+        setTimeout(() => {
+            isUploading.value = false;
+        }, 500);
+
+    } catch (error) {
+        console.error(error);
+        isUploading.value = false;
+    } finally {
+        isLoading.value = false;
+    }
 };
 
 const hasFailedRequirements = computed(() => {
@@ -1102,6 +1165,20 @@ onMounted(() => {
           allow="autoplay"></iframe>
       </Dialog>
 
+      <Dialog v-model:visible="isUploading" modal :closable="false" :draggable="false" :style="{ width: '400px' }">
+        <template #header>
+          <span>Uploading Files</span>
+        </template>
+
+        <div class="space-y-3">
+          <ProgressBar :value="uploadProgress" />
+
+          <div class="text-center text-sm text-gray-600">
+            {{ uploadProgress }}%
+          </div>
+        </div>
+      </Dialog>
+
       <div :class="[
         'pt-6 w-full',
         currentStep == 4
@@ -1408,13 +1485,13 @@ onMounted(() => {
             </div>
 
             <!-- Date Received -->
-             
+
 
             <div
-            v-if="[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 
-            53, 55, 57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 
-            105, 107, 109, 111, 113, 115, 117, 119, 121, 123, 125, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149].includes(item.route_order)"
-            class="rounded-lg bg-gray-50 p-3">
+              v-if="[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51,
+                53, 55, 57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103,
+                105, 107, 109, 111, 113, 115, 117, 119, 121, 123, 125, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149].includes(item.route_order)"
+              class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
                 Date Received
               </div>
@@ -1442,10 +1519,10 @@ onMounted(() => {
             <!-- Date Endorsed -->
 
             <div
-            v-if="[2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 
-                54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 
+              v-if="[2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52,
+                54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104,
                 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 148, 150].includes(item.route_order)"
-            class="rounded-lg bg-gray-50 p-3">
+              class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
                 Date Endorsed
               </div>
