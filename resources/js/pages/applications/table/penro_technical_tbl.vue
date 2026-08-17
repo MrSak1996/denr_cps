@@ -106,17 +106,15 @@ const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
       application_type: {
         value: null,
-        matchMode: FilterMatchMode.EQUALS
+        matchMode: FilterMatchMode.CONTAINS
     },
     applicant_name: {
         value: null,
-        matchMode: FilterMatchMode.EQUALS
+        matchMode: FilterMatchMode.CONTAINS
     },
-    
-
     application_status: {
         value: null,
-        matchMode: FilterMatchMode.EQUALS
+        matchMode: FilterMatchMode.CONTAINS
     }
 });
 
@@ -1060,11 +1058,7 @@ const getAvatarColor = (name: string) => {
                                 <b>{{ data.permit_no }}</b>
                             </template>
                         </Column>
-                        <Column header="Office" style="min-width: 10rem">
-                            <template #body="slotProps">
-                                {{ slotProps.data.office_title }}
-                            </template>
-                        </Column>
+                        
                         <Column field="application_type" header="Application Type" sortable />
                         <Column header="Type of Transaction" field="transaction_type" sortable></Column>
                         <Column header="Classification" field="classification" sortable></Column>

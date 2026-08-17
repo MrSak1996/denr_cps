@@ -100,6 +100,18 @@ const product = ref({});
 const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+      application_type: {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+    },
+    applicant_name: {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+    },
+    application_status: {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+    }
 });
 const submitted = ref(false);
 const statuses = ref([
@@ -777,6 +789,26 @@ const canView = (row: any) => {
         25
     ].includes(row.application_status)
 }
+const avatarColors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-cyan-500',
+    'bg-indigo-500',
+    'bg-red-500',
+];
+const getAvatarColor = (name: string) => {
+    if (!name) return 'bg-gray-500';
+
+    let sum = 0;
+    for (const ch of name) {
+        sum += ch.charCodeAt(0);
+    }
+
+    return avatarColors[sum % avatarColors.length];
+};
 
 </script>
 
@@ -853,7 +885,52 @@ const canView = (row: any) => {
                                 </div>
                             </template>
                         </Column>
+                         <Column header="Applicant Name" style="min-width: 16rem">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-3">
 
+                                    <!-- Avatar -->
+                                    <div :class="[
+                                        'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                                        getAvatarColor(
+                                            slotProps.data.application_type === 'Individual'
+                                                ? slotProps.data.applicant_name
+                                                : slotProps.data.company_name
+                                        )
+                                    ]">
+                                        {{
+                                            (
+                                                slotProps.data.application_type === 'Individual'
+                                                    ? slotProps.data.applicant_name
+                                                    : slotProps.data.company_name
+                                            )?.charAt(0)
+                                        }}
+                                    </div>
+
+                                    <!-- Name -->
+                                    <div class="flex flex-col">
+                                        <!-- Individual -->
+                                        <template v-if="slotProps.data.application_type === 'Individual'">
+                                            <span class="font-medium">
+                                                {{ slotProps.data.applicant_name }}
+                                            </span>
+                                        </template>
+
+                                        <!-- Company / Government -->
+                                        <template v-else>
+                                            <span class="font-medium">
+                                                {{ slotProps.data.company_name }}
+                                            </span>
+
+                                            <span class="text-sm text-gray-500">
+                                                {{ slotProps.data.authorized_representative }}
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                </div>
+                            </template>
+                        </Column>
                         <Column field="status_title" header="Status" sortable style="min-width: 12rem">
                             <template #body="{ data }">
                                 <div class="flex flex-col items-center">
