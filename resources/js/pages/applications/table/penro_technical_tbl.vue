@@ -104,6 +104,20 @@ const product = ref({});
 const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+      application_type: {
+        value: null,
+        matchMode: FilterMatchMode.EQUALS
+    },
+    applicant_name: {
+        value: null,
+        matchMode: FilterMatchMode.EQUALS
+    },
+    
+
+    application_status: {
+        value: null,
+        matchMode: FilterMatchMode.EQUALS
+    }
 });
 
 const roleId = page.props.auth.user.role_id;

@@ -108,7 +108,10 @@ const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     office_id: { value: null, matchMode: FilterMatchMode.IN },
-
+   applicant_name: {
+        value: null,
+        matchMode: FilterMatchMode.EQUALS
+    },
     application_type: {
         value: null,
         matchMode: FilterMatchMode.EQUALS
