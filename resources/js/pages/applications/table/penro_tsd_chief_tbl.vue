@@ -841,7 +841,17 @@ const getAvatarColor = (name: string) => {
             <div v-if="activeTab === 're'" class="space-y-2 text-sm text-gray-700">
                 <div class="h-auto w-full">
                     <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="endorsed_applications"
-                        dataKey="id" :paginator="true" :rows="20" :filters="filters" filterDisplay="menu"
+                        dataKey="id" :paginator="true" :rows="20" :filters="filters" 
+                        :globalFilterFields="[
+                            'application_no',
+                            'permit_no',
+                            'applicant_name',
+                            'application_type',
+                            'transaction_type',
+                            'classification',
+                            'application_status'
+                        ]"
+                        filterDisplay="menu"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         :rowsPerPageOptions="[5, 10, 25]"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
@@ -885,7 +895,7 @@ const getAvatarColor = (name: string) => {
                                 </div>
                             </template>
                         </Column>
-                         <Column header="Applicant Name" style="min-width: 16rem">
+                        <Column field="applicant_name" header="Applicant Name" style="min-width: 12rem" >
                             <template #body="slotProps">
                                 <div class="flex items-center gap-3">
 
