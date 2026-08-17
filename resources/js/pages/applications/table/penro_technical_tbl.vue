@@ -892,6 +892,7 @@ const getAvatarColor = (name: string) => {
                             'application_no',
                             'permit_no',
                             'applicant_name',
+                            'company_name',
                             'application_type',
                             'transaction_type',
                             'classification',
