@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
-import { BadgeCheck, PrinterCheck, SquarePen,View, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
+import { BadgeCheck, PrinterCheck, SquarePen, View, Eye, History, SaveAll, Send, SendIcon, ShieldCheck, Undo2 } from 'lucide-vue-next';
 import Fieldset from 'primevue/fieldset';
 import OverlayBadge from 'primevue/overlaybadge';
 import { useConfirm } from 'primevue/useconfirm';
@@ -764,30 +764,30 @@ const handleFileUpdate = async (event) => {
 
 const buttonState = (row: any) => {
     const isReceived = row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
-    row.application_status === STATUS_DRAFT ||
-    row.application_status === STATUS_RETURNED_TO_PENRO_TECHNICAL ||
-    row.application_status === STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF ||
+        row.application_status === STATUS_DRAFT ||
+        row.application_status === STATUS_RETURNED_TO_PENRO_TECHNICAL ||
+        row.application_status === STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF ||
 
-    row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
-    row.application_status === STATUS_RECEIVED_PENRO_CHIEF_RPS ||
-    row.application_status === STATUS_RECEIVED_PENRO_CHIEF_TSD ||
-    row.application_status === STATUS_RECEIVED_PENRO_OFFICER ||
-    row.application_status === STATUS_RECEIVED_FUS_CHIEF ||
-    row.application_status === STATUS_RECEIVED_LPDD_CHIEF ||
-    row.application_status === STATUS_ENDORSED_CENRO_RPS_CHIEF ||
-    row.application_status === STATUS_ENDORSED_CENRO_OFFICER ||
-    row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS ||
-    row.application_status === STATUS_ENDORSED_PENRO_CHIEF_TSD ||
-    row.application_status === STATUS_ENDORSED_PENRO_OFFICER ||
-    row.application_status === STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF ||
-    row.application_status === STATUS_ENDORSED_FUS_CHIEF ||
-    row.application_status === STATUS_ENDORSED_LPDD_CHIEF ||
-    row.application_status === STATUS_ENDORSED_ARDTS ||
-    row.application_status === STATUS_ENDORSED_RED ||
-    row.application_status === STATUS_RECEIVED_ARDTS ||
-    row.application_status === STATUS_RECEIVED_RED;
+        row.application_status === STATUS_RECEIVED_PENRO_TECHNICAL ||
+        row.application_status === STATUS_RECEIVED_PENRO_CHIEF_RPS ||
+        row.application_status === STATUS_RECEIVED_PENRO_CHIEF_TSD ||
+        row.application_status === STATUS_RECEIVED_PENRO_OFFICER ||
+        row.application_status === STATUS_RECEIVED_FUS_CHIEF ||
+        row.application_status === STATUS_RECEIVED_LPDD_CHIEF ||
+        row.application_status === STATUS_ENDORSED_CENRO_RPS_CHIEF ||
+        row.application_status === STATUS_ENDORSED_CENRO_OFFICER ||
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_RPS ||
+        row.application_status === STATUS_ENDORSED_PENRO_CHIEF_TSD ||
+        row.application_status === STATUS_ENDORSED_PENRO_OFFICER ||
+        row.application_status === STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF ||
+        row.application_status === STATUS_ENDORSED_FUS_CHIEF ||
+        row.application_status === STATUS_ENDORSED_LPDD_CHIEF ||
+        row.application_status === STATUS_ENDORSED_ARDTS ||
+        row.application_status === STATUS_ENDORSED_RED ||
+        row.application_status === STATUS_RECEIVED_ARDTS ||
+        row.application_status === STATUS_RECEIVED_RED;
 
-        return {
+    return {
         receiveDisable: isReceived, // ✅ disable if already received
         endorsedDisabled: false,
         viewDisabled: false,
@@ -823,6 +823,26 @@ const getDownloadCount = async (application_id) => {
         console.error('Download count error:', error);
         downloadCount.value[application_id] = 0;
     }
+};
+const avatarColors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-cyan-500',
+    'bg-indigo-500',
+    'bg-red-500',
+];
+const getAvatarColor = (name: string) => {
+    if (!name) return 'bg-gray-500';
+
+    let sum = 0;
+    for (const ch of name) {
+        sum += ch.charCodeAt(0);
+    }
+
+    return avatarColors[sum % avatarColors.length];
 };
 </script>
 
@@ -888,17 +908,19 @@ const getDownloadCount = async (application_id) => {
                                         class="inline-flex items-center justify-center rounded-md bg-[#BF360C] px-3 py-2 text-white hover:bg-[#BF360C]">
                                         <SquarePen :size="16" />
                                     </Link>
-                                    <Link v-if="slotProps.data.application_status == STATUS_RETURNED_TO_PENRO_TECHNICAL" :href="route('applications.edit', {
-                                        application_id: slotProps.data.id,
-                                        type: slotProps.data.application_type,
-                                        step: 4
-                                    })" class=" inline-flex justify-center rounded-md bg-blue-700 px-3 py-2 text-white hover:bg-blue-600">
+                                    <Link v-if="slotProps.data.application_status == STATUS_RETURNED_TO_PENRO_TECHNICAL"
+                                        :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: 4
+                                        })"
+                                        class=" inline-flex justify-center rounded-md bg-blue-700 px-3 py-2 text-white hover:bg-blue-600">
                                         <View :size="16" />
                                     </Link>
                                     <Button v-if="slotProps.data.application_status == STATUS_APPROVED_BY_RED"
                                         :disabled="(downloadCount[slotProps.data.id] ?? 0) >= 3"
                                         @click="generatePdf(slotProps.data)" style="background-color: #0D47A1">
-                                        <PrinterCheck :size="15" /> 
+                                        <PrinterCheck :size="15" />
                                     </Button>
 
                                 </div>
@@ -909,13 +931,11 @@ const getDownloadCount = async (application_id) => {
                                         <BadgeCheck :size="15" />
                                     </Button>
 
-                                    <Link
-                                        v-if="canView(slotProps.data)"
-                                        :href="route('applications.edit', {
-                                            application_id: slotProps.data.id,
-                                            type: slotProps.data.application_type,
-                                            step: 4
-                                        })"
+                                    <Link v-if="canView(slotProps.data)" :href="route('applications.edit', {
+                                        application_id: slotProps.data.id,
+                                        type: slotProps.data.application_type,
+                                        step: 4
+                                    })"
                                         class="mr-2 inline-flex items-center justify-center rounded-md px-3 py-2 text-white"
                                         style="background-color: #0f766e">
                                         <SquarePen :size="16" />
@@ -930,15 +950,50 @@ const getDownloadCount = async (application_id) => {
                                 </div>
                             </template>
                         </Column>
-                        <Column field="application_type" header="Application Type" sortable />
-                        <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
-                            <template #body="{ data }">
-                                <b>{{ data.application_no }}</b>
-                            </template>
-                        </Column>
-                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <b>{{ data.permit_no }}</b>
+                        <Column header="Applicant Name" style="min-width: 16rem">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-3">
+
+                                    <!-- Avatar -->
+                                    <div :class="[
+                                        'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                                        getAvatarColor(
+                                            slotProps.data.application_type === 'Individual'
+                                                ? slotProps.data.applicant_name
+                                                : slotProps.data.company_name
+                                        )
+                                    ]">
+                                        {{
+                                            (
+                                                slotProps.data.application_type === 'Individual'
+                                                    ? slotProps.data.applicant_name
+                                                    : slotProps.data.company_name
+                                            )?.charAt(0)
+                                        }}
+                                    </div>
+
+                                    <!-- Name -->
+                                    <div class="flex flex-col">
+                                        <!-- Individual -->
+                                        <template v-if="slotProps.data.application_type === 'Individual'">
+                                            <span class="font-medium">
+                                                {{ slotProps.data.applicant_name }}
+                                            </span>
+                                        </template>
+
+                                        <!-- Company / Government -->
+                                        <template v-else>
+                                            <span class="font-medium">
+                                                {{ slotProps.data.company_name }}
+                                            </span>
+
+                                            <span class="text-sm text-gray-500">
+                                                {{ slotProps.data.authorized_representative }}
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                </div>
                             </template>
                         </Column>
                         <Column field="status_title" header="Status" sortable style="min-width: 12rem">
@@ -948,7 +1003,7 @@ const getDownloadCount = async (application_id) => {
                                 <Tag :value="data.status_title"
                                     :severity="data.status_title === 'Returned to PENRO Technical Staff' ? 'danger' : 'success'"
                                     class="text-center" v-else />
-                                    <Button v-if="data.application_status >= 25 && data.application_status <= 27" style="
+                                <Button v-if="data.application_status >= 25 && data.application_status <= 27" style="
                                         display: inline;
                                         padding: .2em .6em .3em;
                                         font-size: 75%;
@@ -960,9 +1015,9 @@ const getDownloadCount = async (application_id) => {
                                         vertical-align: baseline;
                                         border-radius: .25em;
                                     " severity="info" class="mt-1 rounded bg-blue-900 px-1 py-1 text-xs text-white"
-                                        @click="openCommentModal(data)" size="small">
-                                        View Comments
-                                    </Button>
+                                    @click="openCommentModal(data)" size="small">
+                                    View Comments
+                                </Button>
                             </template>
                             <!-- <template #body="{ data }">
                                 <div class="flex flex-col">
@@ -980,22 +1035,27 @@ const getDownloadCount = async (application_id) => {
                                 </div>
                             </template> -->
                         </Column>
-                        <Column header="Applicant Name" style="min-width: 12rem">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.application_type == 'Individual'">
-                                    {{ slotProps.data.applicant_name }}
 
-                                </div>
-                                <div v-else>
-                                    {{ slotProps.data.authorized_representative }}
-                                </div>
+                        <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
+                            <template #body="{ data }">
+                                <b>{{ data.application_no }}</b>
                             </template>
                         </Column>
-
+                        <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column>
+                        <Column header="Office" style="min-width: 10rem">
+                            <template #body="slotProps">
+                                {{ slotProps.data.office_title }}
+                            </template>
+                        </Column>
+                        <Column field="application_type" header="Application Type" sortable />
+                        <Column header="Type of Transaction" field="transaction_type" sortable></Column>
                         <Column header="Classification" field="classification" sortable></Column>
-                        <!-- <Column header="Type of Transaction" field="transaction_type" sortable></Column> -->
-                        <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
 
+                        <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
                     </DataTable>
                 </div>
             </div>

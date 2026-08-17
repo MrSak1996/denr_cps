@@ -132,6 +132,7 @@ class ApplicationController extends Controller
 
         // Create the application using the validated data
         // $validated['date_applied'] = \Carbon\Carbon::parse($request->date_applied)->format('Y-m-d');
+
         $application = ChainsawIndividualApplication::updateOrCreate(
             ['id' => $request->input('id')],
             [
@@ -141,11 +142,8 @@ class ApplicationController extends Controller
                 'application_no' => $validated['application_no'],
                 'date_applied' => $request->input('date_applied'),
 
-
-                // 'encoded_by' => $validated['encoded_by'] ?? null,
                 'classification' => $validated['classification'] ?? null,
 
-                // ✅ UPPERCASE CLEAN DATA
                 'applicant_lastname' => $lastName,
                 'applicant_firstname' => $firstName,
                 'applicant_middlename' => $middleName,
@@ -167,6 +165,11 @@ class ApplicationController extends Controller
                 'operation_brgy_c' => $validated['p_barangay'] ?? null,
             ]
         );
+        if ($application->wasRecentlyCreated) {
+            $application->encoded_by = auth()->id();
+            $application->save();
+        }
+
         $applicationNo = $application->application_no;
         $applicationId = $application->id;
         $filesToUpload = [
@@ -247,7 +250,7 @@ class ApplicationController extends Controller
                     'transaction_type' => $request->input('type_of_transaction'),
                     'application_no' => $request->input('application_no'),
                     'date_applied' => $request->input('date_applied'),
-                    'encoded_by' => $request->input('encoded_by'),
+                    // 'encoded_by' => $request->input('encoded_by'),
                     'company_name' => $request->input('company_name'),
                     'company_address' => $request->input('company_address'),
                     'authorized_representative' => $request->input('authorized_representative'),
@@ -343,7 +346,7 @@ class ApplicationController extends Controller
                     'transaction_type' => $request->input('type_of_transaction'),
                     'application_no' => $request->input('application_no'),
                     'date_applied' => $request->input('date_applied'),
-                    'encoded_by' => $request->input('encoded_by'),
+                    // 'encoded_by' => $request->input('encoded_by'),
                     'company_name' => $request->input('company_name'),
                     'company_address' => $request->input('company_address'),
                     'authorized_representative' => $request->input('authorized_representative'),
