@@ -125,7 +125,7 @@ onMounted(() => {
 
         <!-- Submit Button -->
 
-        <Button :disabled="props.disabled || isLoading" @click="requireConfirmation()"
+        <Button :disabled="props.disabled || isLoading || [28].includes(Number(props.status_id))" @click="requireConfirmation()"
             style="background-color: rgba(0,77,64,1) !important;"
             class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-green-900 text-white hover:bg-green-800">
             <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
