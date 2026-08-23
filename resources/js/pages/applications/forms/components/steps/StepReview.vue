@@ -1198,7 +1198,7 @@ onMounted(() => {
           @click="emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">Back</Button>
 
         <AssessmentModal
-          :disabled="[1, 4].includes(roleId) && props.form.application_status >= 3 && props.form.application_status <= 13"
+          :disabled="[1, 4].includes(roleId) && props.form.application_status == 28 && props.form.application_status >= 3 && props.form.application_status <= 13"
           :status_id="props.form.application_status" class="w-full" :applicationId="Number(props.form.id)"
           @submit-assessments="submitAllAssessments" />
 

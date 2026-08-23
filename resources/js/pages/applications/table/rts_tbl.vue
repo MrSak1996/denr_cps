@@ -1197,7 +1197,18 @@ const insertPurpose = async () => {
             <div v-else-if="activeTab === 'aa'" class="space-y-2 text-sm text-gray-700">
                 <div class="h-auto w-full">
                     <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="approved_application"
-                        dataKey="id" :paginator="true" :rows="20" :filters="filters" filterDisplay="menu"
+                        dataKey="id" :paginator="true" :rows="20" :filters="filters" 
+                        :globalFilterFields="[
+                            'application_no',
+                            'permit_no',
+                            'applicant_name',
+                            'company_name',
+                            'application_type',
+                            'transaction_type',
+                            'classification',
+                            'application_status'
+                        ]"
+                        filterDisplay="menu"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         :rowsPerPageOptions="[5, 10, 25]"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
