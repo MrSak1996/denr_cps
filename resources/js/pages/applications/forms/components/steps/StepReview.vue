@@ -574,62 +574,62 @@ const getApplicantFile = async (application_id) => {
 // };
 
 const handleResubmissionUpload = async (
-    checklistId: number,
-    files: File[]
+  checklistId: number,
+  files: File[]
 ) => {
-    try {
-        isLoading.value = true;
+  try {
+    isLoading.value = true;
 
-        isUploading.value = true;
-        uploadProgress.value = 0;
+    isUploading.value = true;
+    uploadProgress.value = 0;
 
-        const formData = new FormData();
+    const formData = new FormData();
 
-        files.forEach(file => {
-            formData.append('files[]', file);
-        });
+    files.forEach(file => {
+      formData.append('files[]', file);
+    });
 
-        formData.append('uploaded_by', userId);
-        formData.append('application_type', props.form.application_type);
-        formData.append('checklist_entry_id', checklistId.toString());
-        formData.append('application_no', props.form.application_no);
-        formData.append('application_id', props.form.id);
+    formData.append('uploaded_by', userId);
+    formData.append('application_type', props.form.application_type);
+    formData.append('checklist_entry_id', checklistId.toString());
+    formData.append('application_no', props.form.application_no);
+    formData.append('application_id', props.form.id);
 
-        const response = await axios.post(
-            '/api/resubmit-files',
-            formData,
-            {
-                onUploadProgress: (progressEvent) => {
-                    if (!progressEvent.total) return;
+    const response = await axios.post(
+      '/api/resubmit-files',
+      formData,
+      {
+        onUploadProgress: (progressEvent) => {
+          if (!progressEvent.total) return;
 
-                    uploadProgress.value = Math.round(
-                        (progressEvent.loaded * 100) / progressEvent.total
-                    );
-                }
-            }
-        );
-
-        const row = companyRequirements.value.find(
-            r => r.checklist_entry_id === checklistId
-        );
-
-        if (row) {
-            row.resubmissions.push(...response.data.files);
+          uploadProgress.value = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
         }
+      }
+    );
 
-        uploadProgress.value = 100;
+    const row = companyRequirements.value.find(
+      r => r.checklist_entry_id === checklistId
+    );
 
-        // Small delay so the user sees 100%
-        setTimeout(() => {
-            isUploading.value = false;
-        }, 500);
-
-    } catch (error) {
-        console.error(error);
-        isUploading.value = false;
-    } finally {
-        isLoading.value = false;
+    if (row) {
+      row.resubmissions.push(...response.data.files);
     }
+
+    uploadProgress.value = 100;
+
+    // Small delay so the user sees 100%
+    setTimeout(() => {
+      isUploading.value = false;
+    }, 500);
+
+  } catch (error) {
+    console.error(error);
+    isUploading.value = false;
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const hasFailedRequirements = computed(() => {
@@ -1794,12 +1794,11 @@ onMounted(() => {
       </Fieldset>
 
 
-      <AssessmentTable title="Applicant Requirements" :collapsed="applicationData.application_status === 25"
-        :application_status="props.form.status_title" :roleId="roleId" :rows="companyRequirements" :onsite="onsite"
-        @view-file="openFileModal" @update-assessment="updateAssessment" @update-remarks="updateRemarks"
-        @update-onsite="updateOnsite" @upload-resubmission="handleResubmissionUpload"
-        @remove-resubmission="handleRemoveResubmission" :overallRemarks="overallRemarks"
-        @update-overall-remarks="overallRemarks = $event" />
+      <AssessmentModal :disabled="[1, 4].includes(roleId) &&
+        Number(props.form.application_status) > 1 &&
+        ![25, 26, 27].includes(Number(props.form.application_status))
+        " :status_id="props.form.application_status" class="w-full sm:w-auto" :applicationId="Number(props.form.id)"
+        @submit-assessments="submitAllAssessments" />
 
       <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
         <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.file_url)" width="100%" height="500"

@@ -16,9 +16,8 @@ const props = defineProps({
         required: true
     },
     disabled: Boolean
-
-
 });
+
 
 
 // ✅ Event emit for parent submission
@@ -126,20 +125,13 @@ onMounted(() => {
 
         <!-- Submit Button -->
 
-        <Button @click="requireConfirmation()" 
+        <Button :disabled="props.disabled || isLoading" @click="requireConfirmation()"
             style="background-color: rgba(0,77,64,1) !important;"
             class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-green-900 text-white hover:bg-green-800">
-
             <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
 
-            <CircleCheckBig />
-            <!-- submit -> cenro to rps chief 
-            
-            endorsed -> penro technical
-            RPS CHIEF TO ARDTS
+            <CircleCheckBig v-else />
 
-            approved
-            RED -->
             {{
                 [5, 6, 7, 8, 9].includes(Number(props.status_id))
                     ? 'Endorsed Application'
