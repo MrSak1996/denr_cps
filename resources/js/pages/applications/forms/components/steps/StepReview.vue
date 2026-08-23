@@ -1197,9 +1197,10 @@ onMounted(() => {
         <Button v-else-if="![1, 25, 26, 27].includes(props.form.application_status)" variant="outline"
           @click="emit('back')" class="w-full bg-gray-300 hover:bg-gray-400">Back</Button>
 
-        <AssessmentModal
-          :disabled="[1, 4].includes(roleId) && props.form.application_status == 28 && props.form.application_status >= 3 && props.form.application_status <= 13"
-          :status_id="props.form.application_status" class="w-full" :applicationId="Number(props.form.id)"
+        <AssessmentModal :disabled="[1, 4].includes(roleId) &&
+          Number(props.form.application_status) > 1 &&
+          ![25, 26, 27].includes(Number(props.form.application_status))
+          " :status_id="Number(props.form.application_status)" class="w-full" :applicationId="Number(props.form.id)"
           @submit-assessments="submitAllAssessments" />
 
       </div>
