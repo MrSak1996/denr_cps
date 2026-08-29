@@ -100,6 +100,11 @@ const filters = ref({
     application_status: {
         value: null,
         matchMode: FilterMatchMode.CONTAINS
+    },
+    authorized_representative:{
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+
     }
 });
 
@@ -698,7 +703,8 @@ const applicantsTable = async () => {
                 'application_type',
                 'transaction_type',
                 'classification',
-                'application_status'
+                'application_status',
+                'authorized_representative',
             ]" filterDisplay="menu"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
             :rowsPerPageOptions="[5, 10, 25]"
@@ -1054,43 +1060,86 @@ const applicantsTable = async () => {
         </div>
     </Dialog>
 
-    <Dialog v-model:visible="showCommentsModal" modal header="Comments" :style="{ width: '50vw' }">
-        <div class="overflow-x-auto">
-            <!-- Loading state -->
-            <div v-if="loadingRouting" class="p-4 text-center text-gray-500">Loading comments...</div>
-            <table v-else class="min-w-full rounded-lg border border-gray-300 bg-white text-[12px]">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="border px-4 py-2 text-left">Action Officer</th>
-                        <th class="border px-4 py-2 text-left">Comments</th>
-                        <th class="border px-4 py-2 text-left">Date Return</th>
-                    </tr>
-                </thead>
+    <Dialog v-model:visible="showCommentsModal" modal header="Comments History" :style="{ width: '60vw' }">
+            <div class="overflow-x-auto">
 
-                <tbody>
-                    <tr v-for="(item, index) in commentsHistory" :key="index" class="hover:bg-gray-50">
-                        <td class="border px-4" style="width: 10rem">
-                            <b>{{ item.action_officer }}</b><br />
-                            <i>{{ item.sender_role }}</i><br />
-                        </td>
-                        <td class="border px-4">{{ item.comments }}</td>
-                        <td class="border px-4">
-                            {{
-                                new Date(item.created_at).toLocaleString('en-PH', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit',
-                                    hour12: true,
-                                })
-                            }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <!-- Table -->
-        </div>
-    </Dialog>
+                <!-- Loading -->
+                <div v-if="loadingComment" class="p-4 text-center text-gray-500">
+                    Loading comments...
+                </div>
+
+                <!-- Table -->
+                <table v-else class="min-w-full rounded-lg border border-gray-300 bg-white text-[12px]">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border px-4 py-2 text-left">#</th>
+                            <th class="border px-4 py-2 text-left">Application No.</th>
+                            <th class="border px-4 py-2 text-left">Action Officer</th>
+                            <th class="border px-4 py-2 text-left">Role</th>
+                            <th class="border px-4 py-2 text-left">Comments</th>
+                            <th class="border px-4 py-2 text-left">Status</th>
+                            <th class="border px-4 py-2 text-left">Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr v-for="(item, index) in commentsHistory" :key="index" class="hover:bg-gray-50">
+                            <!-- # -->
+                            <td class="border px-4 py-2">
+                                {{ index + 1 }}
+                            </td>
+
+                            <!-- Application No -->
+                            <td class="border px-4 py-2">
+                                {{ item.application_no }}
+                            </td>
+
+                            <!-- Officer -->
+                            <td class="border px-4 py-2">
+                                {{ item.action_officer }}
+                            </td>
+
+                            <!-- Role -->
+                            <td class="border px-4 py-2">
+                                {{ item.sender_role }}
+                            </td>
+
+                            <!-- Comments -->
+                            <td class="border px-4 py-2">
+                                {{ item.comments ?? '-' }}
+                            </td>
+
+                            <!-- Status -->
+                            <td class="border px-4 py-2">
+                                <Tag severity="info">
+                                    {{ item.status_title }}
+                                </Tag>
+                            </td>
+
+                            <!-- Date -->
+                            <td class="border px-4 py-2">
+                                {{
+                                    new Date(item.created_at).toLocaleString('en-PH', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit',
+                                        hour12: true,
+                                    })
+                                }}
+                            </td>
+                        </tr>
+
+                        <!-- Empty -->
+                        <tr v-if="commentsHistory.length === 0">
+                            <td colspan="7" class="p-4 text-center text-gray-500">
+                                No comments history found
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </Dialog>
 </template>
