@@ -731,22 +731,21 @@ const applicantsTable = async () => {
             </template>
             <Column header="Action" :exportable="false" style="min-width: 10rem">
                 <template #body="{ data }">
-                    <Link v-if="canView(data.data)" :href="route('applications.edit', {
-                        application_id: data.data.id,
-                        type: data.data.application_type,
-                        step: 1
-                    })
-                        "
-                        class="inline-flex items-center justify-center rounded-md bg-[#BF360C] px-3 py-2 text-white hover:bg-[#BF360C]">
+                    <Link v-if="canView(data)" :href="route('applications.edit', {
+                        application_id: data.id,
+                        type: data.application_type,
+                        step: getStep(data.application_status)
+                    })"
+                        class="mr-2 inline-flex justify-center rounded-md bg-teal-700 px-3 py-2 text-white hover:bg-teal-600">
                         <SquarePen :size="16" />
                     </Link>
 
-                    <Link v-if="data.data.application_status == STATUS_RETURNED_TO_CENRO_TECHNICAL" :href="route('applications.edit', {
-                        application_id: data.data.id,
-                        type: data.data.application_type,
+                    <Link :href="route('applications.edit', {
+                        application_id: data.id,
+                        type: data.application_type,
                         step: 4
                     })"
-                        class=" inline-flex justify-center rounded-md bg-blue-700 px-3 py-2 text-white hover:bg-blue-600">
+                        class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
                         <View :size="16" />
                     </Link>
                     <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"
@@ -804,7 +803,7 @@ const applicantsTable = async () => {
                     </div>
                 </template>
             </Column>
-
+           
             <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
                 <template #body="{ data }">
                     <b>{{ data.permit_no }}</b>
@@ -841,19 +840,20 @@ const applicantsTable = async () => {
                     </div>
                 </template>
             </Column>
-            <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
+             <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
                 <template #body="{ data }">
                     <b>{{ data.application_no }}</b>
                 </template>
             </Column>
-            <Column header="Office" style="min-width: 10rem">
-                <template #body="slotProps">
-                    {{ slotProps.data.office_title }}
-                </template>
-            </Column>
+             <Column header="Office" style="min-width: 10rem">
+                            <template #body="slotProps">
+                                {{ slotProps.data.office_title }}
+                            </template>
+                        </Column>
 
-            <Column field="application_type" header="Application Type" sortable />
-            <Column header="Type of Transaction" field="transaction_type" sortable></Column>
+                                    <Column field="application_type" header="Application Type" sortable />
+                        <Column header="Type of Transaction" field="transaction_type" sortable></Column>
+
 
             <Column header="Classification" field="classification" sortable></Column>
             <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
