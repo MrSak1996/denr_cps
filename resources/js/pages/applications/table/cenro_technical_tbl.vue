@@ -9,7 +9,7 @@ import { onMounted, reactive, ref } from 'vue';
 import FileCard from '../forms/file_card.vue';
 import ReusableConfirmDialog from '../modal/endorsed_modal.vue';
 import { ProductService } from '../service/ProductService';
-import { PrinterCheck,View , SquarePen } from 'lucide-vue-next';
+import { PrinterCheck, View, SquarePen } from 'lucide-vue-next';
 
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
@@ -28,37 +28,37 @@ const userId = page.props.auth.user.id;
 const officeId = page.props.auth.user.office_id;
 
 const STATUS_DRAFT = 1;
-    const STATUS_FOR_REVIEW_EVALUATION = 2;
+const STATUS_FOR_REVIEW_EVALUATION = 2;
 
-    const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
-    const STATUS_ENDORSED_CENRO_OFFICER = 4;
-    const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
-    const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
-    const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
-    const STATUS_ENDORSED_PENRO_OFFICER = 8;
-    const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
-    const STATUS_ENDORSED_FUS_CHIEF = 10;
-    const STATUS_ENDORSED_LPDD_CHIEF = 11;
-    const STATUS_ENDORSED_ARDTS = 12;
-    const STATUS_ENDORSED_RED = 13;
+const STATUS_ENDORSED_CENRO_RPS_CHIEF = 3;
+const STATUS_ENDORSED_CENRO_OFFICER = 4;
+const STATUS_ENDORSED_PENRO_TECHNICAL = 5;
+const STATUS_ENDORSED_PENRO_CHIEF_RPS = 6;
+const STATUS_ENDORSED_PENRO_CHIEF_TSD = 7;
+const STATUS_ENDORSED_PENRO_OFFICER = 8;
+const STATUS_ENDORSED_REGIONAL_TECHNICAL_STAFF = 9;
+const STATUS_ENDORSED_FUS_CHIEF = 10;
+const STATUS_ENDORSED_LPDD_CHIEF = 11;
+const STATUS_ENDORSED_ARDTS = 12;
+const STATUS_ENDORSED_RED = 13;
 
-    const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
-    const STATUS_RECEIVED_CENRO_OFFICER = 15;
-    const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
-    const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
-    const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
-    const STATUS_RECEIVED_PENRO_OFFICER = 19;
-    const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
-    const STATUS_RECEIVED_FUS_CHIEF = 21;
-    const STATUS_RECEIVED_LPDD_CHIEF = 22;
-    const STATUS_RECEIVED_ARDTS = 23;
-    const STATUS_RECEIVED_RED = 24;
+const STATUS_RECEIVED_CENRO_RPS_CHIEF = 14;
+const STATUS_RECEIVED_CENRO_OFFICER = 15;
+const STATUS_RECEIVED_PENRO_TECHNICAL = 16;
+const STATUS_RECEIVED_PENRO_CHIEF_RPS = 17;
+const STATUS_RECEIVED_PENRO_CHIEF_TSD = 18;
+const STATUS_RECEIVED_PENRO_OFFICER = 19;
+const STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF = 20;
+const STATUS_RECEIVED_FUS_CHIEF = 21;
+const STATUS_RECEIVED_LPDD_CHIEF = 22;
+const STATUS_RECEIVED_ARDTS = 23;
+const STATUS_RECEIVED_RED = 24;
 
-    const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
-    const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
-    const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
+const STATUS_RETURNED_TO_CENRO_TECHNICAL = 25;
+const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
+const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
 
-    const STATUS_APPROVED_BY_RED = 28;
+const STATUS_APPROVED_BY_RED = 28;
 
 const toast = useToast();
 const dt = ref();
@@ -87,15 +87,19 @@ const signatories_data = ref({});
 const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-
+    office_id: { value: null, matchMode: FilterMatchMode.IN },
+    applicant_name: {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+    },
     application_type: {
         value: null,
-        matchMode: FilterMatchMode.EQUALS
+        matchMode: FilterMatchMode.CONTAINS
     },
 
     application_status: {
         value: null,
-        matchMode: FilterMatchMode.EQUALS
+        matchMode: FilterMatchMode.CONTAINS
     }
 });
 
@@ -645,6 +649,27 @@ const getDownloadCount = async (application_id) => {
         downloadCount.value[application_id] = 0;
     }
 };
+const avatarColors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-cyan-500',
+    'bg-indigo-500',
+    'bg-red-500',
+];
+
+const getAvatarColor = (name: string) => {
+    if (!name) return 'bg-gray-500';
+
+    let sum = 0;
+    for (const ch of name) {
+        sum += ch.charCodeAt(0);
+    }
+
+    return avatarColors[sum % avatarColors.length];
+};
 onMounted(() => {
     applicantsTable();
     // products.value.forEach((item) => {
@@ -665,7 +690,16 @@ const applicantsTable = async () => {
     <div class="flex flex-col gap-4 rounded-xl p-4">
         <Toast />
         <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="products" dataKey="id"
-            :paginator="true" :rows="20" :filters="filters" filterDisplay="menu"
+            :paginator="true" :rows="20" :filters="filters" :globalFilterFields="[
+                'application_no',
+                'permit_no',
+                'applicant_name',
+                'company_name',
+                'application_type',
+                'transaction_type',
+                'classification',
+                'application_status'
+            ]" filterDisplay="menu"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
             :rowsPerPageOptions="[5, 10, 25]"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="scroll"
@@ -681,7 +715,7 @@ const applicantsTable = async () => {
                     </IconField>
                     <div class="flex flex-wrap gap-2">
 
-    
+
                         <!-- Application Type Filter -->
                         <Select v-model="filters['application_type'].value" filter :options="applicationTypeOptions"
                             optionLabel="label" optionValue="value" placeholder="Application Type" class="w-52"
@@ -697,22 +731,23 @@ const applicantsTable = async () => {
             </template>
             <Column header="Action" :exportable="false" style="min-width: 10rem">
                 <template #body="{ data }">
-                    <Link v-if="canView(data)" :href="route('applications.edit', {
-                        application_id: data.id,
-                        type: data.application_type,
-                        step: getStep(data.application_status)
-                    })"
-                        class="mr-2 inline-flex justify-center rounded-md bg-teal-700 px-3 py-2 text-white hover:bg-teal-600">
+                    <Link v-if="canView(data.data)" :href="route('applications.edit', {
+                        application_id: data.data.id,
+                        type: data.data.application_type,
+                        step: 1
+                    })
+                        "
+                        class="inline-flex items-center justify-center rounded-md bg-[#BF360C] px-3 py-2 text-white hover:bg-[#BF360C]">
                         <SquarePen :size="16" />
                     </Link>
 
-                    <Link :href="route('applications.edit', {
-                        application_id: data.id,
-                        type: data.application_type,
+                    <Link v-if="data.data.application_status == STATUS_RETURNED_TO_CENRO_TECHNICAL" :href="route('applications.edit', {
+                        application_id: data.data.id,
+                        type: data.data.application_type,
                         step: 4
                     })"
-                        class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
-                        <View :size="16"/>
+                        class=" inline-flex justify-center rounded-md bg-blue-700 px-3 py-2 text-white hover:bg-blue-600">
+                        <View :size="16" />
                     </Link>
                     <Button v-if="data.application_status == STATUS_APPROVED_BY_RED"
                         :disabled="(downloadCount[data.id] ?? 0) >= 3" @click="generatePdf(data)"
@@ -723,31 +758,102 @@ const applicantsTable = async () => {
 
                 </template>
             </Column>
-            <Column field="application_type" header="Application Type" sortable />
-            <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
-                <template #body="{ data }">
-                    <b>{{ data.application_no }}</b>
+            <Column field="applicant_name" header="Applicant Name" style="min-width: 12rem">
+                <template #body="slotProps">
+                    <div class="flex items-center gap-3">
+
+                        <!-- Avatar -->
+                        <div :class="[
+                            'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                            getAvatarColor(
+                                slotProps.data.application_type === 'Individual'
+                                    ? slotProps.data.applicant_name
+                                    : slotProps.data.company_name
+                            )
+                        ]">
+                            {{
+                                (
+                                    slotProps.data.application_type === 'Individual'
+                                        ? slotProps.data.applicant_name
+                                        : slotProps.data.company_name
+                                )?.charAt(0)
+                            }}
+                        </div>
+
+                        <!-- Name -->
+                        <div class="flex flex-col">
+                            <!-- Individual -->
+                            <template v-if="slotProps.data.application_type === 'Individual'">
+                                <span class="font-medium">
+                                    {{ slotProps.data.applicant_name }}
+                                </span>
+                            </template>
+
+                            <!-- Company / Government -->
+                            <template v-else>
+                                <span class="font-medium">
+                                    {{ slotProps.data.company_name }}
+                                </span>
+
+                                <span class="text-sm text-gray-500">
+                                    {{ slotProps.data.authorized_representative }}
+                                </span>
+                            </template>
+                        </div>
+
+                    </div>
                 </template>
             </Column>
+
             <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
                 <template #body="{ data }">
                     <b>{{ data.permit_no }}</b>
                 </template>
             </Column>
-            <Column field="status_title" header="Status" sortable style="min-width: 10rem">
+            <Column field="status_title" header="Status" sortable style="min-width: 12rem">
                 <template #body="{ data }">
-                    <Tag :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' : 'success'"
-                        class="text-center" v-if="data.application_status == 28">Approved</Tag>
-                    <Tag :value="data.status_title"
-                        :severity="data.status_title === 'Returned to CENRO Technical Staff' ? 'danger' : 'success'"
-                        class="text-center" v-else />
+                    <div class="flex flex-col items-center">
+                        <Tag :value="data.status_title" :severity="data.application_status >= 25 && data.application_status <= 27
+                            ? 'danger'
+                            : data.status_title === 'Endorsed to TSD Chief' || data.status_title === 'Received by ARDTS'
+                                ? 'info'
+                                : 'success'
+                            " class="text-center" />
+                        <div class="italic text-gray-600">
+                            {{ data.updated_by }}
+                        </div>
+
+                        <Button v-if="data.application_status >= 25 && data.application_status <= 27" style="
+                                        display: inline;
+                                        padding: .2em .6em .3em;
+                                        font-size: 75%;
+                                        font-weight: 700;
+                                        line-height: 1;
+                                        color: #fff;
+                                        text-align: center;
+                                        white-space: nowrap;
+                                        vertical-align: baseline;
+                                        border-radius: .25em;
+                                    " severity="info" class="mt-1 rounded bg-blue-900 px-1 py-1 text-xs text-white"
+                            @click="openCommentModal(data)" size="small">
+                            View Comments
+                        </Button>
+                    </div>
                 </template>
             </Column>
-            <Column header="Applicant Name" style="min-width: 12rem">
+            <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
+                <template #body="{ data }">
+                    <b>{{ data.application_no }}</b>
+                </template>
+            </Column>
+            <Column header="Office" style="min-width: 10rem">
                 <template #body="slotProps">
-                    {{ slotProps.data.authorized_representative || slotProps.data.applicant_name }}
+                    {{ slotProps.data.office_title }}
                 </template>
             </Column>
+
+            <Column field="application_type" header="Application Type" sortable />
+            <Column header="Type of Transaction" field="transaction_type" sortable></Column>
 
             <Column header="Classification" field="classification" sortable></Column>
             <Column field="date_applied" header="Date of Application" sortable style="min-width: 4rem" />
