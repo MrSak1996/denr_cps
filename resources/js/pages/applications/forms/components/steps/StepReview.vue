@@ -1795,11 +1795,11 @@ onMounted(() => {
       </Fieldset>
 
 
-      <AssessmentModal :disabled="[1, 4].includes(roleId) &&
+      <!-- <AssessmentModal :disabled="[1, 4].includes(roleId) &&
         Number(props.form.application_status) > 1 &&
         ![25, 26, 27].includes(Number(props.form.application_status))
         " :status_id="props.form.application_status" class="w-full sm:w-auto" :applicationId="Number(props.form.id)"
-        @submit-assessments="submitAllAssessments" />
+        @submit-assessments="submitAllAssessments" /> -->
 
       <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
         <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.file_url)" width="100%" height="500"
