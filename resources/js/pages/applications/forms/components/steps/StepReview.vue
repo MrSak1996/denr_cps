@@ -1807,27 +1807,27 @@ onMounted(() => {
       </Dialog>
 
       <div :class="[
-        'pt-6 w-full gap-4',
+        'pt-6 w-full gap-3',
         currentStep === 4
-          ? 'grid grid-cols-1 sm:grid-cols-2'
-          : 'flex flex-col sm:flex-row sm:justify-end'
+          ? 'grid grid-cols-1 sm:grid-cols-2 sm:gap-4'
+          : 'flex flex-col sm:flex-row sm:justify-end sm:gap-3'
       ]">
-        <!-- Return Application -->
+        <!-- Return Application (secondary/danger action, outlined so it doesn't compete visually) -->
         <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)"
-          :disabled="roleId === 1"
-          class="h-10 w-full sm:w-auto sm:ml-auto px-4 py-2 flex items-center justify-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
+          :disabled="roleId === 1" variant="outlined"
+          class="h-10 w-full sm:w-auto sm:ml-auto px-4 py-2 flex items-center justify-center gap-2 rounded-md border-red-700 text-red-700 hover:bg-red-50"
           @click="returnApplication">
-          <Undo2 />
+          <Undo2 class="h-4 w-4" />
           Return Application
         </Button>
 
         <!-- Back -->
         <Button v-else-if="![1, 25, 26, 27].includes(props.form.application_status)" variant="outline"
-          @click="emit('back')" class="w-full sm:w-auto bg-gray-300 hover:bg-gray-400">
+          @click="emit('back')" class="w-full sm:w-auto bg-gray-100 text-gray-700 hover:bg-gray-200">
           Back
         </Button>
 
-        <!-- Assessment -->
+        <!-- Assessment (primary action, stays solid) -->
         <AssessmentModal :disabled="[1, 4].includes(roleId) &&
           props.form.application_status >= 3 &&
           props.form.application_status <= 13" :status_id="props.form.application_status" class="w-full sm:w-auto"
