@@ -1185,13 +1185,15 @@ onMounted(() => {
           ? 'grid grid-cols-2 gap-4'
           : 'flex justify-end'
       ]">
+
         <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)"
-          :disabled="roleId === 1"
-          class="h-10 ml-auto px-4 py-2 flex items-center gap-2 rounded-md bg-red-700 text-white hover:bg-red-800"
+          :disabled="roleId === 1" variant="outlined"
+          class="h-10 w-full px-4 py-2 flex items-center justify-center gap-2 rounded-md bg-red-900 text-white hover:bg-red-50"
           @click="returnApplication">
-          <Undo2 />
+          <Undo2 class="h-4 w-4" />
           Return Application
         </Button>
+
 
         <!-- <Button v-else-if="props.form.application_status === 1 || [1, 2, 3].includes(currentStep)" variant="outline" -->
         <Button v-else-if="![1, 25, 26, 27].includes(props.form.application_status)" variant="outline"
@@ -1210,33 +1212,43 @@ onMounted(() => {
   </div>
 
   <!-- Mobile -->
-  <div v-else class="space-y-3">
+  <div v-else class="space-y-4">
 
     <div>
       <Toast />
       <ReusableConfirmDialog ref="confirmDialogRef" />
 
       <!-- Status -->
-      <div v-if="isEdit" class="flex items-center justify-between rounded-xl p-4 shadow-sm border">
-        <Info class="h-5 w-5" />
-        <h1 class="text-xl font-bold text-gray-800">
-          Application Status
-        </h1>
-        <Tag severity="danger">
+      <div v-if="isEdit"
+        class="flex flex-wrap items-center gap-3 rounded-xl border p-4 shadow-sm sm:flex-nowrap sm:justify-between">
+        <div class="flex items-center gap-2">
+          <Info class="h-5 w-5 flex-shrink-0 text-gray-500" />
+          <h1 class="text-lg font-bold text-gray-800 sm:text-xl">
+            Application Status
+          </h1>
+        </div>
+
+        <Tag severity="danger" class="ml-auto sm:ml-0">
           {{ props.form.status_title }}
         </Tag>
       </div>
 
       <!-- Applicant Details -->
-      <Fieldset legend="Applicant Details" :toggleable="applicationData.application_status != 25">
-        <div class="space-y-3">
+      <Fieldset :toggleable="applicationData.application_status != 25" class="mt-4">
+        <template #legend>
+          <div class="flex items-center gap-2">
+            <UserRound class="h-4 w-4 text-blue-900" />
+            <span class="font-semibold">Applicant Details</span>
+          </div>
+        </template>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
           <!-- Application No -->
           <div class="rounded-lg border p-3 bg-gray-50">
-            <div class="text-xs text-gray-500 font-semibold">
+            <div class="text-xs font-semibold text-gray-500">
               Application No.
             </div>
-
             <div class="mt-1">
               <Tag :value="applicationData?.application_no" severity="success" />
             </div>
@@ -1244,10 +1256,9 @@ onMounted(() => {
 
           <!-- Date Applied -->
           <div class="rounded-lg border p-3">
-            <div class="text-xs text-gray-500 font-semibold">
+            <div class="text-xs font-semibold text-gray-500">
               Date Applied
             </div>
-
             <div class="mt-1 font-medium">
               {{ formatDate(applicationData.date_applied) }}
             </div>
@@ -1255,22 +1266,20 @@ onMounted(() => {
 
           <!-- Transaction -->
           <div class="rounded-lg border p-3">
-            <div class="text-xs text-gray-500 font-semibold">
+            <div class="text-xs font-semibold text-gray-500">
               Type of Transaction
             </div>
-
-            <div class="mt-1">
+            <div class="mt-1 break-words">
               {{ applicationData.type_of_transaction }}
             </div>
           </div>
 
           <!-- Classification -->
           <div class="rounded-lg border p-3">
-            <div class="text-xs text-gray-500 font-semibold">
+            <div class="text-xs font-semibold text-gray-500">
               Classification
             </div>
-
-            <div class="mt-1">
+            <div class="mt-1 break-words">
               {{ applicationData.classification }}
             </div>
           </div>
@@ -1278,21 +1287,19 @@ onMounted(() => {
           <!-- Company -->
           <template v-if="applicationData.application_type === 'Company'">
             <div class="rounded-lg border p-3">
-              <div class="text-xs text-gray-500 font-semibold">
+              <div class="text-xs font-semibold text-gray-500">
                 Company Name
               </div>
-
-              <div class="mt-1">
+              <div class="mt-1 break-words">
                 {{ applicationData.company_name }}
               </div>
             </div>
 
             <div class="rounded-lg border p-3">
-              <div class="text-xs text-gray-500 font-semibold">
+              <div class="text-xs font-semibold text-gray-500">
                 Authorized Representative
               </div>
-
-              <div class="mt-1">
+              <div class="mt-1 break-words">
                 {{ applicationData.authorized_representative }}
               </div>
             </div>
@@ -1301,21 +1308,19 @@ onMounted(() => {
           <!-- Government -->
           <template v-else-if="applicationData.application_type === 'Government'">
             <div class="rounded-lg border p-3">
-              <div class="text-xs text-gray-500 font-semibold">
+              <div class="text-xs font-semibold text-gray-500">
                 Office Name
               </div>
-
-              <div class="mt-1">
+              <div class="mt-1 break-words">
                 {{ applicationData.company_name }}
               </div>
             </div>
 
             <div class="rounded-lg border p-3">
-              <div class="text-xs text-gray-500 font-semibold">
+              <div class="text-xs font-semibold text-gray-500">
                 Authorized Representative
               </div>
-
-              <div class="mt-1">
+              <div class="mt-1 break-words">
                 {{ applicationData.authorized_representative }}
               </div>
             </div>
@@ -1323,12 +1328,11 @@ onMounted(() => {
 
           <!-- Individual -->
           <template v-else>
-            <div class="rounded-lg border p-3">
-              <div class="text-xs text-gray-500 font-semibold">
+            <div class="rounded-lg border p-3 sm:col-span-2">
+              <div class="text-xs font-semibold text-gray-500">
                 Applicant Name
               </div>
-
-              <div class="mt-1">
+              <div class="mt-1 break-words">
                 {{ applicationData.first_name }}
                 {{ applicationData.middle_name }}
                 {{ applicationData.last_name }}
@@ -1338,10 +1342,9 @@ onMounted(() => {
 
           <!-- Contact -->
           <div class="rounded-lg border p-3">
-            <div class="text-xs text-gray-500 font-semibold">
+            <div class="text-xs font-semibold text-gray-500">
               Contact Details
             </div>
-
             <div class="mt-1">
               {{ applicationData.mobile_no }}
             </div>
@@ -1349,30 +1352,26 @@ onMounted(() => {
 
           <!-- Region -->
           <div class="rounded-lg border p-3">
-            <div class="text-xs text-gray-500 font-semibold">
+            <div class="text-xs font-semibold text-gray-500">
               Region
             </div>
-
             <div class="mt-1">
               REGION IV-A (CALABARZON)
             </div>
           </div>
 
           <!-- Address -->
-          <div class="rounded-lg border p-3">
-            <div class="text-xs text-gray-500 font-semibold">
+          <div class="rounded-lg border p-3 sm:col-span-2">
+            <div class="text-xs font-semibold text-gray-500">
               Complete Address
             </div>
-
             <div class="mt-1 break-words">
               <template v-if="applicationData.application_type === 'Company'">
                 {{ applicationData.company_address }}
               </template>
-
               <template v-else-if="applicationData.application_type === 'Government'">
                 {{ applicationData.company_address }}
               </template>
-
               <template v-else>
                 {{ applicationData.i_complete_address }}
               </template>
@@ -1384,21 +1383,26 @@ onMounted(() => {
 
 
       <!-- ================= Registration Information ================= -->
-      <Fieldset legend="Registration Information" toggleable v-model:collapsed="isRegistrationInfoCollapsed">
-        <div class="space-y-3">
+      <Fieldset toggleable v-model:collapsed="isRegistrationInfoCollapsed" class="mt-4">
+        <template #legend>
+          <div class="flex items-center gap-2">
+            <ClipboardList class="h-4 w-4 text-blue-900" />
+            <span class="font-semibold">Registration Information</span>
+          </div>
+        </template>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
           <!-- Encoded By -->
           <div class="rounded-xl border bg-white p-4 shadow-sm">
             <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Encoded By
             </div>
-
             <div class="mt-2">
               <Tag severity="success">
                 {{ props.form.registered_by }}
               </Tag>
             </div>
-
             <div class="mt-2 text-sm text-gray-700">
               {{ props.form.office_title }} - {{ props.form.role_title }}
             </div>
@@ -1409,7 +1413,6 @@ onMounted(() => {
             <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Registered Date & Time
             </div>
-
             <div class="mt-2 text-sm font-medium">
               {{ props.form.created_at }}
             </div>
@@ -1420,149 +1423,113 @@ onMounted(() => {
 
       <!-- ================= Routing History ================= -->
 
-      <Fieldset legend="Routing History" toggleable v-model:collapsed="isRoutingCollapsed">
+      <Fieldset toggleable v-model:collapsed="isRoutingCollapsed" class="mt-4">
+        <template #legend>
+          <div class="flex items-center gap-2">
+            <Route class="h-4 w-4 text-blue-900" />
+            <span class="font-semibold">Routing History</span>
+          </div>
+        </template>
+
         <div v-if="routingHistory.length === 0" class="rounded-xl border bg-white p-5 text-center text-gray-500">
           No routing history found
         </div>
 
-        <div v-for="(item, index) in routingHistory" :key="index" class="mb-4 rounded-xl border bg-white shadow-sm">
-          <!-- Header -->
+        <template v-else>
+          <!-- Search: filters the routes below by route number, sender, receiver, or remarks -->
+          <div class="relative mb-4">
+            <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input v-model="routingSearchQuery" type="text" placeholder="Search routes by sender, receiver, or remarks"
+              class="w-full rounded-lg border py-2.5 pl-9 pr-9 text-sm focus:border-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-900" />
+            <button v-if="routingSearchQuery" type="button" aria-label="Clear search"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              @click="routingSearchQuery = ''">
+              <X class="h-4 w-4" />
+            </button>
+          </div>
 
-          <div class="flex items-center justify-between rounded-t-xl bg-blue-900 px-4 py-3 text-white">
-            <div class="font-semibold">
+          <div v-if="filteredRoutingHistory.length === 0"
+            class="rounded-xl border bg-white p-5 text-center text-gray-500">
+            <SearchX class="mx-auto mb-2 h-5 w-5 text-gray-400" />
+            No routes match "{{ routingSearchQuery }}"
+          </div>
+        </template>
+
+        <div v-for="(item, index) in filteredRoutingHistory" :key="index"
+          class="mb-4 overflow-hidden rounded-xl border bg-white shadow-sm last:mb-0">
+          <!-- Header -->
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-blue-900 px-4 py-3 text-white">
+            <div class="flex items-center gap-2 font-semibold">
+              <GitBranch class="h-4 w-4 opacity-80" />
               Route #2026-00{{ item.route_order }}
             </div>
 
             <Tag v-if="item.action === 'Received'" severity="danger">
-              Received
+              <span class="flex items-center gap-1">
+                <Inbox class="h-3.5 w-3.5" /> Received
+              </span>
             </Tag>
-
             <Tag v-else-if="item.action === 'Endorsed'" severity="info">
-              Endorsed
+              <span class="flex items-center gap-1">
+                <Send class="h-3.5 w-3.5" /> Endorsed
+              </span>
             </Tag>
-
             <Tag v-else-if="
               item.action === 'Returned to Technical Staff' ||
               item.action === 'Returned to PENRO Technical Staff'
             " severity="danger">
-              Returned
+              <span class="flex items-center gap-1">
+                <Undo2 class="h-3.5 w-3.5" /> Returned
+              </span>
             </Tag>
-
             <Tag v-else severity="success">
               {{ item.action }}
             </Tag>
           </div>
 
           <!-- Body -->
-
-          <div class="space-y-4 p-4 text-sm">
+          <div class="space-y-3 p-4 text-sm">
 
             <!-- Sender -->
-
             <div v-if="![2, 4, 6, 8, 10].includes(item.route_order)" class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
                 Sender
               </div>
-
-              <div class="mt-1 font-semibold">
+              <div class="mt-1 font-semibold break-words">
                 {{ item.sender_role }}
               </div>
-
-              <div class="italic text-gray-600">
+              <div class="italic text-gray-600 break-words">
                 {{ item.sender }}
               </div>
             </div>
 
             <!-- Receiver -->
-
             <div class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
                 Receiver
               </div>
-
-              <div class="mt-1 font-semibold">
+              <div class="mt-1 font-semibold break-words">
                 {{ item.receiver_role }}
               </div>
             </div>
 
+            <!--
+            Date Received / Date Endorsed used to be gated by two 75-item
+            hardcoded arrays of every odd/even number up to 150. Route order
+            parity (odd = received, even = endorsed) is all that check was
+            doing, and it silently broke for any route_order above 150.
+            Replaced with a simple modulo check.
+          -->
+
             <!-- Date Received -->
-
-
-            <div
-              v-if="[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51,
-                53, 55, 57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103,
-                105, 107, 109, 111, 113, 115, 117, 119, 121, 123, 125, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149].includes(item.route_order)"
-              class="rounded-lg bg-gray-50 p-3">
+            <div v-if="item.route_order % 2 === 1" class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
                 Date Received
               </div>
-
               <div class="mt-1">
                 {{
                   item.created_at
-                    ? new Date(item.created_at).toLocaleString(
-                      'en-PH',
-                      {
-                        year: 'numeric',
-                        month: 'long',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                      }
-                    )
-                    : '-'
-                }}
-              </div>
-            </div>
-
-            <!-- Date Endorsed -->
-
-            <div
-              v-if="[2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52,
-                54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104,
-                106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 148, 150].includes(item.route_order)"
-              class="rounded-lg bg-gray-50 p-3">
-              <div class="text-xs font-semibold text-gray-500">
-                Date Endorsed
-              </div>
-
-              <div class="mt-1">
-                {{
-                  item.updated_at
-                    ? new Date(item.updated_at).toLocaleString(
-                      'en-PH',
-                      {
-                        year: 'numeric',
-                        month: 'long',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                      }
-                    )
-                    : '-'
-                }}
-              </div>
-            </div>
-
-            <!-- Date Returned -->
-
-            <div v-if="
-              item.action === 'Returned to Technical Staff' ||
-              item.action === 'Returned to PENRO Technical Staff'
-            " class="rounded-lg bg-red-50 p-3">
-              <div class="text-xs font-semibold text-red-600">
-                Date Returned
-              </div>
-
-              <div class="mt-1">
-                {{
-                  new Date(item.updated_at).toLocaleString(
-                    'en-PH',
-                    {
+                    ? new Date(item.created_at).toLocaleString('en-PH', {
                       year: 'numeric',
                       month: 'long',
                       day: '2-digit',
@@ -1570,19 +1537,62 @@ onMounted(() => {
                       minute: '2-digit',
                       second: '2-digit',
                       hour12: true
-                    }
-                  )
+                    })
+                    : '-'
+                }}
+              </div>
+            </div>
+
+            <!-- Date Endorsed -->
+            <div v-if="item.route_order % 2 === 0" class="rounded-lg bg-gray-50 p-3">
+              <div class="text-xs font-semibold text-gray-500">
+                Date Endorsed
+              </div>
+              <div class="mt-1">
+                {{
+                  item.updated_at
+                    ? new Date(item.updated_at).toLocaleString('en-PH', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true
+                    })
+                    : '-'
+                }}
+              </div>
+            </div>
+
+            <!-- Date Returned -->
+            <div v-if="
+              item.action === 'Returned to Technical Staff' ||
+              item.action === 'Returned to PENRO Technical Staff'
+            " class="rounded-lg bg-red-50 p-3">
+              <div class="text-xs font-semibold text-red-600">
+                Date Returned
+              </div>
+              <div class="mt-1">
+                {{
+                  new Date(item.updated_at).toLocaleString('en-PH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                  })
                 }}
               </div>
             </div>
 
             <!-- Remarks -->
-
             <div class="rounded-lg bg-gray-50 p-3">
               <div class="text-xs font-semibold text-gray-500">
                 Remarks
               </div>
-
               <div class="mt-1 break-words">
                 {{ item.remarks ?? '-' }}
               </div>
@@ -1593,215 +1603,178 @@ onMounted(() => {
       </Fieldset>
 
       <!-- Chainsaw Info -->
-      <Fieldset legend="Chainsaw Information" toggleable v-model:collapsed="isChainsawInfoCollapsed">
-        <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-4 text-sm text-gray-800 md:grid-cols-2">
-          <div class="md:col-span-2">
-            <table class="w-full border border-gray-300 text-sm">
-              <tbody>
-                <!-- <tr class="border-b">
-                <td class="w-56 bg-gray-50 p-2 font-semibold">Supplier Name</td>
-                <td class="p-2">
-                  <ul class="ml-4 list-disc">
-                    <li v-for="(supplier, i) in suppliers" :key="i">
-                      {{ supplier.supplier_name }}
-                    </li>
-                  </ul>
-                </td>
-              </tr> -->
+      <Fieldset toggleable v-model:collapsed="isChainsawInfoCollapsed" class="mt-4">
+        <template #legend>
+          <div class="flex items-center gap-2">
+            <Axe class="h-4 w-4 text-blue-900" />
+            <span class="font-semibold">Chainsaw Information</span>
+          </div>
+        </template>
+        <div class="mt-4 space-y-4 text-sm text-gray-800">
 
-                <tr>
-                  <td class="bg-gray-50 p-2 font-semibold">
-                    Purpose of Purchase
-                  </td>
+          <!-- Purpose / Other Details — was a 2-column table with a fixed 14rem
+             label column, which crushed the content column on phones.
+             Stacked label/value blocks match the rest of the page and
+             stay readable at any width. -->
+          <div class="space-y-3">
+            <div class="rounded-lg border bg-gray-50 p-3">
+              <div class="text-xs font-semibold text-gray-500">
+                Purpose of Purchase
+              </div>
+              <div class="mt-1 break-words">
+                {{ suppliers[0].purpose }}
+              </div>
+            </div>
 
-                  <td class="p-2">
-                    {{ suppliers[0].purpose }}
-                  </td>
-                </tr>
-
-                <tr class="border-b">
-                  <td class="bg-gray-50 p-2 font-semibold">Other Details</td>
-                  <td class="p-2">
-                    <ul class="ml-4 list-disc">
-                      <li v-for="(supplier, i) in suppliers" :key="i" class="mb-2">
-                        Covered by Permit to Sell
-                        <b>{{ supplier.permit_to_sell_no }}</b>
-                        issued on {{ formatDate(supplier.issued_date) }}, valid
-                        until
-                        {{ formatDate(supplier.valid_until) }} approved/issued
-                        by {{ supplier.issued_by }}
-                      </li>
-                    </ul>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="rounded-lg border p-3">
+              <div class="text-xs font-semibold text-gray-500">
+                Other Details
+              </div>
+              <ul class="mt-2 ml-4 list-disc space-y-2">
+                <li v-for="(supplier, i) in suppliers" :key="i" class="break-words">
+                  Covered by Permit to Sell
+                  <b>{{ supplier.permit_to_sell_no }}</b>
+                  issued on {{ formatDate(supplier.issued_date) }}, valid until
+                  {{ formatDate(supplier.valid_until) }}, approved/issued by
+                  {{ supplier.issued_by }}
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div class="md:col-span-2">
-            <table class="w-full border border-gray-300 text-sm">
-              <tbody>
+          <!-- Payment details -->
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="rounded-lg border p-3">
+              <div class="text-xs font-semibold text-gray-500">
+                Official Receipt No.
+              </div>
+              <div class="mt-1">
+                <Tag :value="applicationData.official_receipt" severity="success" />
+              </div>
+            </div>
 
-                <tr class="border-b">
-                  <td class="bg-gray-50 p-2 font-semibold">Official Receipt No.</td>
-                  <td class="p-2">
-                    <Tag :value="applicationData.official_receipt" severity="success" />
-                  </td>
-                </tr>
+            <div class="rounded-lg border p-3">
+              <div class="text-xs font-semibold text-gray-500">
+                Permit Fee
+              </div>
+              <div class="mt-1 font-medium">
+                ₱ {{ applicationData.permit_fee }}
+              </div>
+            </div>
 
-                <tr>
-                  <td class="bg-gray-50 p-2 font-semibold">Permit Fee</td>
-                  <td class="p-2">₱ {{ applicationData.permit_fee }}</td>
-                </tr>
-
-
-                <tr>
-                  <td class="bg-gray-50 p-2 font-semibold">Date of Payment</td>
-                  <td class="p-2">
-                    <b>{{ formatDate(applicationData.date_of_payment) }}</b>
-                  </td>
-                </tr>
-
-
-              </tbody>
-            </table>
+            <div class="rounded-lg border p-3">
+              <div class="text-xs font-semibold text-gray-500">
+                Date of Payment
+              </div>
+              <div class="mt-1 font-medium">
+                {{ formatDate(applicationData.date_of_payment) }}
+              </div>
+            </div>
           </div>
 
-          <!-- ✅ Brands & Models -->
-          <div class="md:col-span-2">
-
-            <h3 class="mb-4 text-lg font-semibold">
+          <!-- Supplier Information -->
+          <div>
+            <h3 class="mb-3 text-base font-semibold text-gray-800 sm:text-lg">
               Supplier Information
             </h3>
 
-            <div v-for="(supplier, sIndex) in suppliers" :key="sIndex" class="mb-6 rounded-lg border shadow-sm">
-
+            <div v-for="(supplier, sIndex) in suppliers" :key="sIndex"
+              class="mb-4 overflow-hidden rounded-lg border shadow-sm last:mb-0">
               <!-- Header -->
-
-              <div class="bg-blue-900 text-white px-4 py-2 font-semibold">
-
+              <div class="flex items-center gap-2 bg-blue-900 px-4 py-2 font-semibold text-white">
+                <Store class="h-4 w-4" />
                 Supplier {{ sIndex + 1 }}
-
               </div>
 
               <!-- Supplier Details -->
-
-              <div class="grid grid-cols-2 gap-3 p-4 text-sm">
-
-                <div>
-
-                  <b>Supplier Name</b><br>
-
-                  {{ supplier.supplier_name }}
-
+              <div class="grid grid-cols-1 gap-3 p-4 text-sm sm:grid-cols-2">
+                <div class="break-words">
+                  <div class="font-semibold text-gray-700">Supplier Name</div>
+                  <div class="mt-0.5">{{ supplier.supplier_name }}</div>
                 </div>
 
-                <div>
-
-                  <b>Supplier Address</b><br>
-
-                  {{ supplier.supplier_address }}
-
+                <div class="break-words">
+                  <div class="font-semibold text-gray-700">Supplier Address</div>
+                  <div class="mt-0.5">{{ supplier.supplier_address }}</div>
                 </div>
 
-                <div>
-
-                  <b>Permit To Sell No.</b><br>
-
-                  {{ supplier.permit_to_sell_no }}
-
+                <div class="break-words">
+                  <div class="font-semibold text-gray-700">Permit To Sell No.</div>
+                  <div class="mt-0.5">{{ supplier.permit_to_sell_no }}</div>
                 </div>
 
-                <div>
-
-                  <b>Issued By</b><br>
-
-                  {{ supplier.issued_by }}
-
+                <div class="break-words">
+                  <div class="font-semibold text-gray-700">Issued By</div>
+                  <div class="mt-0.5">{{ supplier.issued_by }}</div>
                 </div>
 
-                <div>
-
-                  <b>Issued Date</b><br>
-
-                  {{ formatDate(supplier.issued_date) }}
-
+                <div class="break-words">
+                  <div class="font-semibold text-gray-700">Issued Date</div>
+                  <div class="mt-0.5">{{ formatDate(supplier.issued_date) }}</div>
                 </div>
 
-                <div>
-
-                  <b>Valid Until</b><br>
-
-                  {{ formatDate(supplier.permit_validity || supplier.valid_until) }}
-
+                <div class="break-words">
+                  <div class="font-semibold text-gray-700">Valid Until</div>
+                  <div class="mt-0.5">
+                    {{ formatDate(supplier.permit_validity || supplier.valid_until) }}
+                  </div>
                 </div>
-
               </div>
 
               <!-- Chainsaw Details -->
+              <div class="border-t px-4 py-4">
+                <div class="mb-2 text-xs font-semibold text-gray-500">
+                  Brands & Models
+                </div>
 
-              <div class="px-4 pb-4">
-
-                <table class="w-full border text-sm">
-
+                <!-- Table view: sm and up -->
+                <table class="hidden w-full border text-sm sm:table">
                   <thead class="bg-gray-100">
-
                     <tr>
-
-                      <th class="border p-2">
-                        Brand
-                      </th>
-
-                      <th class="border p-2">
-                        Model
-                      </th>
-
-                      <th class="border p-2">
-                        Quantity
-                      </th>
-
+                      <th class="border p-2 text-left">Brand</th>
+                      <th class="border p-2 text-left">Model</th>
+                      <th class="border p-2 text-center">Quantity</th>
                     </tr>
-
                   </thead>
-
-                  <tbody style="text-align: center;">
-
+                  <tbody>
                     <tr v-for="(row, index) in supplier.rows" :key="index">
-
-                      <td class="border p-2">
-                        {{ row.brand_name }}
-                      </td>
-
-                      <td class="border p-2">
-                        {{ row.model || row.model_name }}
-                      </td>
-
-                      <td class="border p-2 text-center">
-                        {{ row.quantity }}
-                      </td>
-
+                      <td class="border p-2">{{ row.brand_name }}</td>
+                      <td class="border p-2">{{ row.model || row.model_name }}</td>
+                      <td class="border p-2 text-center">{{ row.quantity }}</td>
                     </tr>
-
                   </tbody>
-
                 </table>
 
+                <!-- Card view: below sm, so nothing is squeezed into unreadable columns -->
+                <div class="space-y-2 sm:hidden">
+                  <div v-for="(row, index) in supplier.rows" :key="index" class="rounded-lg border p-3">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="font-semibold break-words">{{ row.brand_name }}</span>
+                      <span class="flex-shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium">
+                        Qty: {{ row.quantity }}
+                      </span>
+                    </div>
+                    <div class="mt-1 text-gray-600 break-words">
+                      {{ row.model || row.model_name }}
+                    </div>
+                  </div>
+                </div>
               </div>
 
             </div>
-
           </div>
+
         </div>
       </Fieldset>
 
 
       <!-- <AssessmentModal :disabled="[1, 4].includes(roleId) &&
-        Number(props.form.application_status) > 1 &&
-        ![25, 26, 27].includes(Number(props.form.application_status))
-        " :status_id="props.form.application_status" class="w-full sm:w-auto" :applicationId="Number(props.form.id)"
-        @submit-assessments="submitAllAssessments" /> -->
+      Number(props.form.application_status) > 1 &&
+      ![25, 26, 27].includes(Number(props.form.application_status))
+      " :status_id="props.form.application_status" class="w-full sm:w-auto" :applicationId="Number(props.form.id)"
+      @submit-assessments="submitAllAssessments" /> -->
 
-      <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '70vw' }">
+      <Dialog v-model:visible="showModal" modal header="File Preview" :style="{ width: '90vw', maxWidth: '900px' }">
         <iframe v-if="selectedFile" :src="getEmbedUrl(selectedFile.file_url)" width="100%" height="500"
           allow="autoplay"></iframe>
       </Dialog>
@@ -1815,8 +1788,7 @@ onMounted(() => {
         <!-- Return Application (secondary/danger action, outlined so it doesn't compete visually) -->
         <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)"
           :disabled="roleId === 1" variant="outlined"
-          class="h-10 w-full px-4 py-2 flex items-center justify-center gap-2 rounded-md bg-red-900 text-white hover:bg-red-50">
-
+          class="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-red-900 px-4 py-2 text-white hover:bg-red-50"
           @click="returnApplication">
           <Undo2 class="h-4 w-4" />
           Return Application
@@ -1824,14 +1796,15 @@ onMounted(() => {
 
         <!-- Back -->
         <Button v-else-if="![1, 25, 26, 27].includes(props.form.application_status)" variant="outline"
-          @click="emit('back')" class="w-full sm:w-auto bg-gray-100 text-gray-700 hover:bg-gray-200">
+          class="h-11 w-full bg-gray-100 text-gray-700 hover:bg-gray-200 sm:w-auto" @click="emit('back')">
           Back
         </Button>
 
         <!-- Assessment (primary action, stays solid) -->
         <AssessmentModal :disabled="[1, 4].includes(roleId) &&
           props.form.application_status >= 3 &&
-          props.form.application_status <= 13" :status_id="props.form.application_status" class="w-full sm:w-auto"
+          props.form.application_status <= 13
+          " :status_id="props.form.application_status" class="h-11 w-full sm:w-auto"
           :applicationId="Number(props.form.id)" @submit-assessments="submitAllAssessments" />
       </div>
 
