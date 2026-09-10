@@ -1815,7 +1815,8 @@ onMounted(() => {
         <!-- Return Application (secondary/danger action, outlined so it doesn't compete visually) -->
         <Button v-if="roleId === 1 || (props.form.status_title !== 'Draft' && currentStep === 4)"
           :disabled="roleId === 1" variant="outlined"
-          class="h-10 w-full sm:w-auto sm:ml-auto px-4 py-2 flex items-center justify-center gap-2 rounded-md border-red-700 text-red-700 hover:bg-red-50"
+          class="h-10 w-full px-4 py-2 flex items-center justify-center gap-2 rounded-md bg-red-900 text-white hover:bg-red-50">
+
           @click="returnApplication">
           <Undo2 class="h-4 w-4" />
           Return Application
