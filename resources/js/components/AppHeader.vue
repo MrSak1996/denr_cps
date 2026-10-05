@@ -18,7 +18,7 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Users, Menu, Search, ListCheck,BookOpenText} from 'lucide-vue-next';
+import { Users, Menu, Search, ListCheck, BookOpenText } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -54,39 +54,62 @@ const dashboardHref = computed(() => {
     switch (roleId) {
         case 1:
             return '/applications/pending_application';
+            break;
 
         case 2:
             return '/dashboard/rps-chief';
+            break;
+
 
         case 3:
             return '/dashboard/cenro';
+            break;
+
 
         case 4:
             return '/dashboard/penro-technical';
+            break;
+
 
         case 5:
             return '/dashboard/penro-rps-chief';
+            break;
+
 
         case 6:
             return '/dashboard/penro-tsd-chief';
+            break;
+
 
         case 7:
             return '/dashboard/penro';
+            break;
+
 
         case 8:
             return '/dashboard/rts';
+            break;
+
 
         case 9:
             return '/dashboard/fus';
+            break;
+
 
         case 10:
             return '/dashboard/lpdd-chief';
+            break;
+
 
         case 11:
             return '/dashboard/ardts';
+            break;
+
 
         case 12:
             return '/dashboard/regional-executive';
+            break;
+
 
         default:
             return '/dashboard';
@@ -106,9 +129,9 @@ const mainNavItems = computed<NavItem[]>(() => {
             icon: ListCheck,
         },
         {
-            title:"Users's Manual",
-            href:'/applications/manual',
-            icon:BookOpenText
+            title: "Users's Manual",
+            href: '/applications/manual',
+            icon: BookOpenText
         },
         // {
         //     title: 'Guidelines',

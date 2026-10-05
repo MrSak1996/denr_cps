@@ -12,7 +12,7 @@ import { route } from 'ziggy-js';
 import FileCard from '../forms/file_card.vue';
 import ReusableConfirmDialog from '../modal/endorsed_modal.vue';
 import { ProductService } from '../service/ProductService';
-
+import MobileView from './mobileView.vue';
 import Toast from 'primevue/toast';
 import InputText from 'primevue/inputtext';
 import Dialog from 'primevue/dialog';
@@ -22,9 +22,10 @@ import InputIcon from 'primevue/inputicon';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
-
+import Select from 'primevue/select';
 onMounted(() => {
     applicantsTable();
+    approvedApplicants();
 });
 
 const STATUS_DRAFT = 1;
@@ -60,13 +61,18 @@ const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
 
 const STATUS_APPROVED_BY_RED = 28;
 
+const endorsed_application = ref();
+
 const page = usePage();
 const toast = useToast();
 const dt = ref();
 const totalCount = ref(0);
+
 const returnedTotalCount = ref(0);
 const endorsedTotalCount = ref(0);
 const approvedTotalCount = ref(0);
+const displayApprovedCount = ref(approvedTotalCount.value);
+
 const confirm = useConfirm();
 const isLoading = ref(false);
 const products = ref();
@@ -74,6 +80,9 @@ const signatories_data = ref();
 const returned_application = ref();
 const approved_application = ref();
 const endorsed_applications = ref();
+const forReview = ref();
+const totalCountReview = ref(0);
+const displayedCountReview = ref(totalCountReview.value);
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
@@ -99,6 +108,20 @@ const product = ref({});
 const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    office_id: { value: null, matchMode: FilterMatchMode.IN },
+    applicant_name: {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+    },
+    application_type: {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+    },
+
+    application_status: {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS
+    }
 });
 const submitted = ref(false);
 const statuses = ref([
@@ -255,15 +278,22 @@ const applicantsTable = async () => {
         const officeId = page.props.auth.user.office_id;
         const roleId = page.props.auth.user.role_id;
 
-        const { applications: endorsedApplications, count: endorsedCount } = await ProductService.getApplicationsByStatus(STATUS_ENDORSED_RED, officeId, roleId);
+        const { applications: endorsedApplications, count: endorsedCount } = await ProductService.getApplicationsByStatus(STATUS_APPROVED_BY_RED, officeId, roleId);
+        const { applications: for_review, count: countReview } = await ProductService.getApplicationsByStatus(STATUS_ENDORSED_RED, officeId);
+
+        forReview.value = for_review;
+        totalCountReview.value = countReview;
+        displayedCountReview.value = totalCountReview.value;
+
 
         endorsed_applications.value = endorsedApplications;
         totalCount.value = endorsedCount;
-
+        displayedCount.value = totalCount.value;
     } catch (error) {
         console.error('Error fetching applications:', error);
     }
 };
+
 
 
 
@@ -832,32 +862,210 @@ const buttonState = (row: any) => {
 //         returnDisabled: false
 //     };
 // };
+const displayedCount = ref(totalCount.value);
+const selectedOffice = ref(null);
+const officeOptions = [
+    { label: 'PENRO CAVITE', value: 1 },
+    { label: 'PENRO LAGUNA', value: 2 },
+    { label: 'PENRO BATANGAS', value: 3 },
+    { label: 'PENRO RIZAL', value: 4 },
+    { label: 'PENRO QUEZON', value: 5 },
+
+    { label: 'CENRO Sta. Cruz', value: 6 },
+    { label: 'CENRO Lipa City', value: 7 },
+    { label: 'CENRO Calaca', value: 8 },
+    { label: 'CENRO Calauag', value: 9 },
+    { label: 'CENRO Catanauan', value: 10 },
+    { label: 'CENRO Tayabas', value: 11 },
+    { label: 'CENRO Real', value: 12 },
+
+    { label: 'Regional Office', value: 13 },
+]
+
+const applicationTypeOptions = [
+    { label: 'Individual', value: 'Individual' },
+    { label: 'Company', value: 'Company' },
+    { label: 'Government', value: 'Government' },
+]
+
+const officeGroups = {
+    // PENRO
+    1: [1],                   // PENRO Cavite
+    2: [2, 6],                // PENRO Laguna + CENRO Sta. Cruz
+    3: [3, 7, 8],             // PENRO Batangas + CENROs
+    4: [4],                   // PENRO Rizal
+    5: [5, 9, 10, 11, 12],    // PENRO Quezon + CENROs
+
+    // CENRO
+    6: [6],
+    7: [7],
+    8: [8],
+    9: [9],
+    10: [10],
+    11: [11],
+    12: [12],
+
+    // Regional Office
+    13: [13]
+};
+const avatarColors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-cyan-500',
+    'bg-indigo-500',
+    'bg-red-500',
+];
+const onOfficeChange = ({ value }) => {
+    filters.value.office_id.value =
+        value == null ? null : (officeGroups[value] ?? [value]);
+};
+const onTotalFilter = (event) => {
+    if (event.filteredValue) {
+        displayedCount.value = event.filteredValue.length;
+    } else {
+        // No filter applied
+        displayedCount.value = totalCount.value;
+    }
+};
+const canView = (row: any) => {
+    return [
+        STATUS_RECEIVED_REGIONAL_TECHNICAL_STAFF,
+        STATUS_APPROVED_BY_RED,
+        25
+    ].includes(row.application_status)
+}
+const getAvatarColor = (name: string) => {
+    if (!name) return 'bg-gray-500';
+
+    let sum = 0;
+    for (const ch of name) {
+        sum += ch.charCodeAt(0);
+    }
+
+    return avatarColors[sum % avatarColors.length];
+};
+const approvedApplicants = async () => {
+    try {
+        const officeId = page.props.auth.user.office_id;
+        const { applications: approvedApplications, count: approvedCount } = await ProductService.getApplicationsByStatus(STATUS_APPROVED_BY_RED, officeId);
+
+        approved_application.value = approvedApplications;
+        approvedTotalCount.value = approvedCount;
+        displayApprovedCount.value = approvedTotalCount.value;
+
+
+    } catch (error) {
+        console.error('Error fetching applications:', error);
+    }
+}
 </script>
 
 <template>
     <div class="flex flex-col gap-4 rounded-xl p-4">
         <Toast />
         <div v-if="!isMobile">
+            <div class="flex border-b border-gray-200">
+                <!-- For Review / Evaluation Tab -->
+                <button @click="activeTab = 're'" :class="[
+                    'border-b-2 px-4 py-2 text-sm font-medium transition flex items-center space-x-2',
+                    activeTab === 're'
+                        ? 'border-green-600 text-green-700'
+                        : 'border-transparent text-gray-500 hover:border-green-500 hover:text-green-600'
+                ]">
+                    <!-- Tab Title -->
+                    <span>For Review / Evaluation</span>
 
+                    <!-- PrimeVue OverlayBadge with Icon -->
+                    <OverlayBadge :value="displayedCountReview" severity="danger" size="small">
+                        <i class="pi pi-list" style="font-size: 25px" />
+
+                    </OverlayBadge>
+                </button>
+
+                <button @click="activeTab = 'aa'" :class="[
+                    'border-b-2 px-4 py-2 text-sm font-medium transition flex items-center space-x-2',
+                    activeTab === 'aa'
+                        ? 'border-green-600 text-green-700'
+                        : 'border-transparent text-gray-500 hover:border-green-500 hover:text-green-600'
+                ]">
+                    <!-- Tab Title -->
+                    <span>Approved Applications</span>
+
+
+
+
+                    <div class="relative inline-block">
+                        <OverlayBadge :value="displayApprovedCount" severity="danger" size="small"
+                            class="absolute top-0 right-0" />
+                        <i class="pi pi-check-circle" style="font-size: 25px" />
+
+                    </div>
+                </button>
+
+
+
+                |
+            </div>
             <div class="flex-1 space-y-4 overflow-y-auto">
-                <!-- For Review / Evaluation Table -->
                 <div v-if="activeTab === 're'" class="space-y-2 text-sm text-gray-700">
                     <div class="h-auto w-full">
-                        <DataTable ref="dt" size="small" v-model:selection="selectedProducts"
-                            :value="endorsed_applications" dataKey="id" :paginator="true" :rows="20" :filters="filters"
-                            filterDisplay="menu"
+                        <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="forReview"
+                            dataKey="id" :paginator="true" :rows="20" :filters="filters" :globalFilterFields="[
+                                'application_no',
+                                'permit_no',
+                                'applicant_name',
+                                'company_name',
+                                'application_type',
+                                'transaction_type',
+                                'classification',
+                                'application_status'
+                            ]" filterDisplay="menu"
                             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                             :rowsPerPageOptions="[5, 10, 25]"
                             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-                            responsiveLayout="scroll" class="w-full text-sm">
+                            responsiveLayout="scroll" class="w-full text-sm" @filter="onTotalFilter">
                             <template #header>
-                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+
+                                    <!-- Search -->
                                     <IconField>
                                         <InputIcon>
                                             <i class="pi pi-search" />
                                         </InputIcon>
-                                        <InputText v-model="filters['global'].value" placeholder="Search..." />
+
+                                        <InputText v-model="filters['global'].value" placeholder="Search..."
+                                            class="w-64" />
                                     </IconField>
+
+                                    <!-- Filters -->
+                                    <div class="flex flex-wrap gap-2">
+
+                                        <!-- Office Filter -->
+                                        <!-- <Select v-model="filters['office_id'].value" :options="officeOptions" filter
+                                        optionLabel="label" optionValue="value" placeholder="Filter by Office"
+                                        class="w-52" showClear /> -->
+
+
+                                        <Select v-model="selectedOffice" :options="officeOptions" optionLabel="label"
+                                            optionValue="value" placeholder="Filter by Office" filter showClear
+                                            @change="onOfficeChange" />
+
+                                        <!-- Application Type Filter -->
+                                        <Select v-model="filters['application_type'].value" filter
+                                            :options="applicationTypeOptions" optionLabel="label" optionValue="value"
+                                            placeholder="Application Type" class="w-52" showClear />
+
+                                        <!-- Status Filter -->
+                                        <Select v-model="filters['application_status'].value" :options="statusOptions"
+                                            filter optionLabel="label" optionValue="value"
+                                            placeholder="Filter by Status" class="w-52" showClear />
+
+
+
+                                    </div>
                                 </div>
                             </template>
                             <Column header="Action" :exportable="false" style="min-width: 2rem">
@@ -871,7 +1079,8 @@ const buttonState = (row: any) => {
                                         <!-- ✅ RECEIVE (disabled if endorsed) -->
                                         <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
                                             ? 'Application cannot be received yet'
-                                            : 'Receive Application'" :disabled="buttonState(slotProps.data).receiveDisable"
+                                            : 'Receive Application'"
+                                            :disabled="buttonState(slotProps.data).receiveDisable"
                                             @click="openDialog('receive', slotProps.data.id)"
                                             style="background-color: #0f766e" class="p-2 text-white">
                                             <BadgeCheck :size="15" />
@@ -896,19 +1105,78 @@ const buttonState = (row: any) => {
                                     </div>
                                 </template>
                             </Column>
+                            <Column field="applicant_name" header="Applicant Name" style="min-width: 12rem">
+                                <template #body="slotProps">
+                                    <div class="flex items-center gap-3">
+
+                                        <!-- Avatar -->
+                                        <div :class="[
+                                            'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                                            getAvatarColor(
+                                                slotProps.data.application_type === 'Individual'
+                                                    ? slotProps.data.applicant_name
+                                                    : slotProps.data.company_name
+                                            )
+                                        ]">
+                                            {{
+                                                (
+                                                    slotProps.data.application_type === 'Individual'
+                                                        ? slotProps.data.applicant_name
+                                                        : slotProps.data.company_name
+                                                )?.charAt(0)
+                                            }}
+                                        </div>
+
+                                        <!-- Name -->
+                                        <div class="flex flex-col">
+                                            <!-- Individual -->
+                                            <template v-if="slotProps.data.application_type === 'Individual'">
+                                                <span class="font-medium">
+                                                    {{ slotProps.data.applicant_name }}
+                                                </span>
+                                            </template>
+
+                                            <!-- Company / Government -->
+                                            <template v-else>
+                                                <span class="font-medium">
+                                                    {{ slotProps.data.company_name }}
+                                                </span>
+
+                                                <span class="text-sm text-gray-500">
+                                                    {{ slotProps.data.authorized_representative }}
+                                                </span>
+                                            </template>
+                                        </div>
+
+                                    </div>
+                                </template>
+                            </Column>
                             <Column field="status_title" header="Status" sortable style="min-width: 12rem">
                                 <template #body="{ data }">
                                     <div class="flex flex-col items-center">
-                                        <Tag :value="data.status_title" :severity="data.status_title === 'Returned to RPS Chief' ? 'danger' :
-                                            data.status_title === 'Endorsed to TSD Chief' ? 'info' :
-                                                'success'
+                                        <Tag :value="data.status_title" :severity="data.application_status >= 25 && data.application_status <= 27
+                                            ? 'danger'
+                                            : data.status_title === 'Endorsed to TSD Chief' || data.status_title === 'Received by ARDTS'
+                                                ? 'info'
+                                                : 'success'
                                             " class="text-center" />
+                                        <div class="italic text-gray-600">
+                                            {{ data.updated_by }}
+                                        </div>
 
-
-                                        <Button
-                                            style="display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em;"
-                                            severity="info" v-if="data.status_title === 'Returned to RPS Chief'"
-                                            class="rounded bg-blue-900 px-1 py-1 mt-1 text-xs text-white"
+                                        <Button v-if="data.application_status >= 25 && data.application_status <= 27"
+                                            style="
+                                        display: inline;
+                                        padding: .2em .6em .3em;
+                                        font-size: 75%;
+                                        font-weight: 700;
+                                        line-height: 1;
+                                        color: #fff;
+                                        text-align: center;
+                                        white-space: nowrap;
+                                        vertical-align: baseline;
+                                        border-radius: .25em;
+                                    " severity="info" class="mt-1 rounded bg-blue-900 px-1 py-1 text-xs text-white"
                                             @click="openCommentModal(data)" size="small">
                                             View Comments
                                         </Button>
@@ -920,78 +1188,263 @@ const buttonState = (row: any) => {
                                     <b>{{ data.application_no }}</b>
                                 </template>
                             </Column>
-                            <Column field="permit_no" header="Permit No" sortable style="min-width: 12rem">
-                                <template #body="{ data }">
-                                    <b>{{ data.permit_no }}</b>
+                            <!-- <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column> -->
+                            <Column header="Office" style="min-width: 10rem">
+                                <template #body="slotProps">
+                                    {{ slotProps.data.office_title }}
                                 </template>
                             </Column>
+
+
                             <Column field="application_type" header="Application Type" sortable />
                             <Column header="Type of Transaction" field="transaction_type" sortable></Column>
                             <Column header="Classification" field="classification" sortable></Column>
+
                             <Column field="date_applied" header="Date of Application" sortable
                                 style="min-width: 4rem" />
+
+                        </DataTable>
+                    </div>
+                </div>
+                <!-- For Review / Evaluation Table -->
+                <div v-if="activeTab === 'aa'" class="space-y-2 text-sm text-gray-700">
+                    <div class="h-auto w-full">
+                        <DataTable ref="dt" size="small" v-model:selection="selectedProducts"
+                            :value="endorsed_applications" dataKey="id" :paginator="true" :rows="20" :filters="filters"
+                            :globalFilterFields="[
+                                'application_no',
+                                'permit_no',
+                                'applicant_name',
+                                'company_name',
+                                'application_type',
+                                'transaction_type',
+                                'classification',
+                                'application_status'
+                            ]" filterDisplay="menu"
+                            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                            :rowsPerPageOptions="[5, 10, 25]"
+                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                            responsiveLayout="scroll" class="w-full text-sm" @filter="onTotalFilter">
+                            <template #header>
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+
+                                    <!-- Search -->
+                                    <IconField>
+                                        <InputIcon>
+                                            <i class="pi pi-search" />
+                                        </InputIcon>
+
+                                        <InputText v-model="filters['global'].value" placeholder="Search..."
+                                            class="w-64" />
+                                    </IconField>
+
+                                    <!-- Filters -->
+                                    <div class="flex flex-wrap gap-2">
+
+                                        <!-- Office Filter -->
+                                        <!-- <Select v-model="filters['office_id'].value" :options="officeOptions" filter
+                                        optionLabel="label" optionValue="value" placeholder="Filter by Office"
+                                        class="w-52" showClear /> -->
+
+
+                                        <Select v-model="selectedOffice" :options="officeOptions" optionLabel="label"
+                                            optionValue="value" placeholder="Filter by Office" filter showClear
+                                            @change="onOfficeChange" />
+
+                                        <!-- Application Type Filter -->
+                                        <Select v-model="filters['application_type'].value" filter
+                                            :options="applicationTypeOptions" optionLabel="label" optionValue="value"
+                                            placeholder="Application Type" class="w-52" showClear />
+
+                                        <!-- Status Filter -->
+                                        <Select v-model="filters['application_status'].value" :options="statusOptions"
+                                            filter optionLabel="label" optionValue="value"
+                                            placeholder="Filter by Status" class="w-52" showClear />
+
+
+
+                                    </div>
+                                </div>
+                            </template>
+                            <Column header="Action" :exportable="false" style="min-width: 2rem">
+                                <template #body="slotProps">
+                                    <div class="mt-2 flex gap-2">
+                                        <Button v-tooltip.top="'Preview'" @click="generatePdf(slotProps.data)"
+                                            style="background-color: #0D47A1" class="p-2 text-white">
+                                            <PrinterCheck :size="15" />
+                                        </Button>
+
+                                        <!-- ✅ RECEIVE (disabled if endorsed) -->
+                                        <Button v-tooltip.top="buttonState(slotProps.data).receiveDisable
+                                            ? 'Application cannot be received yet'
+                                            : 'Receive Application'"
+                                            :disabled="buttonState(slotProps.data).receiveDisable"
+                                            @click="openDialog('receive', slotProps.data.id)"
+                                            style="background-color: #0f766e" class="p-2 text-white">
+                                            <BadgeCheck :size="15" />
+                                        </Button>
+
+
+
+                                        <!-- ✅ VIEW (ALWAYS ENABLED) -->
+
+                                        <Link v-tooltip.top="'View Application'" :href="route('applications.edit', {
+                                            application_id: slotProps.data.id,
+                                            type: slotProps.data.application_type,
+                                            step: 4
+                                        })"
+                                            class="mr-2 inline-flex justify-center rounded-md bg-red-700 px-3 py-2 text-white hover:bg-red-600">
+
+                                            <View :size="15" />
+                                        </Link>
+
+
+
+                                    </div>
+                                </template>
+                            </Column>
+                            <Column field="applicant_name" header="Applicant Name" style="min-width: 12rem">
+                                <template #body="slotProps">
+                                    <div class="flex items-center gap-3">
+
+                                        <!-- Avatar -->
+                                        <div :class="[
+                                            'flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg uppercase flex-shrink-0',
+                                            getAvatarColor(
+                                                slotProps.data.application_type === 'Individual'
+                                                    ? slotProps.data.applicant_name
+                                                    : slotProps.data.company_name
+                                            )
+                                        ]">
+                                            {{
+                                                (
+                                                    slotProps.data.application_type === 'Individual'
+                                                        ? slotProps.data.applicant_name
+                                                        : slotProps.data.company_name
+                                                )?.charAt(0)
+                                            }}
+                                        </div>
+
+                                        <!-- Name -->
+                                        <div class="flex flex-col">
+                                            <!-- Individual -->
+                                            <template v-if="slotProps.data.application_type === 'Individual'">
+                                                <span class="font-medium">
+                                                    {{ slotProps.data.applicant_name }}
+                                                </span>
+                                            </template>
+
+                                            <!-- Company / Government -->
+                                            <template v-else>
+                                                <span class="font-medium">
+                                                    {{ slotProps.data.company_name }}
+                                                </span>
+
+                                                <span class="text-sm text-gray-500">
+                                                    {{ slotProps.data.authorized_representative }}
+                                                </span>
+                                            </template>
+                                        </div>
+
+                                    </div>
+                                </template>
+                            </Column>
+                            <Column field="status_title" header="Status" sortable style="min-width: 12rem">
+                                <template #body="{ data }">
+                                    <div class="flex flex-col items-center">
+                                        <Tag :value="data.status_title" :severity="data.application_status >= 25 && data.application_status <= 27
+                                            ? 'danger'
+                                            : data.status_title === 'Endorsed to TSD Chief' || data.status_title === 'Received by ARDTS'
+                                                ? 'info'
+                                                : 'success'
+                                            " class="text-center" />
+                                        <div class="italic text-gray-600">
+                                            {{ data.updated_by }}
+                                        </div>
+
+                                        <Button v-if="data.application_status >= 25 && data.application_status <= 27"
+                                            style="
+                                        display: inline;
+                                        padding: .2em .6em .3em;
+                                        font-size: 75%;
+                                        font-weight: 700;
+                                        line-height: 1;
+                                        color: #fff;
+                                        text-align: center;
+                                        white-space: nowrap;
+                                        vertical-align: baseline;
+                                        border-radius: .25em;
+                                    " severity="info" class="mt-1 rounded bg-blue-900 px-1 py-1 text-xs text-white"
+                                            @click="openCommentModal(data)" size="small">
+                                            View Comments
+                                        </Button>
+                                    </div>
+                                </template>
+                            </Column>
+                            <Column field="application_no" header="Application No" sortable style="min-width: 12rem">
+                                <template #body="{ data }">
+                                    <b>{{ data.application_no }}</b>
+                                </template>
+                            </Column>
+                            <!-- <Column field="permit_no" header="Permit No" sortable style="min-width: 10rem">
+                            <template #body="{ data }">
+                                <b>{{ data.permit_no }}</b>
+                            </template>
+                        </Column> -->
+                            <Column header="Office" style="min-width: 10rem">
+                                <template #body="slotProps">
+                                    {{ slotProps.data.office_title }}
+                                </template>
+                            </Column>
+
+
+                            <Column field="application_type" header="Application Type" sortable />
+                            <Column header="Type of Transaction" field="transaction_type" sortable></Column>
+                            <Column header="Classification" field="classification" sortable></Column>
+
+                            <Column field="date_applied" header="Date of Application" sortable
+                                style="min-width: 4rem" />
+
                         </DataTable>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-else class="space-y-3">
-
-            <div v-for="app in endorsed_applications" :key="app.id" class="border rounded-lg p-3 shadow-sm bg-white">
-
-                <div class="flex justify-between items-center">
-
-                    <div>
-                        <div class="font-semibold text-sm">
-                            {{ app.application_no }}
-                        </div>
-
-                        <div class="text-xs text-gray-500">
-                            {{ app.application_type }}
-                        </div>
-
-                        <Tag :value="app.status_title" :severity="app.status_title === 'Approved by Regional Executive Director'
-                            ? 'info'
-                            : app.status_title === 'Endorsed to Regional Executive Director'
-                                ? 'success'
-                                : 'warn'
-                            " class="text-xs" />
-                    </div>
-
-                    <!-- ACTION BUTTONS -->
-                    <div class="flex gap-2">
-                        <Button v-tooltip.top="'Preview'" @click="generatePdf(app)" style="background-color: #0D47A1"
-                            class="p-2 text-white">
-                            <PrinterCheck :size="15" />
-                        </Button>
-
-                        <Button v-tooltip.top="buttonState(app).receiveDisable
-                            ? 'Application cannot be received yet'
-                            : 'Receive Application'" :disabled="buttonState(app).receiveDisable"
-                            @click="openDialog('receive', app.id)" style="background-color: #0f766e"
-                            class="p-2 text-white">
-                            <BadgeCheck :size="15" />
-                        </Button>
-                        <!-- APPROVE -->
-
-
-                        <!-- VIEW -->
-                        <Link :href="route('applications.edit', {
-                            application_id: app.id,
-                            type: app.application_type,
-                            step: 4
-                        })" class="inline-flex items-center justify-center rounded-md p-2 text-white"
-                            style="background-color:#0f766e">
-                            <Eye :size="15" />
-                        </Link>
-
-                    </div>
-
-                </div>
-
+        <div v-else class="md:hidden" role="tablist">
+              <div class="mb-3 grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1" role="tablist">
+                <button v-for="t in [
+                    { id: 're', label: 'For Review / Evaluation', count: displayedCountReview },
+                    { id: 'aa', label: 'Approved', count: displayApprovedCount },
+                ]" :key="t.id" type="button" role="tab" :aria-selected="activeTab === t.id" @click="activeTab = t.id"
+                    :class="[
+                        'flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition',
+                        activeTab === t.id ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500',
+                    ]">
+                    <span>{{ t.label }}</span>
+                    <span v-if="t.count > 0"
+                        class="min-w-5 rounded-full bg-red-500 px-1.5 text-center text-xs leading-5 font-semibold text-white">
+                        {{ t.count }}
+                    </span>
+                </button>
             </div>
+            <MobileView v-if="activeTab === 're'" key="re" :applications="forReview ?? []"
+                :actions="['receive', 'view']" :can-view="canView" :button-state="buttonState"
+                :can-comment="(app) => app.status_title === 'Returned to RPS Chief'"
+                @receive="(app) => openDialog('receive', app.id)" @comments="openCommentModal" />
 
+            <MobileView v-else key="aa" :applications="endorsed_applications ?? []" :actions="['preview', 'view']"
+                :can-view="(app) => canView(app) || app.application_status != STATUS_DRAFT"
+                :can-comment="(app) => app.application_status >= 25 && app.application_status <= 27"
+                @preview="generatePdf" @comments="openCommentModal" />
         </div>
+
+        <!-- <MobileView v-if="activeTab === 're'" :applications="endorsed_applications ?? []" :button-state="buttonState"
+            @preview="generatePdf" @receive="(app) => openDialog('receive', app.id)" /> -->
+
 
         <ReusableConfirmDialog ref="confirmDialogRef" />
 

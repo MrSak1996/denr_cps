@@ -173,7 +173,8 @@ class ApplicationController extends Controller
         $applicationNo = $application->application_no;
         $applicationId = $application->id;
         $filesToUpload = [
-            'authorization_letter' => [
+            
+            'authorization_documents' => [
                 'folder_name' => 'Authorization Documents',
                 'requirement_id' => 18,
             ],

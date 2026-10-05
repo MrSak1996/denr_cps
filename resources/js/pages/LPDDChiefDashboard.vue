@@ -60,7 +60,7 @@ const officeId = page.props.auth.user.office_id;
 const totalApplications = computed(() => dashboardData.value?.total || 0)
 const totalApproved = computed(() => dashboardData.value?.approved || 0)
 
-const totalDeferred = computed(() =>dashboardData.value?.deferred || 0)
+const totalDeferred = computed(() => dashboardData.value?.deferred || 0)
 
 const totalDraft = computed(() => dashboardData.value?.draft || 0)
 
@@ -70,7 +70,7 @@ const fetchDashboardData = async () => {
     try {
 
         const response = await axios.get('https://cps.denrcalabarzon.com/api/summary', {
-            params: { user_id: userId,office_id:officeId,status:STATUS_ENDORSED_LPDD_CHIEF }
+            params: { user_id: userId, office_id: officeId, status: STATUS_ENDORSED_LPDD_CHIEF }
 
         });
 
@@ -79,6 +79,12 @@ const fetchDashboardData = async () => {
         console.error('Failed to fetch dashboard data:', error);
     }
 };
+const summaryCards = computed(() => [
+    { label: 'Total Applications', value: totalApplications.value, icon: total_icon },
+    { label: 'For Review', value: totalDraft.value, icon: review_icon },
+    { label: 'Approved', value: totalApproved.value, icon: approved_icon },
+    { label: 'Deferred', value: totalDeferred.value, icon: reject_icon },
+])
 onMounted(() => {
     fetchDashboardData()
 })
@@ -98,97 +104,31 @@ onMounted(() => {
                     <List class="h-5 w-5" />
                     <h1 class="text-xl font-semibold"> LPDD Chief Dashboard</h1>
                 </div>
-                   <Fieldset legend="Dashboard Summary" class="mb-6">
-                     <div class="grid gap-4 md:grid-cols-4">
-
-                        <!-- TOTAL -->
-
-
-                        <Card
-                            class="rounded-2xl shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white overflow-hidden">
+                <Fieldset legend="Dashboard Summary" class="mb-6">
+                    <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                        <Card v-for="item in summaryCards" :key="item.label"
+                            class="group rounded-2xl shadow-lg overflow-hidden border-0 active:scale-95 transition-transform rounded-lg"
+                            :pt="{ body: { class: 'p-0' }, content: { class: 'p-0' } }">
                             <template #content>
-                                <div class="relative flex items-center justify-between">
+                                <div class="relative flex min-h-[104px] md:min-h-[112px] flex-col justify-between
+                 p-3.5 md:p-4 text-white bg-gradient-to-r from-blue-500 to-blue-600">
+                                    <!-- LABEL: pr-12 keeps text clear of the icon -->
+                                    <p class="pr-12 text-xs md:text-sm font-medium leading-tight">
+                                        {{ item.label }}
+                                    </p>
 
-                                    <!-- TEXT -->
-                                    <div class="z-10 p-4">
-                                        <p class="text-sm opacity-90">Total Applications</p>
-                                        <h2 class="text-3xl font-bold">
-                                            {{ totalApplications }}
-                                        </h2>
+                                    <!-- NUMBER -->
+                                    <h2 class="text-3xl font-bold leading-none">{{ item.value }}</h2>
+
+                                    <!-- ICON CHIP -->
+                                    <div class="absolute right-3 top-3 flex h-10 w-10 md:h-12 md:w-12 items-center
+                   justify-center rounded-xl bg-white/95 shadow-sm">
+                                        <img :src="item.icon" alt="" class="h-7 w-7 md:h-9 md:w-9 object-contain transition-transform
+                     duration-300 md:group-hover:scale-110" />
                                     </div>
-
-                                    <!-- IMAGE -->
-                                    <img :src="total_icon" alt="Total Applications"
-                                        class="absolute right-0 top-0 h-full w-auto object-cover opacity-90 transition-transform duration-500 ease-in-out hover:scale-150" />
                                 </div>
                             </template>
                         </Card>
-
-                        <!-- FOR REVIEW -->
-                         <Card
-                            class="rounded-2xl shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white overflow-hidden">
-                            <template #content>
-                                <div class="relative flex items-center justify-between">
-
-                                    <!-- TEXT -->
-                                    <div class="z-10 p-4">
-                                        <p class="text-sm opacity-90">For Review</p>
-                                        <h2 class="text-3xl font-bold">
-                                            {{ totalDraft }}
-                                        </h2>
-                                    </div>
-
-                                    <!-- IMAGE -->
-                                    <img :src="review_icon" alt="For Review"
-                                        class="absolute right-0 top-0 h-full w-auto object-cover opacity-90 transition-transform duration-500 ease-in-out hover:scale-150" />
-                                </div>
-                            </template>
-                        </Card>
-
-                        <!-- APPROVED -->
-                         <Card
-                            class="rounded-2xl shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white overflow-hidden">
-                            <template #content>
-                                <div class="relative flex items-center justify-between">
-
-                                    <!-- TEXT -->
-                                    <div class="z-10 p-4">
-                                        <p class="text-sm opacity-90">Approved</p>
-                                        <h2 class="text-3xl font-bold">
-                                            {{ totalApproved }}
-                                        </h2>
-                                    </div>
-
-                                    <!-- IMAGE -->
-                                    <img :src="approved_icon" alt="Approved"
-                                        class="absolute right-0 top-0 h-full w-auto object-cover opacity-90 transition-transform duration-500 ease-in-out hover:scale-150" />
-                                </div>
-                            </template>
-                        </Card>
-
-                        <Card
-                            class="rounded-2xl shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white overflow-hidden">
-                            <template #content>
-                                <div class="relative flex items-center justify-between">
-
-                                    <!-- TEXT -->
-                                    <div class="z-10 p-4">
-                                        <p class="text-sm opacity-90">Deferred</p>
-                                        <h2 class="text-3xl font-bold">
-                                            {{ totalDeferred }}
-                                        </h2>
-                                    </div>
-
-                                    <!-- IMAGE -->
-                                    <img :src="reject_icon" alt="Deferred"
-                                        class="absolute right-0 top-0 h-full w-auto object-cover opacity-90 transition-transform duration-500 ease-in-out hover:scale-150" />
-                                </div>
-                            </template>
-                        </Card>
-
-
-                        
-
                     </div>
                 </Fieldset>
 

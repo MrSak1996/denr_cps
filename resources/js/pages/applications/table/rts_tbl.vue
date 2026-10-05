@@ -33,6 +33,7 @@ const page = usePage();
 onMounted(() => {
     applicantsTable();
     approvedApplicants();
+    getOfficeCounts();
 
 });
 
@@ -65,6 +66,11 @@ const STATUS_RETURNED_TO_PENRO_TECHNICAL = 26;
 const STATUS_RETURNED_TO_REGIONAL_TECHNICAL = 27;
 const STATUS_APPROVED_BY_RED = 28;
 
+import quezon from '../../../../images/quezon.png'
+import batangas from '../../../../images/batangas.png'
+import laguna from '../../../../images/laguna.png'
+import cavite from '../../../../images/cavite.png'
+import rizal from '../../../../images/rizal.png'
 
 const auth = computed(() => page.props.auth);
 const roleId = auth.value.user?.role_id;
@@ -103,12 +109,13 @@ const updateFileInput = ref(null);
 const showReturnFieldset = ref(false);
 const returnReason = ref(''); // Stores the user's input for the return reason
 const isSubmitting = ref(false);
+const selectedProvince = ref(null);
 const product = ref({});
 const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     office_id: { value: null, matchMode: FilterMatchMode.IN },
-   applicant_name: {
+    applicant_name: {
         value: null,
         matchMode: FilterMatchMode.CONTAINS
     },
@@ -122,7 +129,9 @@ const filters = ref({
         matchMode: FilterMatchMode.CONTAINS
     }
 });
-
+const selectProvince = (province) => {
+    selectedProvince.value = province;
+};
 
 const officeGroups = {
     // PENRO
@@ -175,7 +184,50 @@ const officeOptions = [
 
     { label: 'Regional Office', value: 13 },
 ]
+const provinces = ref([])
 
+const summary = ref([
+    {
+        name: 'CAVITE',
+        key: 'cavite',
+        office_id: 1,
+        color: 'bg-[#FF8F00]',
+        text: 'text-white',
+        pa_count: 0
+    },
+    {
+        name: 'LAGUNA',
+        key: 'laguna',
+        office_id: 2,
+        color: 'bg-[#B71C1C]',
+        text: 'text-white',
+        pa_count: 0
+    },
+    {
+        name: 'BATANGAS',
+        key: 'batangas',
+        office_id: 3,
+        color: 'bg-[#1A237E]',
+        text: 'text-white',
+        pa_count: 0
+    },
+    {
+        name: 'RIZAL',
+        key: 'rizal',
+        office_id: 4,
+        color: 'bg-[#FFEB3B]',
+        text: 'text-black',
+        pa_count: 0
+    },
+    {
+        name: 'QUEZON',
+        key: 'quezon',
+        office_id: 5,
+        color: 'bg-[#1B5E20]',
+        text: 'text-white',
+        pa_count: 0
+    }
+])
 const applicationTypeOptions = [
     { label: 'Individual', value: 'Individual' },
     { label: 'Company', value: 'Company' },
@@ -320,7 +372,7 @@ const badgeSeverity = computed(() => {
     }
 });
 
-const activeTab = ref<'re' | 'rc' | 'cpr' | 'aa'>('re');
+const activeTab = ref<'su' | 're' | 'rc' | 'cpr' | 'aa'>('re');
 
 const applicationDetails = ref(null);
 const files = ref([]);
@@ -358,8 +410,26 @@ const approvedApplicants = async () => {
         console.error('Error fetching applications:', error);
     }
 }
+const getOfficeCounts = async () => {
+    try {
+        const response = await axios.get(
+            'https://cps.denrcalabarzon.com/api/getByOffice'
+        )
 
-    ;
+        const counts = response.data.data
+
+        console.log('Counts:', counts)
+
+        summary.value.forEach(province => {
+            province.pa_count = counts[province.office_id] ?? 0
+        })
+
+        console.log('Updated summary:', summary.value)
+
+    } catch (error) {
+        console.error('Error loading office counts:', error)
+    }
+}
 
 const handleReturnReasonClick = async () => {
     if (!returnReason.value.trim()) {
@@ -947,9 +1017,26 @@ const insertPurpose = async () => {
 <template>
     <div class="flex flex-col gap-4 rounded-xl p-4">
         <Toast />
+        <div class="box flex flex-col border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+
+
+
+        </div>
         <!-- Tabs -->
         <div class="flex border-b border-gray-200">
             <!-- For Review / Evaluation Tab -->
+            <button @click="activeTab = 'su'" :class="[
+                'border-b-2 px-4 py-2 text-sm font-medium transition flex items-center space-x-2',
+                activeTab === 'su'
+                    ? 'border-green-600 text-green-700'
+                    : 'border-transparent text-gray-500 hover:border-green-500 hover:text-green-600'
+            ]">
+                <!-- Tab Title -->
+                <span>Summary</span>
+
+                <!-- PrimeVue OverlayBadge with Icon -->
+
+            </button>
             <button @click="activeTab = 're'" :class="[
                 'border-b-2 px-4 py-2 text-sm font-medium transition flex items-center space-x-2',
                 activeTab === 're'
@@ -957,7 +1044,7 @@ const insertPurpose = async () => {
                     : 'border-transparent text-gray-500 hover:border-green-500 hover:text-green-600'
             ]">
                 <!-- Tab Title -->
-                <span>List of Permit Application</span>
+                <span>For Review / Evaluation</span>
 
                 <!-- PrimeVue OverlayBadge with Icon -->
                 <OverlayBadge :value="displayedCount" severity="danger" size="small">
@@ -994,11 +1081,62 @@ const insertPurpose = async () => {
         <!-- Content -->
         <div class="flex-1 space-y-4 overflow-y-auto">
             <!-- For Review / Evaluation Table -->
+            <div v-if="activeTab === 'su'" class="space-y-2 text-sm text-gray-700">
+                <div class="h-auto w-full flex flex-col lg:flex-row">
+                    <!-- COL-LG-8 -->
+                    <div class="w-full lg:w-2/3 flex justify-center">
+
+                        <div class="relative w-full max-w-[445px] aspect-square">
+
+                            <img :src="quezon" class="absolute top-0 left-[68px] w-[445px] max-w-none" alt="Quezon" />
+
+                            <img :src="batangas" class="absolute top-0 left-0 w-[445px] max-w-none" alt="Batangas" />
+
+                            <img :src="laguna" class="absolute top-0 left-0 w-[445px] max-w-none" alt="Laguna" />
+
+                            <img :src="cavite" class="absolute top-0 left-0 w-[445px] max-w-none" alt="Cavite" />
+
+                            <img :src="rizal" class="absolute top-0 left-0 w-[445px] max-w-none" alt="Rizal" />
+
+                        </div>
+
+                    </div>
+                    <div class="w-full lg:w-1/3">
+
+                        <div class="bg-[#e8e8e8] p-[15px]">
+
+                            <a v-for="province in summary" :key="province.key" href="#" :class="[
+                                'mb-1 flex min-h-[80px] items-center no-underline transition-transform duration-200 hover:scale-[1.02]',
+                                province.color,
+                                province.text
+                            ]">
+
+                                <!-- Total Number - Left Side -->
+                                <div class="flex w-[60px] items-center justify-center">
+                                    <span class="text-[24pt] font-bold leading-none">
+                                        {{ province.pa_count }}
+                                    </span>
+                                </div>
+
+                                <!-- Province Information - Right Side -->
+                                <div class="flex flex-col">
+                                    <span class="text-sm">
+                                        <b>{{ province.name }}</b>
+                                        - Total Permit Application
+                                    </span>
+                                </div>
+
+                            </a>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
             <div v-if="activeTab === 're'" class="space-y-2 text-sm text-gray-700">
                 <div class="h-auto w-full">
                     <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="endorsed_application"
-                        dataKey="id" :paginator="true" :rows="20" :filters="filters"
-                        :globalFilterFields="[
+                        dataKey="id" :paginator="true" :rows="20" :filters="filters" :globalFilterFields="[
                             'application_no',
                             'permit_no',
                             'applicant_name',
@@ -1007,8 +1145,7 @@ const insertPurpose = async () => {
                             'transaction_type',
                             'classification',
                             'application_status'
-                        ]"
-                        filterDisplay="menu"
+                        ]" filterDisplay="menu"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         :rowsPerPageOptions="[5, 10, 25]"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
@@ -1091,7 +1228,7 @@ const insertPurpose = async () => {
                                 </div>
                             </template>
                         </Column>
-                        <Column field="applicant_name" header="Applicant Name" style="min-width: 12rem" >
+                        <Column field="applicant_name" header="Applicant Name" style="min-width: 12rem">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-3">
 
@@ -1197,8 +1334,7 @@ const insertPurpose = async () => {
             <div v-else-if="activeTab === 'aa'" class="space-y-2 text-sm text-gray-700">
                 <div class="h-auto w-full">
                     <DataTable ref="dt" size="small" v-model:selection="selectedProducts" :value="approved_application"
-                        dataKey="id" :paginator="true" :rows="20" :filters="filters" 
-                        :globalFilterFields="[
+                        dataKey="id" :paginator="true" :rows="20" :filters="filters" :globalFilterFields="[
                             'application_no',
                             'permit_no',
                             'applicant_name',
@@ -1207,8 +1343,7 @@ const insertPurpose = async () => {
                             'transaction_type',
                             'classification',
                             'application_status'
-                        ]"
-                        filterDisplay="menu"
+                        ]" filterDisplay="menu"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         :rowsPerPageOptions="[5, 10, 25]"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
